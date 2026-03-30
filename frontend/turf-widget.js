@@ -89,7 +89,7 @@ class TurfProgramma extends HTMLElement {
     this.currentView = 'list'
     const root = this.shadowRoot.querySelector('.root')
     root.innerHTML = `
-      <div class="category-bar">
+      <div class="category-bar desktop-only">
         <button class="cat-tab active" data-cat="all">All Events</button>
         <button class="cat-tab" data-cat="talks">⬡ TURF Talks</button>
         <button class="cat-tab" data-cat="live">◈ TURF Live</button>
@@ -127,9 +127,11 @@ class TurfProgramma extends HTMLElement {
               <option value="">Alle locaties</option>
               ${this.locations.map(loc => `<option value="${loc}" ${this.activeLocation === loc ? 'selected' : ''}>${loc}</option>`).join('')}
             </select>
-            <select class="mobile-select" id="mobileType">
-              <option value="">Alle types</option>
-              ${this.types.map(t => `<option value="${t}" ${this.activeType === t ? 'selected' : ''}>${t}</option>`).join('')}
+            <select class="mobile-select" id="mobileCat">
+              <option value="all" ${this.activeCat === 'all' ? 'selected' : ''}>All Events</option>
+              <option value="talks" ${this.activeCat === 'talks' ? 'selected' : ''}>⬡ TURF Talks</option>
+              <option value="live" ${this.activeCat === 'live' ? 'selected' : ''}>◈ TURF Live</option>
+              <option value="night" ${this.activeCat === 'night' ? 'selected' : ''}>◉ TURF by Night</option>
             </select>
           </div>
         </aside>
@@ -207,8 +209,10 @@ class TurfProgramma extends HTMLElement {
       this.applyFilters()
     })
 
-    root.getElementById('mobileType')?.addEventListener('change', (e) => {
-      this.activeType = e.target.value || null
+    root.getElementById('mobileCat')?.addEventListener('change', (e) => {
+      this.activeCat = e.target.value
+      // Sync desktop tabs
+      root.querySelectorAll('.cat-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === this.activeCat))
       this.applyFilters()
     })
   }
@@ -236,7 +240,6 @@ class TurfProgramma extends HTMLElement {
       if (this.activeDay && e.day !== this.activeDay) return false
       if (this.activeCat !== 'all' && e.theme !== this.activeCat) return false
       if (this.activeLocation && e.location !== this.activeLocation) return false
-      if (this.activeType && e.type !== this.activeType) return false
       if (q && !e.title.toLowerCase().includes(q) && !e.location.toLowerCase().includes(q)) return false
       return true
     })
