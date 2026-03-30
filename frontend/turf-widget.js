@@ -169,8 +169,8 @@ class TurfProgramma extends HTMLElement {
               <option value="talks" ${this.activeCat === 'talks' ? 'selected' : ''}>⬡ TURF Talks</option>
               <option value="live" ${this.activeCat === 'live' ? 'selected' : ''}>◈ TURF Live</option>
               <option value="night" ${this.activeCat === 'night' ? 'selected' : ''}>◉ TURF by Night</option>
-              <option value="favorites" ${this.showFavoritesOnly ? 'selected' : ''}>★ Favorites</option>
             </select>
+            <button class="mobile-fav-btn ${this.showFavoritesOnly ? 'fav-active' : ''}" id="mobileFavFilter">★</button>
           </div>
         </aside>
         <main class="content" id="eventList"></main>
@@ -264,20 +264,27 @@ class TurfProgramma extends HTMLElement {
     })
 
     root.getElementById('mobileCat')?.addEventListener('change', (e) => {
-      const val = e.target.value
-      if (val === 'favorites') {
-        this.showFavoritesOnly = true
-        this.activeCat = 'all'
-      } else {
-        this.showFavoritesOnly = false
-        this.activeCat = val
-      }
+      this.activeCat = e.target.value
+      this.showFavoritesOnly = false
       // Sync desktop tabs
       root.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'))
+      root.querySelector(`.cat-tab[data-cat="${this.activeCat}"]`)?.classList.add('active')
+      root.getElementById('favFilter')?.classList.remove('active')
+      root.getElementById('mobileFavFilter')?.classList.remove('fav-active')
+      this.applyFilters()
+    })
+
+    // Mobile favorites toggle
+    root.getElementById('mobileFavFilter')?.addEventListener('click', () => {
+      this.showFavoritesOnly = !this.showFavoritesOnly
+      const btn = root.getElementById('mobileFavFilter')
+      btn.classList.toggle('fav-active', this.showFavoritesOnly)
+      // Sync desktop
+      root.getElementById('favFilter')?.classList.toggle('active', this.showFavoritesOnly)
       if (this.showFavoritesOnly) {
-        root.getElementById('favFilter')?.classList.add('active')
-      } else {
-        root.querySelector(`.cat-tab[data-cat="${this.activeCat}"]`)?.classList.add('active')
+        this.activeCat = 'all'
+        root.querySelectorAll('.cat-tab:not(.cat-tab-fav)').forEach(b => b.classList.remove('active'))
+        root.getElementById('mobileCat').value = 'all'
       }
       this.applyFilters()
     })
@@ -774,6 +781,13 @@ class TurfProgramma extends HTMLElement {
       .detail-fav-icon { font-size: 14px; }
 
       .cat-tab-fav { margin-left: auto; }
+      .mobile-fav-btn {
+        width: 46px; height: 46px; border: none; background: #111; color: rgba(255,255,255,0.4);
+        font-size: 20px; border-radius: 50%; cursor: pointer; transition: all 0.2s;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      }
+      .mobile-fav-btn:hover { background: transparent; outline: 2px solid #fff; outline-offset: -2px; color: #fff; }
+      .mobile-fav-btn.fav-active { background: #fff; color: #111; }
 
       .empty-state { padding: 80px 32px; text-align: center; color: var(--muted); }
       .empty-state h3 { font-family: var(--font-heading); font-size: 42px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; color: rgba(255,255,255,0.2); }
