@@ -51,7 +51,7 @@ class TurfProgramma extends HTMLElement {
     return now >= start && now < end
   }
 
-  get routeUrl() { return this.getAttribute('route-url') || 'turf-route.html' }
+  get routeUrl() { return this.getAttribute('route-url') || '/route' }
   get projectId() { return this.getAttribute('project-id') || 'x545nfex' }
   get dataset() { return this.getAttribute('dataset') || 'production' }
   get cdnUrl() { return `https://${this.projectId}.api.sanity.io/v2024-01-01/data/query/${this.dataset}` }
