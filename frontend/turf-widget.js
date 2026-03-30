@@ -673,7 +673,9 @@ class TurfProgramma extends HTMLElement {
         background: var(--bg);
         color: var(--text);
         font-family: var(--font-body);
-        min-height: 400px;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
       }
 
       .loading {
@@ -688,7 +690,7 @@ class TurfProgramma extends HTMLElement {
       /* ── CATEGORY TABS ── */
       .category-bar {
         display: flex; gap: 10px; padding: 20px 24px;
-        overflow-x: auto; flex-wrap: wrap; align-items: center;
+        overflow-x: auto; flex-wrap: wrap; align-items: center; flex-shrink: 0;
       }
       .cat-tab {
         padding: 14px 28px; border: none; background: #111;
@@ -701,12 +703,12 @@ class TurfProgramma extends HTMLElement {
       .cat-tab.active { background: #fff; color: #111; }
 
       /* ── LAYOUT ── */
-      .main { display: grid; grid-template-columns: 280px 1fr; min-height: 600px; gap: 0; }
+      .main { display: grid; grid-template-columns: 280px 1fr; flex: 1; min-height: 0; overflow: hidden; }
 
       /* ── SIDEBAR ── */
       .sidebar {
         padding: 28px 24px;
-        position: sticky; top: 0; height: 100vh; overflow-y: auto;
+        overflow-y: auto;
       }
       .results-count {
         font-family: var(--font-body); font-size: 12px; font-weight: 600;
@@ -759,6 +761,8 @@ class TurfProgramma extends HTMLElement {
       .loc-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
       .loc-btn.active { color: #fff; font-weight: 700; background: rgba(255,255,255,0.1); }
       .loc-btn.active::before { background: #fff; }
+
+      .content { overflow-y: auto; }
 
       /* ── TIME DIVIDER ── */
       .time-divider {
@@ -884,7 +888,7 @@ class TurfProgramma extends HTMLElement {
       .cat-tab-fav { margin-left: auto; }
 
       .active-tag-bar {
-        padding: 12px 40px; background: rgba(255,255,255,0.1);
+        padding: 12px 24px; background: rgba(255,255,255,0.1); flex-shrink: 0;
         font-family: var(--font-body); font-size: 13px; font-weight: 500;
         color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 12px;
       }
@@ -1065,8 +1069,9 @@ class TurfProgramma extends HTMLElement {
       @media (max-width: 768px) {
         .category-bar { padding: 12px 16px; gap: 6px; }
         .cat-tab { padding: 8px 16px; font-size: 11px; }
-        .main { grid-template-columns: 1fr; }
-        .sidebar { position: static; height: auto; padding: 16px; }
+        .main { grid-template-columns: 1fr; display: flex; flex-direction: column; }
+        .sidebar { padding: 16px; flex-shrink: 0; overflow-y: visible; }
+        .content { flex: 1; overflow-y: auto; }
         .desktop-only { display: none; }
         .mobile-only { display: block; }
         .mobile-filters { display: flex; }
