@@ -531,9 +531,6 @@ class TurfProgramma extends HTMLElement {
       }
       .cat-tab:hover { background: transparent; outline: 2px solid #fff; outline-offset: -2px; color: #fff; }
       .cat-tab.active { background: #fff; color: #111; }
-      .cat-tab[data-cat="talks"].active { background: var(--tag-talks); color: #fff; }
-      .cat-tab[data-cat="live"].active { background: var(--tag-live); color: #fff; }
-      .cat-tab[data-cat="night"].active { background: var(--tag-night); color: #fff; }
 
       /* ── LAYOUT ── */
       .main { display: grid; grid-template-columns: 280px 1fr; min-height: 600px; gap: 0; }
@@ -576,7 +573,7 @@ class TurfProgramma extends HTMLElement {
         border-radius: var(--radius);
       }
       .date-btn:hover { background: transparent; outline: 2px solid #fff; outline-offset: -2px; color: #fff; }
-      .date-btn.active { background: var(--accent); color: #fff; }
+      .date-btn.active { background: #fff; color: #111; }
       .date-btn .day-name { display: block; font-size: 14px; font-weight: 700; text-transform: uppercase; }
       .date-btn .day-num { display: block; font-size: 10px; opacity: 0.7; margin-top: 2px; }
 
