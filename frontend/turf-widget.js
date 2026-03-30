@@ -498,7 +498,7 @@ class TurfProgramma extends HTMLElement {
         <div class="detail-left">
           ${e.afbeelding ? `<div class="hero-image"><img src="${e.afbeelding}?w=800&h=400&fit=crop" alt="${e.titel}"></div>` : ''}
           <div class="hero ${isLive ? 'hero-live' : ''}">
-            ${isLive ? '<div class="detail-live-badge"><span class="live-dot"></span>LIVE NU</div>' : ''}
+            ${isLive ? '<div class="detail-live-badge"><span class="detail-live-dot"></span>LIVE NU</div>' : ''}
             <h1 class="event-title-detail">${e.titel}</h1>
             <div class="event-meta-row">
               <span class="meta-item">
@@ -804,6 +804,10 @@ class TurfProgramma extends HTMLElement {
         font-size: 13px; font-weight: 700; letter-spacing: 1px;
         text-transform: uppercase; margin-bottom: 16px;
         animation: livePulse 1.5s infinite;
+      }
+      .detail-live-dot {
+        width: 8px; height: 8px; background: #fff; border-radius: 50%;
+        display: inline-block; animation: liveDot 1.5s infinite;
       }
 
       .map-container {
