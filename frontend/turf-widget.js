@@ -336,14 +336,14 @@ class TurfProgramma extends HTMLElement {
     const themeLabel = { talks: 'TURF Talks', live: 'TURF Live', night: 'TURF by Night' }
 
     const sprekersHtml = e.sprekers && e.sprekers.length > 0
-      ? e.sprekers.map(sp => `
+      ? `<div class="speakers-section">${e.sprekers.map(sp => `
         <div class="speaker-card">
-          <div class="speaker-avatar">${sp.foto ? `<img src="${sp.foto}?w=112&h=112&fit=crop" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : '🎙️'}</div>
+          <div class="speaker-avatar">${sp.foto ? `<img src="${sp.foto}?w=160&h=160&fit=crop" alt="${sp.naam}">` : '🎙️'}</div>
           <div>
             <div class="speaker-name">${sp.naam}</div>
             <div class="speaker-role">${[sp.rol, sp.organisatie].filter(Boolean).join(' · ')}</div>
           </div>
-        </div>`).join('')
+        </div>`).join('')}</div>`
       : ''
 
     const tagsHtml = e.tags && e.tags.length > 0
@@ -363,6 +363,7 @@ class TurfProgramma extends HTMLElement {
       </div>
       <div class="detail-page">
         <div class="detail-left">
+          ${e.afbeelding ? `<div class="hero-image"><img src="${e.afbeelding}?w=800&h=400&fit=crop" alt="${e.titel}"></div>` : ''}
           <div class="hero">
             <h1 class="event-title-detail">${e.titel}</h1>
             <div class="event-meta-row">
@@ -669,6 +670,14 @@ class TurfProgramma extends HTMLElement {
       }
       .detail-left { padding-right: 64px; }
 
+      .hero-image {
+        border-radius: var(--radius-card); overflow: hidden; margin-bottom: 24px;
+        border: 1px solid var(--border);
+      }
+      .hero-image img {
+        width: 100%; height: 300px; object-fit: cover; display: block;
+      }
+
       .hero {
         background: var(--surface); backdrop-filter: blur(10px);
         border: 1px solid var(--border); border-radius: var(--radius-card);
@@ -683,15 +692,19 @@ class TurfProgramma extends HTMLElement {
       }
       .event-meta-row { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 8px; }
 
+      .speakers-section { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; }
       .speaker-card {
         display: flex; align-items: center; gap: 16px;
         background: var(--surface2); border: 1px solid var(--border);
-        padding: 16px 20px; margin-top: 20px; border-radius: 12px;
+        padding: 16px 20px; border-radius: 12px;
       }
       .speaker-avatar {
-        width: 56px; height: 56px; background: var(--surface); border-radius: 50%;
+        width: 64px; height: 64px; background: var(--surface); border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         font-size: 22px; flex-shrink: 0; overflow: hidden;
+      }
+      .speaker-avatar img {
+        width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
       }
       .speaker-name { font-family: var(--font-heading); font-size: 22px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
       .speaker-role { font-size: 12px; color: var(--muted); font-family: var(--font-body); font-weight: 500; }

@@ -468,6 +468,11 @@
   <!-- LEFT -->
   <div class="left">
 
+    <!-- EVENT IMAGE -->
+    <div id="heroImage" style="display:none; border-radius:12px; overflow:hidden; margin-bottom:24px; border:1px solid var(--border);">
+      <img id="eventImage" style="width:100%; height:300px; object-fit:cover; display:block;" alt="">
+    </div>
+
     <!-- HERO CARD -->
     <div class="hero">
       <div class="hero-actions">
@@ -644,6 +649,15 @@ async function loadEvent() {
   const theme = e.themaSlug || 'talks';
   const timeStr = `${e.startTijd}${e.eindTijd ? ' – ' + e.eindTijd : ''}`;
 
+  // ── Event image ──
+  if (e.afbeelding) {
+    const heroImg = document.getElementById('heroImage');
+    const eventImg = document.getElementById('eventImage');
+    heroImg.style.display = 'block';
+    eventImg.src = e.afbeelding + '?w=800&h=400&fit=crop';
+    eventImg.alt = e.titel;
+  }
+
   // ── Populate hero ──
   document.getElementById('eventTitle').textContent = e.titel;
   document.getElementById('eventDate').textContent = dag.full;
@@ -654,11 +668,13 @@ async function loadEvent() {
   // ── Speaker(s) ──
   const speakerCard = document.getElementById('speakerCard');
   if (e.sprekers && e.sprekers.length > 0) {
-    speakerCard.innerHTML = e.sprekers.map(sp => `
-      <div class="speaker-avatar">${sp.foto ? `<img src="${sp.foto}?w=112&h=112&fit=crop" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : '🎙️'}</div>
-      <div>
-        <div class="speaker-name">${sp.naam}</div>
-        <div class="speaker-role">${[sp.rol, sp.organisatie].filter(Boolean).join(' · ')}</div>
+    speakerCard.outerHTML = e.sprekers.map(sp => `
+      <div class="speaker-card">
+        <div class="speaker-avatar">${sp.foto ? `<img src="${sp.foto}?w=160&h=160&fit=crop" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="${sp.naam}">` : '🎙️'}</div>
+        <div>
+          <div class="speaker-name">${sp.naam}</div>
+          <div class="speaker-role">${[sp.rol, sp.organisatie].filter(Boolean).join(' · ')}</div>
+        </div>
       </div>
     `).join('');
   } else {
