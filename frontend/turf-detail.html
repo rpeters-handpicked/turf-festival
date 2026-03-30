@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TURF — Event Detail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --surface: #1a1a1a;
+    --surface2: #222;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --muted: #666;
+    --accent-lime: #c8f53b;
+    --accent-blue: #3b8bf5;
+    --accent-purple: #9b3bf5;
+    --tag-talks: #c8f53b;
+    --tag-live: #3b8bf5;
+    --tag-night: #9b3bf5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 4px;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .logo span { color: var(--accent-lime); }
+
+  .nav-date {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  /* ── BACK BAR ── */
+  .back-bar {
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    background: none;
+    border: none;
+    transition: color 0.15s;
+    text-decoration: none;
+  }
+  .back-btn:hover { color: var(--accent-lime); }
+  .back-btn svg { transition: transform 0.15s; }
+  .back-btn:hover svg { transform: translateX(-3px); }
+
+  /* ── MAIN LAYOUT ── */
+  .page {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 0;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 40px;
+    align-items: start;
+  }
+
+  /* ── LEFT CONTENT ── */
+  .left { padding-right: 64px; }
+
+  /* HERO */
+  .hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 36px 36px 32px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--accent-lime);
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 18px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-radius: 100px;
+  }
+  .action-btn:hover { border-color: var(--accent-lime); color: var(--accent-lime); }
+  .action-btn.saved { background: var(--accent-lime); color: var(--black); border-color: var(--accent-lime); }
+
+  .event-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 3px;
+    line-height: 1.05;
+    margin-bottom: 24px;
+  }
+
+  .event-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 8px;
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ── SPEAKER ── */
+  .speaker-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    margin-top: 28px;
+    transition: border-color 0.15s;
+    cursor: pointer;
+    position: relative;
+  }
+  .speaker-card:hover { border-color: var(--accent-lime); }
+
+  .speaker-avatar {
+    width: 56px;
+    height: 56px;
+    background: var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+
+  .speaker-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    margin-bottom: 3px;
+  }
+
+  .speaker-role {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  .speaker-fav {
+    margin-left: auto;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-radius: 50%;
+    font-size: 14px;
+  }
+  .speaker-fav:hover { border-color: var(--accent-lime); color: var(--accent-lime); }
+
+  /* ── DESCRIPTION ── */
+  .section { margin-top: 40px; }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .description {
+    font-size: 15px;
+    line-height: 1.75;
+    color: #bbb;
+    max-width: 680px;
+  }
+
+  .disclaimer {
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  /* ── RELATED EVENTS ── */
+  .related-event {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .related-event:hover .related-title { color: var(--accent-lime); }
+
+  .related-img {
+    width: 60px;
+    height: 60px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .related-meta {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .related-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1.5px;
+    transition: color 0.15s;
+    line-height: 1.1;
+  }
+
+  .related-tag {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 2px 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border: 1px solid;
+    font-weight: 700;
+  }
+
+  /* ── RIGHT SIDEBAR ── */
+  .sidebar {
+    position: sticky;
+    top: 100px;
+  }
+
+  .sidebar-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px;
+    margin-bottom: 16px;
+  }
+
+  .sidebar-heading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+    color: var(--text);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ACCESS BADGES */
+  .badge-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .badge-talks { background: var(--tag-talks); color: var(--black); }
+  .badge-live { background: var(--tag-live); color: #fff; }
+  .badge-night { background: var(--tag-night); color: #fff; }
+  .badge-all { background: #333; color: var(--text); }
+
+  .badge-label {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* DETAILS LIST */
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+
+  .detail-key {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .detail-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text);
+    text-align: right;
+  }
+
+  /* TAGS */
+  .tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .sidebar-tag {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .sidebar-tag:hover { border-color: var(--accent-lime); color: var(--accent-lime); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--black); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* ── MOBILE ── */
+  @media (max-width: 900px) {
+    nav { padding: 16px 20px; }
+    .back-bar { padding: 12px 20px; }
+    .page {
+      grid-template-columns: 1fr;
+      padding: 24px 20px;
+    }
+    .left { padding-right: 0; margin-bottom: 32px; }
+    .event-title { font-size: 34px; }
+    .sidebar { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="turf-programma.html" class="logo">TURF<span>.</span></a>
+  <span class="nav-date">26 — 27 — 28 NOVEMBER '26 · BREDA</span>
+</nav>
+
+<!-- BACK BAR -->
+<div class="back-bar">
+  <a href="turf-programma.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
+    </svg>
+    Back
+  </a>
+</div>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- LEFT -->
+  <div class="left">
+
+    <!-- HERO CARD -->
+    <div class="hero">
+      <div class="hero-actions">
+        <button class="action-btn" onclick="toggleShare(this)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          Share
+        </button>
+        <button class="action-btn" id="favBtn" onclick="toggleFav(this)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          <span>Favorite</span>
+        </button>
+      </div>
+
+      <h1 class="event-title" id="eventTitle">The Future of Nightlife Culture</h1>
+
+      <div class="event-meta-row">
+        <span class="meta-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z"/></svg>
+          <span id="eventDate">DO 26 november 2026</span>
+        </span>
+        <span class="meta-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+          <span id="eventTime">21:00 – 23:00</span>
+        </span>
+      </div>
+      <div class="event-meta-row">
+        <span class="meta-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
+          <span id="eventLocation">Paradox — Tilburgseweg 44, Breda</span>
+        </span>
+      </div>
+
+      <!-- SPEAKER -->
+      <div class="speaker-card" id="speakerCard">
+        <div class="speaker-avatar" id="speakerEmoji">🎙️</div>
+        <div>
+          <div class="speaker-name" id="speakerName">Jana Kovač</div>
+          <div class="speaker-role" id="speakerRole">Founder, Nacht Collective · Rotterdam</div>
+        </div>
+        <button class="speaker-fav" onclick="event.stopPropagation(); this.textContent = this.textContent==='☆' ? '★' : '☆'">☆</button>
+      </div>
+    </div>
+
+    <!-- DESCRIPTION -->
+    <div class="section">
+      <h2 class="section-title">About</h2>
+      <p class="description" id="eventDescription">
+        What does nightlife look like in 2030? In this keynote, we explore how club culture, electronic music and urban policy are shaping the future of cities — and how cities in turn reshape the sounds that emerge from them. From Amsterdam's 24-hour venue licenses to Berlin's cultural preservation battles, we map the fault lines between creative freedom and institutional pressure.<br><br>
+        Speakers draw on field research from 12 European cities to ask: who gets to define what nightlife is for? And what happens when the dancefloor becomes a site of political resistance? Expect honest conversation, no easy answers, and a lot of bass frequency references.
+      </p>
+      <p class="disclaimer">Event descriptions are provided by the organizers and do not necessarily reflect the views of TURF.</p>
+    </div>
+
+    <!-- OTHER EVENTS AT THIS VENUE -->
+    <div class="section">
+      <h2 class="section-title">Other Events at This Venue</h2>
+      <div id="relatedList"></div>
+    </div>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- ACCESS -->
+    <div class="sidebar-card">
+      <div class="sidebar-heading">Access</div>
+      <div class="badge-row">
+        <div class="badge badge-talks">T</div>
+        <div class="badge badge-live">L</div>
+        <div class="badge badge-night">N</div>
+      </div>
+      <div class="badge-label" id="accessLabel">
+        TURF Talks, TURF Live en TURF by Night<br>tickets
+      </div>
+    </div>
+
+    <!-- DETAILS -->
+    <div class="sidebar-card">
+      <div class="sidebar-heading">Details</div>
+      <div class="detail-row">
+        <span class="detail-key">Thema</span>
+        <span class="detail-val" id="detailTheme">TURF by Night</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">Type</span>
+        <span class="detail-val" id="detailType">Keynote</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">Dag</span>
+        <span class="detail-val" id="detailDay">Donderdag 26/11</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">Tijd</span>
+        <span class="detail-val" id="detailTime">21:00 – 23:00</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">Locatie</span>
+        <span class="detail-val" id="detailLocation">Paradox</span>
+      </div>
+    </div>
+
+    <!-- TAGS -->
+    <div class="sidebar-card">
+      <div class="sidebar-heading">Tags</div>
+      <div class="tags-list" id="tagsList">
+        <span class="sidebar-tag">Nightlife</span>
+        <span class="sidebar-tag">Policy</span>
+        <span class="sidebar-tag">Club Culture</span>
+        <span class="sidebar-tag">Electronic Music</span>
+        <span class="sidebar-tag">Urban Futures</span>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<script>
+// ─── SHARED DATA ─────────────────────────────────────────────────────────────
+const locations = [
+  "Chassé Theater", "Nieuwe Veste", "Doornbos", "De Zwaan",
+  "Mark", "Wilhelminapark", "Turfschip", "Rat Verlegh Stadion",
+  "Lantaarnpaal", "Paradox", "Club Skûll", "Grand Café Uno",
+  "Boei 10", "Muziekgieterij", "Schuytgraaf", "Station Hall",
+  "Academie St. Joost", "Mex", "Lokaal", "De Centrale"
+];
+
+const emojis = ["🎵","🎨","💡","🌐","🎭","🔊","⚡","🎙️","🌙","🔮","🎛️","🏙️","🌀","🎤","✨"];
+const eventNames = [
+  "The Future of Nightlife Culture", "AI & Creative Expression", "Techno as Political Act",
+  "Breda After Dark", "Sound Systems & Society", "Digital Identities",
+  "Club Culture Roundtable", "Generative Music Workshop", "Light Art & Space",
+  "Urban Sound Mapping", "Inclusive Dance Floors", "The Algorithm Sessions",
+  "Hardware Hacking Live", "Club Night: Residents", "Vinyl & Memory",
+  "Open Source Beats", "Neon City Showcase", "Bass & Architecture",
+  "Electronic Futures Panel", "Drone Soundscape", "Rave History Talks",
+  "Community Radio Live", "Warehouse Aesthetics", "Decibel Discourse",
+  "Human × Machine", "Night Walks Audio Tour", "Coding the Club",
+  "Ambient & Drift", "Field Recordings Session", "Hybrid Performances",
+];
+const themes = ["talks","talks","live","live","night","night"];
+const types  = ["Keynote","Panel","Performance","Installation","Club Night","Workshop","Showcase","DJ Set"];
+const dayNames = { "1": "DO 26/11", "2": "VR 27/11", "3": "ZA 28/11" };
+const dayFull  = { "1": "Donderdag 26 november", "2": "Vrijdag 27 november", "3": "Zaterdag 28 november" };
+const speakers = [
+  { name: "Jana Kovač", role: "Founder, Nacht Collective · Rotterdam", emoji: "🎙️" },
+  { name: "Daan Vermeer", role: "Researcher, Creative Cities Lab · Utrecht", emoji: "🔬" },
+  { name: "Yuki Tanaka", role: "Sound Artist · Tokyo / Breda", emoji: "🎛️" },
+  { name: "Amara Diallo", role: "DJ / Activist, Rhythm Politics · Antwerpen", emoji: "🎵" },
+  { name: "Lars Hendriks", role: "Architect, Urban Sound Studio · Amsterdam", emoji: "🏙️" },
+  { name: "Sofia Blum", role: "Creative Technologist · Berlin", emoji: "💡" },
+];
+const tagPool = [
+  ["Nightlife","Policy","Club Culture","Electronic Music","Urban Futures"],
+  ["AI","Creativity","Generative Art","Machine Learning"],
+  ["Techno","Politics","Resistance","Sound"],
+  ["Light Art","Spatial Design","Immersive"],
+  ["Gaming","Digital Worlds","Interaction"],
+  ["Sustainability","Inclusive Culture","Community"],
+];
+
+// ─── LOAD EVENT FROM URL PARAMS ───────────────────────────────────────────────
+function getParam(key) {
+  return new URLSearchParams(window.location.search).get(key);
+}
+
+const id       = parseInt(getParam('id') ?? '0');
+const title    = getParam('title')    ?? eventNames[id % eventNames.length];
+const day      = getParam('day')      ?? '1';
+const start    = getParam('start')    ?? '21:00';
+const end      = getParam('end')      ?? '23:00';
+const location = getParam('location') ?? 'Paradox';
+const theme    = getParam('theme')    ?? 'night';
+const type     = getParam('type')     ?? 'Keynote';
+
+// ─── POPULATE LEFT ────────────────────────────────────────────────────────────
+const sp = speakers[id % speakers.length];
+document.getElementById('eventTitle').textContent    = title;
+document.getElementById('eventDate').textContent     = dayFull[day] + ' 2026';
+document.getElementById('eventTime').textContent     = `${start} – ${end}`;
+document.getElementById('eventLocation').textContent = location + ' · Breda';
+document.getElementById('speakerName').textContent   = sp.name;
+document.getElementById('speakerRole').textContent   = sp.role;
+document.getElementById('speakerEmoji').textContent  = sp.emoji;
+
+document.title = `TURF — ${title}`;
+
+// ─── POPULATE SIDEBAR ─────────────────────────────────────────────────────────
+const themeLabel = { talks: 'TURF Talks', live: 'TURF Live', night: 'TURF by Night' };
+document.getElementById('detailTheme').textContent    = themeLabel[theme] ?? theme;
+document.getElementById('detailType').textContent     = type;
+document.getElementById('detailDay').textContent      = dayFull[day];
+document.getElementById('detailTime').textContent     = `${start} – ${end}`;
+document.getElementById('detailLocation').textContent = location;
+
+// badge row
+const badgeRow = document.querySelector('.badge-row');
+badgeRow.innerHTML = `<div class="badge badge-${theme}">${theme[0].toUpperCase()}</div>`;
+document.getElementById('accessLabel').textContent = `${themeLabel[theme]} tickets`;
+
+// tags
+const tags = tagPool[id % tagPool.length];
+document.getElementById('tagsList').innerHTML = tags.map(t =>
+  `<span class="sidebar-tag">${t}</span>`).join('');
+
+// ─── RELATED EVENTS ───────────────────────────────────────────────────────────
+function makeRelated() {
+  const related = [];
+  for (let i = 0; i < 4; i++) {
+    const rid = (id + i + 1) % 75;
+    const rtheme = themes[rid % themes.length];
+    const rday   = String((rid % 3) + 1);
+    const rstart = `${String(10 + (rid % 12)).padStart(2,'0')}:00`;
+    related.push({
+      id: rid,
+      title: eventNames[rid % eventNames.length],
+      location,
+      day: rday,
+      start: rstart,
+      end: `${String(12 + (rid % 12)).padStart(2,'0')}:00`,
+      theme: rtheme,
+      type: types[rid % types.length],
+      emoji: emojis[rid % emojis.length],
+    });
+  }
+  return related;
+}
+
+const tagClass = { talks:'tag-talks', live:'tag-live', night:'tag-night' };
+const tagLabel = { talks:'⬡ Talks', live:'◈ Live', night:'◉ By Night' };
+
+document.getElementById('relatedList').innerHTML = makeRelated().map(e => `
+  <a class="related-event"
+     href="turf-detail.html?id=${e.id}&title=${encodeURIComponent(e.title)}&day=${e.day}&start=${e.start}&end=${e.end}&location=${encodeURIComponent(e.location)}&theme=${e.theme}&type=${encodeURIComponent(e.type)}">
+    <div class="related-img">${e.emoji}</div>
+    <div>
+      <div class="related-meta">${dayNames[e.day]} · ${e.start} – ${e.end} · ${e.location}</div>
+      <div class="related-title">${e.title}</div>
+      <span class="related-tag ${tagClass[e.theme]}">${tagLabel[e.theme]}</span>
+    </div>
+  </a>
+`).join('');
+
+// ─── INTERACTIONS ─────────────────────────────────────────────────────────────
+let isFav = false;
+function toggleFav(btn) {
+  isFav = !isFav;
+  btn.classList.toggle('saved', isFav);
+  btn.querySelector('span').textContent = isFav ? 'Saved' : 'Favorite';
+}
+
+function toggleShare(btn) {
+  if (navigator.share) {
+    navigator.share({ title, url: window.location.href });
+  } else {
+    navigator.clipboard.writeText(window.location.href);
+    btn.querySelector('span') && (btn.querySelector('span').textContent = 'Copied!');
+    setTimeout(() => btn.querySelector('span') && (btn.querySelector('span').textContent = 'Share'), 2000);
+  }
+}
+</script>
+</body>
+</html>

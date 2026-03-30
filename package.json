@@ -2,6 +2,7 @@
   "name": "turf-festival",
   "private": true,
   "version": "1.0.0",
+  "type": "module",
   "main": "package.json",
   "license": "UNLICENSED",
   "scripts": {

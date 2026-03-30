@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TURF — Programma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --dark: #111111;
+    --surface: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --muted: #666;
+    --accent-lime: #c8f53b;
+    --accent-blue: #3b8bf5;
+    --accent-orange: #f5703b;
+    --accent-purple: #9b3bf5;
+    --accent-pink: #f53b9b;
+
+    --tag-talks: #c8f53b;
+    --tag-live: #3b8bf5;
+    --tag-night: #9b3bf5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 4px;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .logo span { color: var(--accent-lime); }
+
+  nav-links { display: flex; gap: 32px; }
+
+  .nav-date {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  /* CATEGORY TABS */
+  .category-bar {
+    display: flex;
+    gap: 4px;
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--border);
+    background: var(--black);
+    overflow-x: auto;
+  }
+
+  .cat-tab {
+    padding: 8px 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+
+  .cat-tab:hover { border-color: var(--text); color: var(--text); }
+
+  .cat-tab.active {
+    background: var(--text);
+    color: var(--black);
+    border-color: var(--text);
+    font-weight: 700;
+  }
+
+  .cat-tab[data-cat="talks"].active { background: var(--tag-talks); border-color: var(--tag-talks); }
+  .cat-tab[data-cat="live"].active { background: var(--tag-live); border-color: var(--tag-live); color: #fff; }
+  .cat-tab[data-cat="night"].active { background: var(--tag-night); border-color: var(--tag-night); color: #fff; }
+
+  /* LAYOUT */
+  .main {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: calc(100vh - 120px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 28px 24px;
+    position: sticky;
+    top: 120px;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+
+  .results-count {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .results-count strong {
+    color: var(--accent-lime);
+    font-size: 14px;
+  }
+
+  .search-box {
+    position: relative;
+    margin-bottom: 28px;
+  }
+
+  .search-box input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px 10px 36px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .search-box input:focus { border-color: var(--accent-lime); }
+  .search-box input::placeholder { color: var(--muted); }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .filter-section {
+    margin-bottom: 28px;
+  }
+
+  .filter-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .filter-label button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  /* DATE BUTTONS */
+  .date-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .date-btn {
+    padding: 10px 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+
+  .date-btn:hover { border-color: var(--text); color: var(--text); }
+
+  .date-btn.active {
+    border-color: var(--accent-lime);
+    color: var(--accent-lime);
+    background: rgba(200, 245, 59, 0.08);
+  }
+
+  .date-btn .day-name {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .date-btn .day-num {
+    display: block;
+    font-size: 9px;
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+
+  /* LOCATION FILTER */
+  .location-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .loc-btn {
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .loc-btn::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+
+  .loc-btn:hover { color: var(--text); }
+  .loc-btn.active { color: var(--accent-lime); }
+  .loc-btn.active::before { background: var(--accent-lime); }
+
+  /* CONTENT */
+  .content {
+    padding: 0;
+  }
+
+  /* TIME DIVIDER */
+  .time-divider {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 120px;
+    z-index: 10;
+  }
+
+  .time-divider::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--accent-lime);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* EVENT CARD */
+  .event-card {
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    gap: 24px;
+    align-items: start;
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .event-card:hover { background: var(--surface); }
+
+  .event-card:hover .event-title {
+    color: var(--accent-lime);
+  }
+
+  .event-img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+
+  .event-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .meta-item {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .meta-item svg { opacity: 0.5; }
+
+  .event-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    transition: color 0.15s;
+    line-height: 1.1;
+  }
+
+  .event-subtitle {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .event-tags {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    padding: 3px 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border: 1px solid;
+    font-weight: 700;
+  }
+
+  .tag-talks { color: var(--tag-talks); border-color: var(--tag-talks); }
+  .tag-live { color: var(--tag-live); border-color: var(--tag-live); }
+  .tag-night { color: var(--tag-night); border-color: var(--tag-night); }
+  .tag-type { color: var(--muted); border-color: var(--border); font-weight: 400; }
+
+  .bookmark-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .bookmark-btn:hover {
+    border-color: var(--accent-lime);
+    color: var(--accent-lime);
+  }
+
+  .bookmark-btn.saved {
+    background: var(--accent-lime);
+    border-color: var(--accent-lime);
+    color: var(--black);
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    padding: 80px 32px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .empty-state h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+    color: var(--border);
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--black); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    nav { padding: 16px 20px; }
+    .category-bar { padding: 12px 20px; }
+    .main { grid-template-columns: 1fr; }
+    .sidebar {
+      position: static;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 20px;
+    }
+    .event-card {
+      grid-template-columns: 72px 1fr auto;
+      gap: 16px;
+      padding: 16px 20px;
+    }
+    .event-img { width: 72px; height: 72px; font-size: 24px; }
+    .event-title { font-size: 18px; }
+    .time-divider { padding: 10px 20px; top: 108px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="logo">TURF<span>.</span></a>
+  <span class="nav-date">26 — 27 — 28 NOVEMBER '26 · BREDA</span>
+</nav>
+
+<div class="category-bar">
+  <button class="cat-tab active" data-cat="all" onclick="filterCat('all', this)">All Events</button>
+  <button class="cat-tab" data-cat="talks" onclick="filterCat('talks', this)">⬡ TURF Talks</button>
+  <button class="cat-tab" data-cat="live" onclick="filterCat('live', this)">◈ TURF Live</button>
+  <button class="cat-tab" data-cat="night" onclick="filterCat('night', this)">◉ TURF by Night</button>
+</div>
+
+<div class="main">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="results-count">
+      Showing <strong id="count">75</strong> results
+    </div>
+
+    <div class="search-box">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search" placeholder="Search event..." oninput="applyFilters()">
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-label">
+        Date <button onclick="clearDate()">—</button>
+      </div>
+      <div class="date-grid">
+        <button class="date-btn" data-day="1" onclick="filterDay('1', this)">
+          <span class="day-name">DO</span>
+          <span class="day-num">26-11</span>
+        </button>
+        <button class="date-btn" data-day="2" onclick="filterDay('2', this)">
+          <span class="day-name">VR</span>
+          <span class="day-num">27-11</span>
+        </button>
+        <button class="date-btn" data-day="3" onclick="filterDay('3', this)">
+          <span class="day-name">ZA</span>
+          <span class="day-num">28-11</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-label">
+        Location <button onclick="clearLocation()">—</button>
+      </div>
+      <div class="location-list" id="locationList"></div>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="content" id="eventList"></main>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const locations = [
+  "Chassé Theater", "Nieuwe Veste", "Doornbos", "De Zwaan",
+  "Mark", "Wilhelminapark", "Turfschip", "Rat Verlegh Stadion",
+  "Lantaarnpaal", "Paradox", "Club Skûll", "Grand Café Uno",
+  "Boei 10", "Muziekgieterij", "Schuytgraaf", "Station Hall",
+  "Academie St. Joost", "Mex", "Lokaal", "De Centrale"
+];
+
+const themes = ["talks", "talks", "live", "live", "night", "night"];
+const types = ["Keynote", "Panel", "Performance", "Installation", "Club Night", "Workshop", "Showcase", "DJ Set"];
+const emojis = ["🎵","🎨","💡","🌐","🎭","🔊","⚡","🎙️","🌙","🔮","🎛️","🏙️","🌀","🎤","✨"];
+
+const timeSlots = [
+  { time: "10:00", label: "DO 26 nov @ 10:00" },
+  { time: "12:00", label: "DO 26 nov @ 12:00" },
+  { time: "14:00", label: "DO 26 nov @ 14:00" },
+  { time: "18:00", label: "VR 27 nov @ 18:00" },
+  { time: "20:00", label: "VR 27 nov @ 20:00" },
+  { time: "22:00", label: "VR 27 nov @ 22:00" },
+  { time: "00:00", label: "ZA 28 nov @ 00:00" },
+  { time: "14:00", label: "ZA 28 nov @ 14:00" },
+  { time: "21:00", label: "ZA 28 nov @ 21:00" },
+];
+
+const eventNames = [
+  "The Future of Nightlife Culture", "AI & Creative Expression", "Techno as Political Act",
+  "Breda After Dark", "Sound Systems & Society", "Digital Identities",
+  "Club Culture Roundtable", "Generative Music Workshop", "Light Art & Space",
+  "Urban Sound Mapping", "Inclusive Dance Floors", "The Algorithm Sessions",
+  "Hardware Hacking Live", "Club Night: Residents", "Vinyl & Memory",
+  "Open Source Beats", "Neon City Showcase", "Bass & Architecture",
+  "Electronic Futures Panel", "Drone Soundscape", "Rave History Talks",
+  "Community Radio Live", "Warehouse Aesthetics", "Decibel Discourse",
+  "Human × Machine", "Night Walks Audio Tour", "Coding the Club",
+  "Ambient & Drift", "Field Recordings Session", "Hybrid Performances",
+];
+
+const subtitles = ["Presented by:", "In collaboration with:", "Hosted by:", "Curated by:"];
+const partners = ["Paradox Breda", "Academie St. Joost", "BKKC", "Mezrab", "Stroomwerk", "Studio Lakmoes"];
+
+function makeEvents() {
+  const events = [];
+  let id = 0;
+  timeSlots.forEach((slot, si) => {
+    const day = si < 3 ? "1" : si < 6 ? "2" : "3";
+    const count = si < 2 ? 7 : si < 5 ? 9 : 8;
+    for (let i = 0; i < count && id < 75; i++) {
+      const theme = themes[Math.floor(Math.random() * themes.length)];
+      const endHour = (parseInt(slot.time) + 2) % 24;
+      events.push({
+        id: id++,
+        day,
+        timeLabel: slot.label,
+        startTime: slot.time,
+        endTime: `${String(endHour).padStart(2,'0')}:00`,
+        location: locations[Math.floor(Math.random() * locations.length)],
+        title: eventNames[id % eventNames.length],
+        subtitle: `${subtitles[Math.floor(Math.random()*subtitles.length)]} ${partners[Math.floor(Math.random()*partners.length)]}`,
+        theme,
+        type: types[Math.floor(Math.random() * types.length)],
+        emoji: emojis[Math.floor(Math.random() * emojis.length)],
+        saved: false,
+      });
+    }
+  });
+  return events;
+}
+
+let events = makeEvents();
+let activeDay = null;
+let activeCat = "all";
+let activeLocation = null;
+
+// ─── RENDER LOCATIONS ────────────────────────────────────────────────────────
+function renderLocations() {
+  const list = document.getElementById('locationList');
+  list.innerHTML = locations.map(loc => `
+    <button class="loc-btn ${activeLocation === loc ? 'active' : ''}"
+      onclick="filterLocation('${loc}', this)">${loc}</button>
+  `).join('');
+}
+
+// ─── RENDER EVENTS ───────────────────────────────────────────────────────────
+function renderEvents(filtered) {
+  const container = document.getElementById('eventList');
+  document.getElementById('count').textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <h3>No Events Found</h3>
+        <p>Try adjusting your filters</p>
+      </div>`;
+    return;
+  }
+
+  // Group by timeLabel
+  const groups = {};
+  filtered.forEach(e => {
+    if (!groups[e.timeLabel]) groups[e.timeLabel] = [];
+    groups[e.timeLabel].push(e);
+  });
+
+  container.innerHTML = Object.entries(groups).map(([label, evts]) => `
+    <div class="time-divider">${label}</div>
+    ${evts.map(e => `
+      <div class="event-card" onclick="void(0)">
+        <div class="event-img">${e.emoji}</div>
+        <div>
+          <div class="event-meta">
+            <span class="meta-item">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z"/></svg>
+              ${['DO 26/11','VR 27/11','ZA 28/11'][e.day-1]}
+            </span>
+            <span class="meta-item">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+              ${e.startTime} – ${e.endTime}
+            </span>
+            <span class="meta-item">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
+              ${e.location}
+            </span>
+          </div>
+          <div class="event-title">${e.title}</div>
+          <div class="event-subtitle">${e.subtitle}</div>
+          <div class="event-tags">
+            <span class="tag tag-${e.theme}">${e.theme === 'talks' ? '⬡ TURF Talks' : e.theme === 'live' ? '◈ TURF Live' : '◉ By Night'}</span>
+            <span class="tag tag-type">${e.type}</span>
+          </div>
+        </div>
+        <button class="bookmark-btn ${e.saved ? 'saved' : ''}" onclick="event.stopPropagation(); toggleSave(${e.id}, this)">
+          ${e.saved ? '★' : '☆'}
+        </button>
+      </div>
+    `).join('')}
+  `).join('');
+}
+
+// ─── FILTERS ─────────────────────────────────────────────────────────────────
+function applyFilters() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const filtered = events.filter(e => {
+    if (activeDay && e.day !== activeDay) return false;
+    if (activeCat !== 'all' && e.theme !== activeCat) return false;
+    if (activeLocation && e.location !== activeLocation) return false;
+    if (q && !e.title.toLowerCase().includes(q) && !e.location.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  renderEvents(filtered);
+}
+
+function filterDay(day, btn) {
+  if (activeDay === day) {
+    activeDay = null;
+    btn.classList.remove('active');
+  } else {
+    document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+    activeDay = day;
+    btn.classList.add('active');
+  }
+  applyFilters();
+}
+
+function clearDate() {
+  activeDay = null;
+  document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+  applyFilters();
+}
+
+function filterCat(cat, btn) {
+  activeCat = cat;
+  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function filterLocation(loc, btn) {
+  if (activeLocation === loc) {
+    activeLocation = null;
+  } else {
+    activeLocation = loc;
+  }
+  renderLocations();
+  applyFilters();
+}
+
+function clearLocation() {
+  activeLocation = null;
+  renderLocations();
+  applyFilters();
+}
+
+function toggleSave(id, btn) {
+  const e = events.find(x => x.id === id);
+  if (e) {
+    e.saved = !e.saved;
+    btn.classList.toggle('saved');
+    btn.textContent = e.saved ? '★' : '☆';
+  }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+renderLocations();
+applyFilters();
+</script>
+</body>
+</html>
