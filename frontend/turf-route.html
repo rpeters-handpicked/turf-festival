@@ -229,7 +229,7 @@ async function initMap() {
             <div class="popup-name">${loc.naam}</div>
             ${loc.adres ? `<div class="popup-address">${loc.adres}</div>` : ''}
             <div class="popup-days">${dagenHtml}</div>
-            <a href="${PROGRAM_URL}?location=${encodeURIComponent(loc.naam)}" class="popup-link">
+            <a href="${PROGRAM_URL}?location=${encodeURIComponent(loc.naam)}" class="popup-link" target="_top">
               Bekijk programma →
             </a>
           </div>
