@@ -854,10 +854,8 @@ class TurfProgramma extends HTMLElement {
         padding: 4px 12px; font-family: var(--font-body); font-size: 10px; font-weight: 600;
         letter-spacing: 0.5px; text-transform: uppercase; border-radius: var(--radius);
       }
-      .tag-talks { background: rgba(232,93,58,0.2); color: var(--tag-talks); }
-      .tag-live { background: rgba(217,64,128,0.2); color: var(--tag-live); }
-      .tag-night { background: rgba(155,59,245,0.2); color: var(--tag-night); }
-      .tag-type { background: var(--surface); color: var(--muted); }
+      .tag-talks, .tag-live, .tag-night { background: #111; color: #fff; }
+      .tag-type { background: #111; color: #fff; }
 
       /* ── FAVORITE BUTTONS ── */
       .fav-btn {
