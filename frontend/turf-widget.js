@@ -33,15 +33,15 @@ class TurfProgramma extends HTMLElement {
     return idx === -1 // returns true if now favorited
   }
 
-  // DEV MODE: simulate time as Thursday 10:30 — set to null for real time
-  get devTime() { return new Date('2026-11-26T10:30:00') }
-  // get devTime() { return null }
-
-  getNow() { return this.devTime || new Date() }
+  getNow() {
+    const cfg = typeof TURF_CONFIG !== 'undefined' ? TURF_CONFIG : {}
+    return cfg.devTime ? new Date(cfg.devTime) : new Date()
+  }
 
   isEventLive(e) {
     const now = this.getNow()
-    const dagDate = { dag1: '2026-11-26', dag2: '2026-11-27', dag3: '2026-11-28' }
+    const cfg = typeof TURF_CONFIG !== 'undefined' ? TURF_CONFIG : {}
+    const dagDate = cfg.festivalDates || { dag1: '2026-11-26', dag2: '2026-11-27', dag3: '2026-11-28' }
     const dateStr = dagDate[e.dag]
     if (!dateStr || !e.startTime) return false
     const start = new Date(`${dateStr}T${e.startTime}:00`)
@@ -51,9 +51,10 @@ class TurfProgramma extends HTMLElement {
     return now >= start && now < end
   }
 
-  get routeUrl() { return this.getAttribute('route-url') || '/route' }
-  get projectId() { return this.getAttribute('project-id') || 'x545nfex' }
-  get dataset() { return this.getAttribute('dataset') || 'production' }
+  get cfg() { return typeof TURF_CONFIG !== 'undefined' ? TURF_CONFIG : {} }
+  get routeUrl() { return this.getAttribute('route-url') || this.cfg.routeUrl || '/route' }
+  get projectId() { return this.getAttribute('project-id') || this.cfg.sanityProjectId || 'x545nfex' }
+  get dataset() { return this.getAttribute('dataset') || this.cfg.sanityDataset || 'production' }
   get cdnUrl() { return `https://${this.projectId}.api.sanity.io/v2024-01-01/data/query/${this.dataset}` }
 
   async connectedCallback() {
@@ -497,7 +498,8 @@ class TurfProgramma extends HTMLElement {
 
     // Google Maps embed URL
     const mapQuery = encodeURIComponent(`${e.locatieNaam}${e.locatieAdres ? ', ' + e.locatieAdres : ', Breda'}`)
-    const mapHtml = `<div class="map-container"><iframe src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBKtiBfiuLmG_td0BKfK6XABATDe8P1YPw&q=${mapQuery}&zoom=15" allowfullscreen loading="lazy"></iframe></div>`
+    const mapsKey = this.cfg.googleMapsApiKey || 'AIzaSyBKtiBfiuLmG_td0BKfK6XABATDe8P1YPw'
+    const mapHtml = `<div class="map-container"><iframe src="https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=${mapQuery}&zoom=15" allowfullscreen loading="lazy"></iframe></div>`
 
     root.innerHTML = `
       <div class="back-bar">

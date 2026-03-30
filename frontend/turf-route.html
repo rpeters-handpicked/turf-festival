@@ -145,19 +145,21 @@
 
 <div class="header">
   <h1>TURF Route</h1>
-  <a href="/program-copy" class="back-link">
+  <a href="" class="back-link" id="backLink">
     ← Programma
   </a>
 </div>
 <div id="map"></div>
 <div class="loading" id="loading">Kaart laden...</div>
 
+<script src="turf-config.js"></script>
 <script>
-// ─── CONFIG ─────────────────────────────────────────────────────────────────
-const SANITY_PROJECT_ID = 'x545nfex';
-const SANITY_DATASET = 'production';
+// ─── CONFIG (from turf-config.js) ───────────────────────────────────────────
+const cfg = typeof TURF_CONFIG !== 'undefined' ? TURF_CONFIG : {};
+const SANITY_PROJECT_ID = cfg.sanityProjectId || 'x545nfex';
+const SANITY_DATASET = cfg.sanityDataset || 'production';
 const SANITY_CDN = `https://${SANITY_PROJECT_ID}.api.sanity.io/v2024-01-01/data/query/${SANITY_DATASET}`;
-const PROGRAM_URL = new URLSearchParams(window.location.search).get('programUrl') || 'https://turf-breda.webflow.io/program-copy';
+const PROGRAM_URL = new URLSearchParams(window.location.search).get('programUrl') || cfg.programUrl || '/program-copy';
 
 const dagLabels = {
   dag1: 'DO 26/11',
@@ -171,6 +173,9 @@ async function sanityFetch(query) {
   const data = await res.json();
   return data.result;
 }
+
+// Set back link from config
+document.getElementById('backLink').href = PROGRAM_URL;
 
 // ─── LOAD DATA ──────────────────────────────────────────────────────────────
 async function loadData() {
@@ -282,7 +287,13 @@ function geocodeAddress(geocoder, address) {
     });
   });
 }
+
+// Load Google Maps with key from config
+const mapsKey = cfg.googleMapsApiKey || 'AIzaSyBKtiBfiuLmG_td0BKfK6XABATDe8P1YPw';
+const s = document.createElement('script');
+s.src = `https://maps.googleapis.com/maps/api/js?key=${mapsKey}&callback=initMap`;
+s.async = true;
+document.body.appendChild(s);
 </script>
-<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBKtiBfiuLmG_td0BKfK6XABATDe8P1YPw&callback=initMap"></script>
 </body>
 </html>

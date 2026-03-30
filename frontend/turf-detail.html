@@ -595,10 +595,12 @@
   </aside>
 </div>
 
+<script src="turf-config.js"></script>
 <script>
 // ─── SANITY CLIENT ──────────────────────────────────────────────────────────
-const SANITY_PROJECT_ID = 'x545nfex';
-const SANITY_DATASET = 'production';
+const _cfg = typeof TURF_CONFIG !== 'undefined' ? TURF_CONFIG : {};
+const SANITY_PROJECT_ID = _cfg.sanityProjectId || 'x545nfex';
+const SANITY_DATASET = _cfg.sanityDataset || 'production';
 const SANITY_CDN = `https://${SANITY_PROJECT_ID}.api.sanity.io/v2024-01-01/data/query/${SANITY_DATASET}`;
 
 async function sanityFetch(query, params = {}) {
