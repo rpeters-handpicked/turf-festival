@@ -53,19 +53,48 @@
   }
 
   /* Custom InfoWindow styling */
-  .gm-style-iw-c { border-radius: 16px !important; padding: 0 !important; }
+  .gm-style-iw-c {
+    border-radius: 16px !important;
+    padding: 0 !important;
+    background: #111 !important;
+    border: none !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
+  }
   .gm-style-iw-d { overflow: hidden !important; padding: 0 !important; }
   .gm-style-iw-tc { display: none !important; }
-  .gm-ui-hover-effect { top: 8px !important; right: 8px !important; }
+  /* White close button */
+  .gm-ui-hover-effect {
+    top: 12px !important; right: 12px !important;
+    width: 28px !important; height: 28px !important;
+    background: none !important;
+    opacity: 1 !important;
+  }
+  .gm-ui-hover-effect > span {
+    background-color: #fff !important;
+    width: 18px !important; height: 18px !important;
+    margin: 5px !important;
+  }
+  /* Remove white border/background around infowindow */
+  .gm-style-iw-chr { display: none !important; }
+  .gm-style .gm-style-iw-c button { display: none !important; }
 
   .popup {
     background: #111;
     color: #fff;
-    padding: 24px;
+    padding: 28px;
     min-width: 260px;
     max-width: 320px;
     font-family: 'Barlow', sans-serif;
+    position: relative;
   }
+  .popup-close {
+    position: absolute; top: 12px; right: 12px;
+    background: none; border: none; color: rgba(255,255,255,0.5);
+    font-size: 18px; cursor: pointer; width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.2s;
+  }
+  .popup-close:hover { color: #fff; }
   .popup-name {
     font-size: 22px;
     font-weight: 700;
@@ -216,6 +245,7 @@ async function initMap() {
       const infoWindow = new google.maps.InfoWindow({
         content: `
           <div class="popup">
+            <button class="popup-close" onclick="this.closest('.gm-style-iw-c').querySelector('button')?.click(); return false;">✕</button>
             <div class="popup-name">${loc.naam}</div>
             ${loc.adres ? `<div class="popup-address">${loc.adres}</div>` : ''}
             <div class="popup-days">${dagenHtml}</div>
