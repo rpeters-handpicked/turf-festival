@@ -5,33 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Test — TURF Widget Embed</title>
 <style>
-  /* Simuleert een Webflow-achtige host pagina */
   body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f5f5f5;
-    color: #333;
+    font-family: 'Barlow', Arial, sans-serif;
+    background: linear-gradient(135deg, #d4690e 0%, #e85d3a 25%, #d94080 50%, #9b3bf5 100%);
+    color: #fff;
+    min-height: 100vh;
   }
-  header {
-    background: #fff;
-    padding: 20px 40px;
-    border-bottom: 1px solid #ddd;
+  .page-header {
+    padding: 40px 40px 20px;
+    text-align: center;
   }
-  header h1 { font-size: 24px; }
+  .page-header h1 {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    opacity: 0.6;
+  }
   .container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 40px 20px;
+    padding: 0 20px 60px;
   }
-  h2 { margin-bottom: 20px; color: #666; }
 </style>
 </head>
 <body>
-  <header>
-    <h1>TURF Event Website (Webflow simulatie)</h1>
-  </header>
+  <div class="page-header">
+    <h1>TURF — Program (Webflow embed test)</h1>
+  </div>
   <div class="container">
-    <h2>Programma</h2>
     <turf-programma></turf-programma>
   </div>
   <script src="turf-widget.js"></script>
