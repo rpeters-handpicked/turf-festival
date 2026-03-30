@@ -33,6 +33,24 @@ class TurfProgramma extends HTMLElement {
     return idx === -1 // returns true if now favorited
   }
 
+  // DEV MODE: simulate time as Thursday 10:30 — set to null for real time
+  get devTime() { return new Date('2026-11-26T10:30:00') }
+  // get devTime() { return null }
+
+  getNow() { return this.devTime || new Date() }
+
+  isEventLive(e) {
+    const now = this.getNow()
+    const dagDate = { dag1: '2026-11-26', dag2: '2026-11-27', dag3: '2026-11-28' }
+    const dateStr = dagDate[e.dag]
+    if (!dateStr || !e.startTime) return false
+    const start = new Date(`${dateStr}T${e.startTime}:00`)
+    const end = e.endTime ? new Date(`${dateStr}T${e.endTime}:00`) : new Date(start.getTime() + 2 * 3600000)
+    // Handle overnight events (end < start means next day)
+    if (end <= start) end.setDate(end.getDate() + 1)
+    return now >= start && now < end
+  }
+
   get projectId() { return this.getAttribute('project-id') || 'x545nfex' }
   get dataset() { return this.getAttribute('dataset') || 'production' }
   get cdnUrl() { return `https://${this.projectId}.api.sanity.io/v2024-01-01/data/query/${this.dataset}` }
@@ -348,17 +366,21 @@ class TurfProgramma extends HTMLElement {
       groups[e.timeLabel].push(e)
     })
 
-    container.innerHTML = Object.entries(groups).map(([label, evts]) => `
-      <div class="time-divider">${label}</div>
+    container.innerHTML = Object.entries(groups).map(([label, evts]) => {
+      const hasLive = evts.some(e => this.isEventLive(e))
+      return `
+      <div class="time-divider ${hasLive ? 'has-live' : ''}">${hasLive ? '<span class="live-badge">LIVE</span>' : ''}${label}</div>
       ${evts.map(e => {
+        const isLive = this.isEventLive(e)
         const imgHtml = e.image
           ? `<img class="event-img" src="${e.image}?w=200&h=200&fit=crop" alt="${e.title}">`
           : `<div class="event-img">${this.themaLabels[e.theme]?.[0] || '◈'}</div>`
         return `
-        <div class="event-card" data-id="${e._id}">
+        <div class="event-card ${isLive ? 'event-live' : ''}" data-id="${e._id}">
           ${imgHtml}
           <div class="event-card-body">
             <div class="event-meta">
+              ${isLive ? '<span class="meta-live"><span class="live-dot"></span>LIVE</span>' : ''}
               <span class="meta-item">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z"/></svg>
                 ${this.dagLabels[e.dag]?.short || e.dag}
@@ -381,8 +403,8 @@ class TurfProgramma extends HTMLElement {
           </div>
           <button class="fav-btn ${this.isFavorite(e._id) ? 'fav-active' : ''}" data-fav="${e._id}" title="Favorite">★</button>
         </div>`
-      }).join('')}
-    `).join('')
+      }).join('')}`
+    }).join('')
 
     // Bind fav buttons (before card click to prevent propagation)
     container.querySelectorAll('.fav-btn').forEach(btn => {
@@ -732,11 +754,33 @@ class TurfProgramma extends HTMLElement {
         letter-spacing: 1px; color: var(--text); display: flex; align-items: center; gap: 12px;
         position: sticky; top: 0; z-index: 10; text-transform: uppercase;
       }
-      .time-divider::before {
-        content: ''; width: 8px; height: 8px; background: var(--accent);
-        border-radius: 50%; animation: pulse 2s infinite; box-shadow: 0 0 8px var(--accent);
+      .time-divider::before { display: none; }
+      .time-divider.has-live { color: #fff; }
+
+      .live-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: #e53935; color: #fff; padding: 3px 10px;
+        border-radius: var(--radius); font-size: 11px; font-weight: 700;
+        letter-spacing: 1px; margin-right: 8px; animation: livePulse 1.5s infinite;
       }
-      @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+      .live-badge::before {
+        content: ''; width: 6px; height: 6px; background: #fff;
+        border-radius: 50%;
+      }
+      @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+      .meta-live {
+        display: inline-flex; align-items: center; gap: 5px;
+        color: #e53935; font-family: var(--font-body); font-size: 10px;
+        font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+      }
+      .live-dot {
+        width: 6px; height: 6px; background: #e53935; border-radius: 50%;
+        animation: liveDot 1.5s infinite;
+      }
+      @keyframes liveDot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.7)} }
+
+      .event-live { background: rgba(229,57,53,0.06); }
 
       /* ── EVENT CARD ── */
       .event-card {
