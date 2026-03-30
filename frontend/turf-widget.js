@@ -100,7 +100,8 @@ class TurfProgramma extends HTMLElement {
             <span class="search-icon">⌕</span>
             <input type="text" id="search" placeholder="Search event..." value="${this.searchQuery}">
           </div>
-          <div class="filter-section">
+          <!-- Desktop filters -->
+          <div class="filter-section desktop-only">
             <div class="filter-label">Date <button id="clearDate">—</button></div>
             <div class="date-grid">
               <button class="date-btn ${this.activeDay === '1' ? 'active' : ''}" data-day="1"><span class="day-name">DO</span><span class="day-num">26-11</span></button>
@@ -108,9 +109,22 @@ class TurfProgramma extends HTMLElement {
               <button class="date-btn ${this.activeDay === '3' ? 'active' : ''}" data-day="3"><span class="day-name">ZA</span><span class="day-num">28-11</span></button>
             </div>
           </div>
-          <div class="filter-section">
+          <div class="filter-section desktop-only">
             <div class="filter-label">Location <button id="clearLoc">—</button></div>
             <div class="location-list" id="locationList"></div>
+          </div>
+          <!-- Mobile filters (dropdowns) -->
+          <div class="mobile-filters mobile-only">
+            <select class="mobile-select" id="mobileDate">
+              <option value="">Alle dagen</option>
+              <option value="1" ${this.activeDay === '1' ? 'selected' : ''}>DO 26-11</option>
+              <option value="2" ${this.activeDay === '2' ? 'selected' : ''}>VR 27-11</option>
+              <option value="3" ${this.activeDay === '3' ? 'selected' : ''}>ZA 28-11</option>
+            </select>
+            <select class="mobile-select" id="mobileLocation">
+              <option value="">Alle locaties</option>
+              ${this.locations.map(loc => `<option value="${loc}" ${this.activeLocation === loc ? 'selected' : ''}>${loc}</option>`).join('')}
+            </select>
           </div>
         </aside>
         <main class="content" id="eventList"></main>
@@ -170,6 +184,20 @@ class TurfProgramma extends HTMLElement {
     // Search
     root.getElementById('search')?.addEventListener('input', (e) => {
       this.searchQuery = e.target.value
+      this.applyFilters()
+    })
+
+    // Mobile dropdowns
+    root.getElementById('mobileDate')?.addEventListener('change', (e) => {
+      this.activeDay = e.target.value || null
+      // Sync desktop buttons
+      root.querySelectorAll('.date-btn').forEach(b => b.classList.toggle('active', b.dataset.day === this.activeDay))
+      this.applyFilters()
+    })
+
+    root.getElementById('mobileLocation')?.addEventListener('change', (e) => {
+      this.activeLocation = e.target.value || null
+      this.renderLocations()
       this.applyFilters()
     })
   }
@@ -721,6 +749,22 @@ class TurfProgramma extends HTMLElement {
         text-transform: uppercase; border-radius: var(--radius);
       }
 
+      /* ── MOBILE DROPDOWNS ── */
+      .mobile-only { display: none; }
+      .mobile-filters { display: none; gap: 8px; }
+      .mobile-select {
+        flex: 1; padding: 12px 16px; background: var(--pill-bg);
+        color: var(--text); border: 2px solid var(--border); border-radius: var(--radius);
+        font-family: var(--font-body); font-size: 13px; font-weight: 600;
+        text-transform: uppercase; cursor: pointer; outline: none;
+        appearance: none; -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 14px center;
+        padding-right: 36px;
+      }
+      .mobile-select:focus { border-color: var(--accent); }
+      .mobile-select option { background: #2a1a14; color: var(--text); }
+
       /* ── SCROLLBAR ── */
       ::-webkit-scrollbar { width: 4px; }
       ::-webkit-scrollbar-track { background: transparent; }
@@ -728,20 +772,28 @@ class TurfProgramma extends HTMLElement {
 
       /* ── MOBILE ── */
       @media (max-width: 768px) {
-        .category-bar { padding: 16px 20px; }
+        .category-bar { padding: 12px 16px; gap: 6px; }
+        .cat-tab { padding: 8px 16px; font-size: 11px; }
         .main { grid-template-columns: 1fr; }
-        .sidebar { position: static; height: auto; padding: 20px; }
-        .date-grid { flex-wrap: wrap; }
-        .event-card { grid-template-columns: 70px 1fr; gap: 14px; padding: 16px 20px; }
+        .sidebar { position: static; height: auto; padding: 16px; }
+        .desktop-only { display: none; }
+        .mobile-only { display: block; }
+        .mobile-filters { display: flex; }
+        .event-card { grid-template-columns: 70px 1fr; gap: 14px; padding: 16px 16px; }
         .event-img { width: 70px; height: 70px; font-size: 24px; }
         img.event-img { width: 70px; height: 70px; }
         .event-title { font-size: 22px; }
-        .time-divider { padding: 12px 20px; }
-        .back-bar { padding: 16px 20px; }
-        .detail-page { grid-template-columns: 1fr; padding: 24px 20px; }
+        .event-meta { gap: 8px; }
+        .meta-item { font-size: 9px; }
+        .time-divider { padding: 12px 16px; font-size: 12px; }
+        .back-bar { padding: 16px 16px; }
+        .detail-page { grid-template-columns: 1fr; padding: 20px 16px; }
         .detail-left { padding-right: 0; margin-bottom: 32px; }
-        .event-title-detail { font-size: 38px; }
+        .event-title-detail { font-size: 34px; }
+        .hero { padding: 24px; }
         .detail-sidebar { position: static; }
+        .results-count { margin-bottom: 16px; }
+        .search-box { margin-bottom: 16px; }
       }
     `
   }
