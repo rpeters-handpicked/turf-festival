@@ -519,18 +519,18 @@ class TurfProgramma extends HTMLElement {
 
       /* ── CATEGORY TABS ── */
       .category-bar {
-        display: flex; gap: 8px; padding: 20px 40px;
+        display: flex; gap: 10px; padding: 20px 40px;
         overflow-x: auto; flex-wrap: wrap;
       }
       .cat-tab {
-        padding: 10px 24px; border: none; background: var(--pill-bg);
-        color: var(--muted); font-family: var(--font-body); font-size: 13px;
-        font-weight: 600; cursor: pointer; transition: all 0.2s;
+        padding: 14px 28px; border: none; background: #111;
+        color: #fff; font-family: var(--font-body); font-size: 14px;
+        font-weight: 700; cursor: pointer; transition: all 0.2s;
         white-space: nowrap; text-transform: uppercase; letter-spacing: 0.5px;
         border-radius: var(--radius);
       }
-      .cat-tab:hover { background: rgba(255,255,255,0.15); color: var(--text); }
-      .cat-tab.active { background: var(--text); color: #1a1a1a; font-weight: 700; }
+      .cat-tab:hover { background: #333; }
+      .cat-tab.active { background: #fff; color: #111; }
       .cat-tab[data-cat="talks"].active { background: var(--tag-talks); color: #fff; }
       .cat-tab[data-cat="live"].active { background: var(--tag-live); color: #fff; }
       .cat-tab[data-cat="night"].active { background: var(--tag-night); color: #fff; }
@@ -544,10 +544,10 @@ class TurfProgramma extends HTMLElement {
         position: sticky; top: 0; height: 100vh; overflow-y: auto;
       }
       .results-count {
-        font-family: var(--font-body); font-size: 12px; font-weight: 500;
-        color: var(--muted); text-transform: uppercase; margin-bottom: 24px; letter-spacing: 0.5px;
+        font-family: var(--font-body); font-size: 12px; font-weight: 600;
+        color: #fff; text-transform: uppercase; margin-bottom: 24px; letter-spacing: 0.5px;
       }
-      .results-count strong { color: var(--accent); font-size: 16px; font-weight: 700; }
+      .results-count strong { color: #fff; font-size: 16px; font-weight: 700; }
       .search-box { position: relative; margin-bottom: 28px; }
       .search-box input {
         width: 100%; background: transparent; border: 2px solid var(--border);
@@ -560,39 +560,39 @@ class TurfProgramma extends HTMLElement {
       .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 16px; }
       .filter-section { margin-bottom: 28px; }
       .filter-label {
-        font-family: var(--font-body); font-size: 11px; font-weight: 600; letter-spacing: 1px;
-        text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+        font-family: var(--font-body); font-size: 11px; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; color: #fff; margin-bottom: 12px;
         display: flex; justify-content: space-between; align-items: center;
       }
-      .filter-label button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
-      .filter-label button:hover { color: var(--text); }
+      .filter-label button { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 16px; }
+      .filter-label button:hover { color: #fff; }
 
       /* ── DATE BUTTONS ── */
       .date-grid { display: flex; gap: 8px; }
       .date-btn {
-        padding: 10px 16px; border: none; background: var(--pill-bg);
-        color: var(--muted); font-family: var(--font-body); font-size: 12px; font-weight: 600;
+        padding: 12px 18px; border: none; background: #111;
+        color: #fff; font-family: var(--font-body); font-size: 12px; font-weight: 700;
         cursor: pointer; text-align: center; transition: all 0.2s; line-height: 1.4;
         border-radius: var(--radius);
       }
-      .date-btn:hover { background: rgba(255,255,255,0.15); color: var(--text); }
+      .date-btn:hover { background: #333; }
       .date-btn.active { background: var(--accent); color: #fff; }
-      .date-btn .day-name { display: block; font-size: 13px; font-weight: 700; text-transform: uppercase; }
+      .date-btn .day-name { display: block; font-size: 14px; font-weight: 700; text-transform: uppercase; }
       .date-btn .day-num { display: block; font-size: 10px; opacity: 0.7; margin-top: 2px; }
 
       /* ── LOCATION ── */
       .location-list { display: flex; flex-direction: column; gap: 2px; max-height: 220px; overflow-y: auto; }
       .loc-btn {
         padding: 8px 14px; border: none; background: transparent;
-        color: var(--muted); font-family: var(--font-body); font-size: 13px; font-weight: 500;
+        color: rgba(255,255,255,0.7); font-family: var(--font-body); font-size: 13px; font-weight: 500;
         cursor: pointer; text-align: left; transition: all 0.2s;
         display: flex; align-items: center; gap: 10px;
         border-radius: 8px;
       }
-      .loc-btn::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.2); flex-shrink: 0; transition: all 0.2s; }
-      .loc-btn:hover { color: var(--text); background: var(--surface); }
-      .loc-btn.active { color: var(--accent); background: rgba(232,93,58,0.1); }
-      .loc-btn.active::before { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+      .loc-btn::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3); flex-shrink: 0; transition: all 0.2s; }
+      .loc-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+      .loc-btn.active { color: #fff; font-weight: 700; background: rgba(255,255,255,0.1); }
+      .loc-btn.active::before { background: #fff; }
 
       /* ── TIME DIVIDER ── */
       .time-divider {
