@@ -15,8 +15,8 @@ const TURF_CONFIG = {
   googleMapsApiKey: 'AIzaSyBKtiBfiuLmG_td0BKfK6XABATDe8P1YPw',
 
   // ── URLs ────────────────────────────────────────────────────────────────
-  programUrl: '/program-copy',       // URL van de programma pagina (Webflow)
-  routeUrl: '/route',                // URL van de route pagina (Webflow)
+  programUrl: 'https://turf-breda.webflow.io/program-copy',  // URL van de programma pagina (Webflow)
+  routeUrl: 'https://turf-breda.webflow.io/route',           // URL van de route pagina (Webflow)
 
   // ── Live indicator ──────────────────────────────────────────────────────
   // Zet op null voor echte tijd, of een datum-string om te simuleren.
