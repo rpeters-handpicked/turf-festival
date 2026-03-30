@@ -7,6 +7,7 @@ class TurfProgramma extends HTMLElement {
     this.activeDay = null
     this.activeCat = 'all'
     this.activeLocation = null
+    this.activeType = null
     this.searchQuery = ''
     this.currentView = 'list'
     this.scrollPos = 0
@@ -79,6 +80,7 @@ class TurfProgramma extends HTMLElement {
     }))
 
     this.locations = [...new Set(this.events.map(e => e.location))].filter(Boolean).sort()
+    this.types = [...new Set(this.events.map(e => e.type))].filter(Boolean).sort()
   }
 
   // ─── LIST VIEW ──────────────────────────────────────────────────────────────
@@ -124,6 +126,10 @@ class TurfProgramma extends HTMLElement {
             <select class="mobile-select" id="mobileLocation">
               <option value="">Alle locaties</option>
               ${this.locations.map(loc => `<option value="${loc}" ${this.activeLocation === loc ? 'selected' : ''}>${loc}</option>`).join('')}
+            </select>
+            <select class="mobile-select" id="mobileType">
+              <option value="">Alle types</option>
+              ${this.types.map(t => `<option value="${t}" ${this.activeType === t ? 'selected' : ''}>${t}</option>`).join('')}
             </select>
           </div>
         </aside>
@@ -200,6 +206,11 @@ class TurfProgramma extends HTMLElement {
       this.renderLocations()
       this.applyFilters()
     })
+
+    root.getElementById('mobileType')?.addEventListener('change', (e) => {
+      this.activeType = e.target.value || null
+      this.applyFilters()
+    })
   }
 
   renderLocations() {
@@ -225,6 +236,7 @@ class TurfProgramma extends HTMLElement {
       if (this.activeDay && e.day !== this.activeDay) return false
       if (this.activeCat !== 'all' && e.theme !== this.activeCat) return false
       if (this.activeLocation && e.location !== this.activeLocation) return false
+      if (this.activeType && e.type !== this.activeType) return false
       if (q && !e.title.toLowerCase().includes(q) && !e.location.toLowerCase().includes(q)) return false
       return true
     })
@@ -751,7 +763,7 @@ class TurfProgramma extends HTMLElement {
 
       /* ── MOBILE DROPDOWNS ── */
       .mobile-only { display: none; }
-      .mobile-filters { display: none; gap: 8px; }
+      .mobile-filters { display: none; gap: 8px; flex-wrap: wrap; }
       .mobile-select {
         flex: 1; padding: 12px 16px; background: var(--pill-bg);
         color: var(--text); border: 2px solid var(--border); border-radius: var(--radius);
