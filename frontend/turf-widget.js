@@ -687,8 +687,8 @@ class TurfProgramma extends HTMLElement {
 
       /* ── CATEGORY TABS ── */
       .category-bar {
-        display: flex; gap: 10px; padding: 20px 40px;
-        overflow-x: auto; flex-wrap: wrap;
+        display: flex; gap: 10px; padding: 20px 24px;
+        overflow-x: auto; flex-wrap: wrap; align-items: center;
       }
       .cat-tab {
         padding: 14px 28px; border: none; background: #111;
