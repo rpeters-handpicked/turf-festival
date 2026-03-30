@@ -497,7 +497,7 @@ class TurfProgramma extends HTMLElement {
 
     // Google Maps embed URL
     const mapQuery = encodeURIComponent(`${e.locatieNaam}${e.locatieAdres ? ', ' + e.locatieAdres : ', Breda'}`)
-    const mapHtml = `<div class="map-container"><iframe src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${mapQuery}&zoom=15" allowfullscreen loading="lazy"></iframe></div>`
+    const mapHtml = `<div class="map-container"><iframe src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBKtiBfiuLmG_td0BKfK6XABATDe8P1YPw&q=${mapQuery}&zoom=15" allowfullscreen loading="lazy"></iframe></div>`
 
     root.innerHTML = `
       <div class="back-bar">
