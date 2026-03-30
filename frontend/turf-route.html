@@ -88,13 +88,14 @@
     position: relative;
   }
   .popup-close {
-    position: absolute; top: 12px; right: 12px;
-    background: none; border: none; color: rgba(255,255,255,0.5);
-    font-size: 18px; cursor: pointer; width: 28px; height: 28px;
-    display: flex; align-items: center; justify-content: center;
-    transition: color 0.2s;
+    position: absolute; top: -14px; right: -14px;
+    background: #fff; border: none; color: #111;
+    font-size: 14px; cursor: pointer; width: 28px; height: 28px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    font-weight: 700; line-height: 1;
   }
-  .popup-close:hover { color: #fff; }
+  .popup-close:hover { background: #e85d3a; color: #fff; }
   .popup-name {
     font-size: 22px;
     font-weight: 700;
