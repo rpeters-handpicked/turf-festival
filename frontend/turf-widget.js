@@ -20,7 +20,24 @@ class TurfProgramma extends HTMLElement {
   async connectedCallback() {
     this.shadowRoot.innerHTML = `<style>${this.getStyles()}</style><div class="root"><div class="loading">Programma laden...</div></div>`
     await this.loadEvents()
-    this.renderList()
+
+    // Check for deep link in URL hash
+    const hash = window.location.hash.slice(1)
+    if (hash) {
+      await this.renderDetail(hash)
+    } else {
+      this.renderList()
+    }
+
+    // Listen for back/forward navigation
+    window.addEventListener('hashchange', () => {
+      const id = window.location.hash.slice(1)
+      if (id) {
+        this.renderDetail(id)
+      } else {
+        this.renderList()
+      }
+    })
   }
 
   async sanityFetch(query, params = {}) {
@@ -302,6 +319,7 @@ class TurfProgramma extends HTMLElement {
     container.querySelectorAll('.event-card').forEach(card => {
       card.addEventListener('click', () => {
         this.scrollPos = container.scrollTop
+        window.history.pushState(null, '', `#${card.dataset.id}`)
         this.renderDetail(card.dataset.id)
       })
     })
@@ -403,7 +421,10 @@ class TurfProgramma extends HTMLElement {
     `
 
     // Back button
-    root.querySelector('#backBtn')?.addEventListener('click', () => this.renderList())
+    root.querySelector('#backBtn')?.addEventListener('click', () => {
+      window.history.pushState(null, '', window.location.pathname + window.location.search)
+      this.renderList()
+    })
 
     // Load related events
     if (e.locatieRef) {
@@ -433,7 +454,10 @@ class TurfProgramma extends HTMLElement {
         }).join('')
 
         relatedList.querySelectorAll('.related-event').forEach(el => {
-          el.addEventListener('click', () => this.renderDetail(el.dataset.id))
+          el.addEventListener('click', () => {
+            window.history.pushState(null, '', `#${el.dataset.id}`)
+            this.renderDetail(el.dataset.id)
+          })
         })
       } else if (relatedList) {
         relatedList.innerHTML = '<p style="color:var(--muted);font-size:13px;">Geen andere events op deze locatie</p>'
