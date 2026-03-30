@@ -634,7 +634,7 @@ function renderEvents(filtered) {
   container.innerHTML = Object.entries(groups).map(([label, evts]) => `
     <div class="time-divider">${label}</div>
     ${evts.map(e => `
-      <div class="event-card" onclick="void(0)">
+      <a class="event-card" href="turf-detail.html?id=${e.id}&title=${encodeURIComponent(e.title)}&day=${e.day}&start=${e.startTime}&end=${e.endTime}&location=${encodeURIComponent(e.location)}&theme=${e.theme}&type=${encodeURIComponent(e.type)}">
         <div class="event-img">${e.emoji}</div>
         <div>
           <div class="event-meta">
@@ -658,10 +658,10 @@ function renderEvents(filtered) {
             <span class="tag tag-type">${e.type}</span>
           </div>
         </div>
-        <button class="bookmark-btn ${e.saved ? 'saved' : ''}" onclick="event.stopPropagation(); toggleSave(${e.id}, this)">
+        <button class="bookmark-btn ${e.saved ? 'saved' : ''}" onclick="event.stopPropagation(); event.preventDefault(); toggleSave(${e.id}, this)">
           ${e.saved ? '★' : '☆'}
         </button>
-      </div>
+      </a>
     `).join('')}
   `).join('');
 }
