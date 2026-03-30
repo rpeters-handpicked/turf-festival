@@ -7,7 +7,7 @@ class TurfProgramma extends HTMLElement {
     this.activeDay = null
     this.activeCat = 'all'
     this.activeLocations = new Set()
-    this.locationsExpanded = false
+    this.locationsExpanded = true
     this.activeType = null
     this.activeTag = null
     this.showFavoritesOnly = false
@@ -195,9 +195,10 @@ class TurfProgramma extends HTMLElement {
               <option value="2" ${this.activeDay === '2' ? 'selected' : ''}>VR 27-11</option>
               <option value="3" ${this.activeDay === '3' ? 'selected' : ''}>ZA 28-11</option>
             </select>
-            <button class="mobile-select mobile-loc-btn" id="mobileLocBtn">
-              ${this.activeLocations.size > 0 ? `Locaties (${this.activeLocations.size})` : 'Alle locaties'}
-            </button>
+            <select class="mobile-select" id="mobileLocation">
+              <option value="">Alle locaties</option>
+              ${this.locations.map(loc => `<option value="${loc}" ${this.activeLocations.has(loc) ? 'selected' : ''}>${loc}</option>`).join('')}
+            </select>
             <select class="mobile-select" id="mobileCat">
               <option value="all" ${this.activeCat === 'all' ? 'selected' : ''}>All Events</option>
               <option value="talks" ${this.activeCat === 'talks' ? 'selected' : ''}>⬡ TURF Talks</option>
@@ -296,18 +297,6 @@ class TurfProgramma extends HTMLElement {
       if (arrow) arrow.classList.toggle('expanded', this.locationsExpanded)
     })
 
-    // Mobile location picker
-    root.getElementById('mobileLocBtn')?.addEventListener('click', () => {
-      this.locationsExpanded = !this.locationsExpanded
-      const overlay = root.getElementById('mobileLocOverlay')
-      if (overlay) overlay.classList.toggle('show', this.locationsExpanded)
-    })
-
-    root.getElementById('mobileLocClose')?.addEventListener('click', () => {
-      this.locationsExpanded = false
-      const overlay = root.getElementById('mobileLocOverlay')
-      if (overlay) overlay.classList.remove('show')
-    })
 
     // Search
     root.getElementById('search')?.addEventListener('input', (e) => {
@@ -323,7 +312,12 @@ class TurfProgramma extends HTMLElement {
       this.applyFilters()
     })
 
-    // Mobile location checkboxes handled in renderLocations
+    root.getElementById('mobileLocation')?.addEventListener('change', (e) => {
+      this.activeLocations.clear()
+      if (e.target.value) this.activeLocations.add(e.target.value)
+      this.renderLocations()
+      this.applyFilters()
+    })
 
     root.getElementById('mobileCat')?.addEventListener('change', (e) => {
       this.activeCat = e.target.value
@@ -390,50 +384,6 @@ class TurfProgramma extends HTMLElement {
       })
     }
 
-    // Mobile overlay checkboxes
-    const overlay = root.getElementById('mobileLocOverlay')
-    if (!overlay) {
-      // Create overlay once
-      const div = document.createElement('div')
-      div.id = 'mobileLocOverlay'
-      div.className = 'mobile-loc-overlay mobile-only'
-      div.innerHTML = `
-        <div class="mobile-loc-panel">
-          <div class="mobile-loc-header">
-            <span>Locaties</span>
-            <button id="mobileLocClose">✕</button>
-          </div>
-          <div class="mobile-loc-list" id="mobileLocList"></div>
-        </div>
-      `
-      root.querySelector('.root')?.appendChild(div)
-      root.getElementById('mobileLocClose')?.addEventListener('click', () => {
-        root.getElementById('mobileLocOverlay')?.classList.remove('show')
-        this.locationsExpanded = false
-      })
-    }
-
-    const mobileList = root.getElementById('mobileLocList')
-    if (mobileList) {
-      mobileList.innerHTML = this.locations.map(loc =>
-        `<label class="loc-check ${this.activeLocations.has(loc) ? 'active' : ''}">
-          <span class="loc-checkbox">${this.activeLocations.has(loc) ? '✓' : ''}</span>
-          <span>${loc}</span>
-        </label>`
-      ).join('')
-
-      mobileList.querySelectorAll('.loc-check').forEach((label, i) => {
-        label.addEventListener('click', () => {
-          const loc = this.locations[i]
-          if (this.activeLocations.has(loc)) this.activeLocations.delete(loc)
-          else this.activeLocations.add(loc)
-          this.renderLocations()
-          this.applyFilters()
-          const mBtn = root.getElementById('mobileLocBtn')
-          if (mBtn) mBtn.textContent = this.activeLocations.size > 0 ? `Locaties (${this.activeLocations.size})` : 'Alle locaties'
-        })
-      })
-    }
   }
 
   applyFilters() {
@@ -881,26 +831,6 @@ class TurfProgramma extends HTMLElement {
       }
       .loc-check.active .loc-checkbox { background: #fff; border-color: #fff; }
 
-      /* Mobile location overlay */
-      .mobile-loc-overlay {
-        display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.6); z-index: 1000; align-items: flex-end; justify-content: center;
-      }
-      .mobile-loc-overlay.show { display: flex; }
-      .mobile-loc-panel {
-        background: #111; border-radius: 16px 16px 0 0; width: 100%; max-height: 70vh;
-        display: flex; flex-direction: column; overflow: hidden;
-      }
-      .mobile-loc-header {
-        padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
-        border-bottom: 1px solid rgba(255,255,255,0.1); font-family: var(--font-body);
-        font-size: 15px; font-weight: 700; text-transform: uppercase; color: #fff;
-      }
-      .mobile-loc-header button {
-        background: none; border: none; color: rgba(255,255,255,0.5); font-size: 18px; cursor: pointer;
-      }
-      .mobile-loc-list { padding: 8px 12px; overflow-y: auto; flex: 1; }
-      .mobile-loc-btn { text-align: left; }
 
       /* ── TIME DIVIDER ── */
       .time-divider {
