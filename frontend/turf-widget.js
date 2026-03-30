@@ -8,9 +8,28 @@ class TurfProgramma extends HTMLElement {
     this.activeCat = 'all'
     this.activeLocation = null
     this.activeType = null
+    this.showFavoritesOnly = false
     this.searchQuery = ''
     this.currentView = 'list'
     this.scrollPos = 0
+  }
+
+  // ─── FAVORITES (localStorage) ─────────────────────────────────────────────
+  getFavorites() {
+    try { return JSON.parse(localStorage.getItem('turf-favorites') || '[]') } catch { return [] }
+  }
+  saveFavorites(favs) {
+    localStorage.setItem('turf-favorites', JSON.stringify(favs))
+  }
+  isFavorite(id) {
+    return this.getFavorites().includes(id)
+  }
+  toggleFavorite(id) {
+    const favs = this.getFavorites()
+    const idx = favs.indexOf(id)
+    if (idx > -1) { favs.splice(idx, 1) } else { favs.push(id) }
+    this.saveFavorites(favs)
+    return idx === -1 // returns true if now favorited
   }
 
   get projectId() { return this.getAttribute('project-id') || 'x545nfex' }
@@ -111,6 +130,7 @@ class TurfProgramma extends HTMLElement {
         <button class="cat-tab" data-cat="talks">⬡ TURF Talks</button>
         <button class="cat-tab" data-cat="live">◈ TURF Live</button>
         <button class="cat-tab" data-cat="night">◉ TURF by Night</button>
+        <button class="cat-tab cat-tab-fav ${this.showFavoritesOnly ? 'active' : ''}" id="favFilter">★ Favorites</button>
       </div>
       <div class="main">
         <aside class="sidebar">
@@ -149,6 +169,7 @@ class TurfProgramma extends HTMLElement {
               <option value="talks" ${this.activeCat === 'talks' ? 'selected' : ''}>⬡ TURF Talks</option>
               <option value="live" ${this.activeCat === 'live' ? 'selected' : ''}>◈ TURF Live</option>
               <option value="night" ${this.activeCat === 'night' ? 'selected' : ''}>◉ TURF by Night</option>
+              <option value="favorites" ${this.showFavoritesOnly ? 'selected' : ''}>★ Favorites</option>
             </select>
           </div>
         </aside>
@@ -169,13 +190,29 @@ class TurfProgramma extends HTMLElement {
     const root = this.shadowRoot
 
     // Category tabs
-    root.querySelectorAll('.cat-tab').forEach(btn => {
+    root.querySelectorAll('.cat-tab:not(.cat-tab-fav)').forEach(btn => {
       btn.addEventListener('click', () => {
         root.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'))
         btn.classList.add('active')
         this.activeCat = btn.dataset.cat
+        this.showFavoritesOnly = false
         this.applyFilters()
       })
+    })
+
+    // Favorites filter toggle
+    root.getElementById('favFilter')?.addEventListener('click', () => {
+      this.showFavoritesOnly = !this.showFavoritesOnly
+      if (this.showFavoritesOnly) {
+        root.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'))
+        root.getElementById('favFilter').classList.add('active')
+        this.activeCat = 'all'
+      } else {
+        root.getElementById('favFilter').classList.remove('active')
+        const allTab = root.querySelector('.cat-tab[data-cat="all"]')
+        if (allTab) allTab.classList.add('active')
+      }
+      this.applyFilters()
     })
 
     // Date buttons
@@ -227,9 +264,21 @@ class TurfProgramma extends HTMLElement {
     })
 
     root.getElementById('mobileCat')?.addEventListener('change', (e) => {
-      this.activeCat = e.target.value
+      const val = e.target.value
+      if (val === 'favorites') {
+        this.showFavoritesOnly = true
+        this.activeCat = 'all'
+      } else {
+        this.showFavoritesOnly = false
+        this.activeCat = val
+      }
       // Sync desktop tabs
-      root.querySelectorAll('.cat-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === this.activeCat))
+      root.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'))
+      if (this.showFavoritesOnly) {
+        root.getElementById('favFilter')?.classList.add('active')
+      } else {
+        root.querySelector(`.cat-tab[data-cat="${this.activeCat}"]`)?.classList.add('active')
+      }
       this.applyFilters()
     })
   }
@@ -253,7 +302,9 @@ class TurfProgramma extends HTMLElement {
 
   applyFilters() {
     const q = this.searchQuery.toLowerCase()
+    const favs = this.showFavoritesOnly ? this.getFavorites() : null
     const filtered = this.events.filter(e => {
+      if (favs && !favs.includes(e._id)) return false
       if (this.activeDay && e.day !== this.activeDay) return false
       if (this.activeCat !== 'all' && e.theme !== this.activeCat) return false
       if (this.activeLocation && e.location !== this.activeLocation) return false
@@ -289,7 +340,7 @@ class TurfProgramma extends HTMLElement {
         return `
         <div class="event-card" data-id="${e._id}">
           ${imgHtml}
-          <div>
+          <div class="event-card-body">
             <div class="event-meta">
               <span class="meta-item">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z"/></svg>
@@ -311,9 +362,22 @@ class TurfProgramma extends HTMLElement {
               ${e.type ? `<span class="tag tag-type">${e.type}</span>` : ''}
             </div>
           </div>
+          <button class="fav-btn ${this.isFavorite(e._id) ? 'fav-active' : ''}" data-fav="${e._id}" title="Favorite">★</button>
         </div>`
       }).join('')}
     `).join('')
+
+    // Bind fav buttons (before card click to prevent propagation)
+    container.querySelectorAll('.fav-btn').forEach(btn => {
+      btn.addEventListener('click', (ev) => {
+        ev.stopPropagation()
+        const id = btn.dataset.fav
+        const isFav = this.toggleFavorite(id)
+        btn.classList.toggle('fav-active', isFav)
+        // If showing favorites only, re-filter
+        if (this.showFavoritesOnly) this.applyFilters()
+      })
+    })
 
     // Bind click events on cards
     container.querySelectorAll('.event-card').forEach(card => {
@@ -378,6 +442,10 @@ class TurfProgramma extends HTMLElement {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
           Terug naar programma
         </button>
+        <button class="detail-fav-btn ${this.isFavorite(eventId) ? 'fav-active' : ''}" id="detailFav">
+          <span class="detail-fav-icon">★</span>
+          <span class="detail-fav-label">${this.isFavorite(eventId) ? 'Saved' : 'Favorite'}</span>
+        </button>
       </div>
       <div class="detail-page">
         <div class="detail-left">
@@ -424,6 +492,14 @@ class TurfProgramma extends HTMLElement {
     root.querySelector('#backBtn')?.addEventListener('click', () => {
       window.history.pushState(null, '', window.location.pathname + window.location.search)
       this.renderList()
+    })
+
+    // Detail favorite button
+    root.querySelector('#detailFav')?.addEventListener('click', () => {
+      const isFav = this.toggleFavorite(eventId)
+      const btn = root.querySelector('#detailFav')
+      btn.classList.toggle('fav-active', isFav)
+      btn.querySelector('.detail-fav-label').textContent = isFav ? 'Saved' : 'Favorite'
     })
 
     // Load related events
@@ -637,7 +713,7 @@ class TurfProgramma extends HTMLElement {
 
       /* ── EVENT CARD ── */
       .event-card {
-        display: grid; grid-template-columns: 90px 1fr; gap: 20px; align-items: start;
+        display: grid; grid-template-columns: 90px 1fr auto; gap: 20px; align-items: start;
         padding: 20px 32px;
         border-bottom: 1px solid var(--border);
         transition: all 0.2s; cursor: pointer; color: inherit;
@@ -674,6 +750,30 @@ class TurfProgramma extends HTMLElement {
       .tag-live { background: rgba(217,64,128,0.2); color: var(--tag-live); }
       .tag-night { background: rgba(155,59,245,0.2); color: var(--tag-night); }
       .tag-type { background: var(--surface); color: var(--muted); }
+
+      /* ── FAVORITE BUTTONS ── */
+      .fav-btn {
+        background: none; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.3);
+        width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+        font-size: 18px; display: flex; align-items: center; justify-content: center;
+        transition: all 0.2s; flex-shrink: 0; align-self: center;
+      }
+      .fav-btn:hover { border-color: #fff; color: #fff; }
+      .fav-btn.fav-active { background: #fff; border-color: #fff; color: #111; }
+
+      .back-bar { display: flex; align-items: center; justify-content: space-between; }
+      .detail-fav-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 10px 24px; background: #111; border: none; color: #fff;
+        font-family: var(--font-heading); font-size: 16px; font-weight: 400;
+        text-transform: uppercase; letter-spacing: 1px;
+        border-radius: var(--radius); cursor: pointer; transition: all 0.2s;
+      }
+      .detail-fav-btn:hover { background: transparent; outline: 2px solid #fff; outline-offset: -2px; }
+      .detail-fav-btn.fav-active { background: #fff; color: #111; }
+      .detail-fav-icon { font-size: 14px; }
+
+      .cat-tab-fav { margin-left: auto; }
 
       .empty-state { padding: 80px 32px; text-align: center; color: var(--muted); }
       .empty-state h3 { font-family: var(--font-heading); font-size: 42px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; color: rgba(255,255,255,0.2); }
@@ -835,7 +935,8 @@ class TurfProgramma extends HTMLElement {
         .desktop-only { display: none; }
         .mobile-only { display: block; }
         .mobile-filters { display: flex; }
-        .event-card { grid-template-columns: 70px 1fr; gap: 14px; padding: 16px 16px; }
+        .event-card { grid-template-columns: 70px 1fr auto; gap: 14px; padding: 16px 16px; }
+        .fav-btn { width: 34px; height: 34px; font-size: 14px; }
         .event-img { width: 70px; height: 70px; font-size: 24px; }
         img.event-img { width: 70px; height: 70px; }
         .event-title { font-size: 22px; }
