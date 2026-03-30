@@ -325,7 +325,7 @@ class TurfProgramma extends HTMLElement {
       if (this.activeCat !== 'all' && e.theme !== this.activeCat) return false
       if (this.activeLocation && e.location !== this.activeLocation) return false
       if (this.activeTag && (!e.tags || !e.tags.includes(this.activeTag))) return false
-      if (q && !e.title.toLowerCase().includes(q) && !e.location.toLowerCase().includes(q)) return false
+      if (q && !e.title.toLowerCase().includes(q) && !e.location.toLowerCase().includes(q) && !(e.tags && e.tags.some(t => t.toLowerCase().includes(q)))) return false
       return true
     })
     this.renderEvents(filtered)
