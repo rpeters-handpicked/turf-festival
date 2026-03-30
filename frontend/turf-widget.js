@@ -675,7 +675,7 @@ class TurfProgramma extends HTMLElement {
         text-transform: uppercase; color: #fff; margin-bottom: 12px;
         display: flex; justify-content: space-between; align-items: center;
       }
-      .filter-label button { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 16px; }
+      .filter-label button { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 16px; display: none; }
       .filter-label button:hover { color: #fff; }
 
       /* ── DATE BUTTONS ── */
