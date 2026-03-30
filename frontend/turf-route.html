@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TURF — Route</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: #0a0a0a;
+    color: #fff;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .header {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+    flex-shrink: 0;
+  }
+  .header h1 {
+    font-family: 'Barlow', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255,255,255,0.6);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: #fff; }
+  #map { flex: 1; width: 100%; }
+  .loading {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.5); font-size: 14px; font-weight: 500;
+  }
+
+  /* Custom InfoWindow styling */
+  .gm-style-iw-c { border-radius: 16px !important; padding: 0 !important; }
+  .gm-style-iw-d { overflow: hidden !important; padding: 0 !important; }
+  .gm-style-iw-tc { display: none !important; }
+  .gm-ui-hover-effect { top: 8px !important; right: 8px !important; }
+
+  .popup {
+    background: #111;
+    color: #fff;
+    padding: 24px;
+    min-width: 260px;
+    max-width: 320px;
+    font-family: 'Barlow', sans-serif;
+  }
+  .popup-name {
+    font-size: 22px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .popup-address {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 16px;
+  }
+  .popup-days {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .popup-day {
+    padding: 4px 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .popup-day.active { background: #e85d3a; }
+  .popup-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: #fff;
+    color: #111;
+    text-decoration: none;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+  .popup-link:hover { background: #e85d3a; color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>TURF Route</h1>
+  <a href="turf-programma.html" class="back-link">
+    ← Programma
+  </a>
+</div>
+<div id="map"></div>
+<div class="loading" id="loading">Kaart laden...</div>
+
+<script>
+// ─── CONFIG ─────────────────────────────────────────────────────────────────
+const SANITY_PROJECT_ID = 'x545nfex';
+const SANITY_DATASET = 'production';
+const SANITY_CDN = `https://${SANITY_PROJECT_ID}.api.sanity.io/v2024-01-01/data/query/${SANITY_DATASET}`;
+const PROGRAM_URL = 'turf-programma.html';
+
+const dagLabels = {
+  dag1: 'DO 26/11',
+  dag2: 'VR 27/11',
+  dag3: 'ZA 28/11',
+};
+
+async function sanityFetch(query) {
+  const url = `${SANITY_CDN}?query=${encodeURIComponent(query)}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.result;
+}
+
+// ─── LOAD DATA ──────────────────────────────────────────────────────────────
+async function loadData() {
+  const [locaties, events] = await Promise.all([
+    sanityFetch(`*[_type == "locatie"] { _id, naam, adres }`),
+    sanityFetch(`*[_type == "event" && gepubliceerd == true] { dag, "locatieRef": locatie._ref }`)
+  ]);
+
+  // Build map: locatie _id → set of dagen
+  const locDagen = {};
+  events.forEach(e => {
+    if (!e.locatieRef) return;
+    if (!locDagen[e.locatieRef]) locDagen[e.locatieRef] = new Set();
+    locDagen[e.locatieRef].add(e.dag);
+  });
+
+  return locaties.map(loc => ({
+    ...loc,
+    dagen: locDagen[loc._id] ? [...locDagen[loc._id]].sort() : [],
+  })).filter(loc => loc.dagen.length > 0); // Only show locations with events
+}
+
+// ─── INIT MAP ───────────────────────────────────────────────────────────────
+let map;
+let openInfoWindow = null;
+
+async function initMap() {
+  const locaties = await loadData();
+  document.getElementById('loading').style.display = 'none';
+
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 51.5880, lng: 4.7760 },
+    zoom: 14,
+    styles: [
+      { elementType: 'geometry', stylers: [{ color: '#1a1a1a' }] },
+      { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a1a' }] },
+      { elementType: 'labels.text.fill', stylers: [{ color: '#666' }] },
+      { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2a2a2a' }] },
+      { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#555' }] },
+      { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#111' }] },
+      { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+      { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#1e1e1e' }] },
+      { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+    ],
+    disableDefaultUI: true,
+    zoomControl: true,
+    fullscreenControl: true,
+  });
+
+  // Geocode and place markers
+  const geocoder = new google.maps.Geocoder();
+  const bounds = new google.maps.LatLngBounds();
+
+  for (const loc of locaties) {
+    const address = `${loc.naam}${loc.adres ? ', ' + loc.adres : ''}, Breda, Nederland`;
+
+    try {
+      const result = await geocodeAddress(geocoder, address);
+      if (!result) continue;
+
+      const marker = new google.maps.Marker({
+        position: result,
+        map,
+        title: loc.naam,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: '#e85d3a',
+          fillOpacity: 1,
+          strokeColor: '#fff',
+          strokeWeight: 2,
+        },
+      });
+
+      bounds.extend(result);
+
+      // Popup content
+      const dagenHtml = ['dag1', 'dag2', 'dag3'].map(d =>
+        `<span class="popup-day ${loc.dagen.includes(d) ? 'active' : ''}">${dagLabels[d]}</span>`
+      ).join('');
+
+      const infoWindow = new google.maps.InfoWindow({
+        content: `
+          <div class="popup">
+            <div class="popup-name">${loc.naam}</div>
+            ${loc.adres ? `<div class="popup-address">${loc.adres}</div>` : ''}
+            <div class="popup-days">${dagenHtml}</div>
+            <a href="${PROGRAM_URL}?location=${encodeURIComponent(loc.naam)}" class="popup-link">
+              Bekijk programma →
+            </a>
+          </div>
+        `,
+      });
+
+      marker.addListener('click', () => {
+        if (openInfoWindow) openInfoWindow.close();
+        infoWindow.open(map, marker);
+        openInfoWindow = infoWindow;
+      });
+    } catch (err) {
+      console.warn(`Could not geocode: ${loc.naam}`, err);
+    }
+  }
+
+  if (!bounds.isEmpty()) {
+    map.fitBounds(bounds, { top: 60, bottom: 60, left: 60, right: 60 });
+  }
+}
+
+function geocodeAddress(geocoder, address) {
+  return new Promise((resolve) => {
+    geocoder.geocode({ address }, (results, status) => {
+      if (status === 'OK' && results[0]) {
+        resolve(results[0].geometry.location);
+      } else {
+        resolve(null);
+      }
+    });
+  });
+}
+</script>
+<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&callback=initMap"></script>
+</body>
+</html>

@@ -51,6 +51,7 @@ class TurfProgramma extends HTMLElement {
     return now >= start && now < end
   }
 
+  get routeUrl() { return this.getAttribute('route-url') || 'turf-route.html' }
   get projectId() { return this.getAttribute('project-id') || 'x545nfex' }
   get dataset() { return this.getAttribute('dataset') || 'production' }
   get cdnUrl() { return `https://${this.projectId}.api.sanity.io/v2024-01-01/data/query/${this.dataset}` }
@@ -58,6 +59,11 @@ class TurfProgramma extends HTMLElement {
   async connectedCallback() {
     this.shadowRoot.innerHTML = `<style>${this.getStyles()}</style><div class="root"><div class="loading">Programma laden...</div></div>`
     await this.loadEvents()
+
+    // Check for location filter from URL param
+    const urlParams = new URLSearchParams(window.location.search)
+    const locationParam = urlParams.get('location')
+    if (locationParam) this.activeLocation = locationParam
 
     // Check for deep link in URL hash
     const hash = window.location.hash.slice(1)
@@ -173,6 +179,11 @@ class TurfProgramma extends HTMLElement {
             <div class="filter-label">Location <button id="clearLoc">—</button></div>
             <div class="location-list" id="locationList"></div>
           </div>
+          <a href="${this.routeUrl}" target="_blank" class="route-btn desktop-only">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            TURF ROUTE
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
           <!-- Mobile filters (dropdowns) -->
           <div class="mobile-filters mobile-only">
             <select class="mobile-select" id="mobileDate">
@@ -193,6 +204,11 @@ class TurfProgramma extends HTMLElement {
             </select>
             <button class="mobile-fav-btn ${this.showFavoritesOnly ? 'fav-active' : ''}" id="mobileFavFilter">★</button>
           </div>
+          <a href="${this.routeUrl}" target="_blank" class="route-btn mobile-only">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            TURF ROUTE
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
         </aside>
         <main class="content" id="eventList"></main>
       </div>
@@ -899,6 +915,17 @@ class TurfProgramma extends HTMLElement {
         margin-left: 4px;
       }
       .active-tag-bar button:hover { color: #fff; }
+
+      .route-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 12px 24px; background: #111; color: #fff;
+        font-family: var(--font-heading); font-size: 16px; font-weight: 400;
+        text-transform: uppercase; letter-spacing: 1px;
+        text-decoration: none; border-radius: var(--radius);
+        transition: all 0.2s; margin-top: 16px; cursor: pointer;
+      }
+      .route-btn:hover { background: transparent; outline: 2px solid #fff; outline-offset: -2px; }
+      .route-btn svg { flex-shrink: 0; }
 
       .sidebar-tag-clickable { cursor: pointer; }
       .sidebar-tag-clickable:hover { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.4); }
