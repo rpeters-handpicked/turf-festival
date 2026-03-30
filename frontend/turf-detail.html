@@ -591,130 +591,139 @@
 </div>
 
 <script>
-// ─── SHARED DATA ─────────────────────────────────────────────────────────────
-const locations = [
-  "Chassé Theater", "Nieuwe Veste", "Doornbos", "De Zwaan",
-  "Mark", "Wilhelminapark", "Turfschip", "Rat Verlegh Stadion",
-  "Lantaarnpaal", "Paradox", "Club Skûll", "Grand Café Uno",
-  "Boei 10", "Muziekgieterij", "Schuytgraaf", "Station Hall",
-  "Academie St. Joost", "Mex", "Lokaal", "De Centrale"
-];
+// ─── SANITY CLIENT ──────────────────────────────────────────────────────────
+const SANITY_PROJECT_ID = 'x545nfex';
+const SANITY_DATASET = 'production';
+const SANITY_CDN = `https://${SANITY_PROJECT_ID}.api.sanity.io/v2024-01-01/data/query/${SANITY_DATASET}`;
 
-const emojis = ["🎵","🎨","💡","🌐","🎭","🔊","⚡","🎙️","🌙","🔮","🎛️","🏙️","🌀","🎤","✨"];
-const eventNames = [
-  "The Future of Nightlife Culture", "AI & Creative Expression", "Techno as Political Act",
-  "Breda After Dark", "Sound Systems & Society", "Digital Identities",
-  "Club Culture Roundtable", "Generative Music Workshop", "Light Art & Space",
-  "Urban Sound Mapping", "Inclusive Dance Floors", "The Algorithm Sessions",
-  "Hardware Hacking Live", "Club Night: Residents", "Vinyl & Memory",
-  "Open Source Beats", "Neon City Showcase", "Bass & Architecture",
-  "Electronic Futures Panel", "Drone Soundscape", "Rave History Talks",
-  "Community Radio Live", "Warehouse Aesthetics", "Decibel Discourse",
-  "Human × Machine", "Night Walks Audio Tour", "Coding the Club",
-  "Ambient & Drift", "Field Recordings Session", "Hybrid Performances",
-];
-const themes = ["talks","talks","live","live","night","night"];
-const types  = ["Keynote","Panel","Performance","Installation","Club Night","Workshop","Showcase","DJ Set"];
-const dayNames = { "1": "DO 26/11", "2": "VR 27/11", "3": "ZA 28/11" };
-const dayFull  = { "1": "Donderdag 26 november", "2": "Vrijdag 27 november", "3": "Zaterdag 28 november" };
-const speakers = [
-  { name: "Jana Kovač", role: "Founder, Nacht Collective · Rotterdam", emoji: "🎙️" },
-  { name: "Daan Vermeer", role: "Researcher, Creative Cities Lab · Utrecht", emoji: "🔬" },
-  { name: "Yuki Tanaka", role: "Sound Artist · Tokyo / Breda", emoji: "🎛️" },
-  { name: "Amara Diallo", role: "DJ / Activist, Rhythm Politics · Antwerpen", emoji: "🎵" },
-  { name: "Lars Hendriks", role: "Architect, Urban Sound Studio · Amsterdam", emoji: "🏙️" },
-  { name: "Sofia Blum", role: "Creative Technologist · Berlin", emoji: "💡" },
-];
-const tagPool = [
-  ["Nightlife","Policy","Club Culture","Electronic Music","Urban Futures"],
-  ["AI","Creativity","Generative Art","Machine Learning"],
-  ["Techno","Politics","Resistance","Sound"],
-  ["Light Art","Spatial Design","Immersive"],
-  ["Gaming","Digital Worlds","Interaction"],
-  ["Sustainability","Inclusive Culture","Community"],
-];
-
-// ─── LOAD EVENT FROM URL PARAMS ───────────────────────────────────────────────
-function getParam(key) {
-  return new URLSearchParams(window.location.search).get(key);
-}
-
-const id       = parseInt(getParam('id') ?? '0');
-const title    = getParam('title')    ?? eventNames[id % eventNames.length];
-const day      = getParam('day')      ?? '1';
-const start    = getParam('start')    ?? '21:00';
-const end      = getParam('end')      ?? '23:00';
-const location = getParam('location') ?? 'Paradox';
-const theme    = getParam('theme')    ?? 'night';
-const type     = getParam('type')     ?? 'Keynote';
-
-// ─── POPULATE LEFT ────────────────────────────────────────────────────────────
-const sp = speakers[id % speakers.length];
-document.getElementById('eventTitle').textContent    = title;
-document.getElementById('eventDate').textContent     = dayFull[day] + ' 2026';
-document.getElementById('eventTime').textContent     = `${start} – ${end}`;
-document.getElementById('eventLocation').textContent = location + ' · Breda';
-document.getElementById('speakerName').textContent   = sp.name;
-document.getElementById('speakerRole').textContent   = sp.role;
-document.getElementById('speakerEmoji').textContent  = sp.emoji;
-
-document.title = `TURF — ${title}`;
-
-// ─── POPULATE SIDEBAR ─────────────────────────────────────────────────────────
-const themeLabel = { talks: 'TURF Talks', live: 'TURF Live', night: 'TURF by Night' };
-document.getElementById('detailTheme').textContent    = themeLabel[theme] ?? theme;
-document.getElementById('detailType').textContent     = type;
-document.getElementById('detailDay').textContent      = dayFull[day];
-document.getElementById('detailTime').textContent     = `${start} – ${end}`;
-document.getElementById('detailLocation').textContent = location;
-
-// badge row
-const badgeRow = document.querySelector('.badge-row');
-badgeRow.innerHTML = `<div class="badge badge-${theme}">${theme[0].toUpperCase()}</div>`;
-document.getElementById('accessLabel').textContent = `${themeLabel[theme]} tickets`;
-
-// tags
-const tags = tagPool[id % tagPool.length];
-document.getElementById('tagsList').innerHTML = tags.map(t =>
-  `<span class="sidebar-tag">${t}</span>`).join('');
-
-// ─── RELATED EVENTS ───────────────────────────────────────────────────────────
-function makeRelated() {
-  const related = [];
-  for (let i = 0; i < 4; i++) {
-    const rid = (id + i + 1) % 75;
-    const rtheme = themes[rid % themes.length];
-    const rday   = String((rid % 3) + 1);
-    const rstart = `${String(10 + (rid % 12)).padStart(2,'0')}:00`;
-    related.push({
-      id: rid,
-      title: eventNames[rid % eventNames.length],
-      location,
-      day: rday,
-      start: rstart,
-      end: `${String(12 + (rid % 12)).padStart(2,'0')}:00`,
-      theme: rtheme,
-      type: types[rid % types.length],
-      emoji: emojis[rid % emojis.length],
-    });
+async function sanityFetch(query, params = {}) {
+  let url = `${SANITY_CDN}?query=${encodeURIComponent(query)}`;
+  for (const [key, val] of Object.entries(params)) {
+    url += `&$${key}="${encodeURIComponent(val)}"`;
   }
-  return related;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.result;
 }
 
-const tagClass = { talks:'tag-talks', live:'tag-live', night:'tag-night' };
-const tagLabel = { talks:'⬡ Talks', live:'◈ Live', night:'◉ By Night' };
+// ─── DAG MAPPING ────────────────────────────────────────────────────────────
+const dagLabels = {
+  dag1: { short: 'DO 26/11', full: 'Donderdag 26 november 2026', num: '1' },
+  dag2: { short: 'VR 27/11', full: 'Vrijdag 27 november 2026', num: '2' },
+  dag3: { short: 'ZA 28/11', full: 'Zaterdag 28 november 2026', num: '3' },
+};
 
-document.getElementById('relatedList').innerHTML = makeRelated().map(e => `
-  <a class="related-event"
-     href="turf-detail.html?id=${e.id}&title=${encodeURIComponent(e.title)}&day=${e.day}&start=${e.start}&end=${e.end}&location=${encodeURIComponent(e.location)}&theme=${e.theme}&type=${encodeURIComponent(e.type)}">
-    <div class="related-img">${e.emoji}</div>
-    <div>
-      <div class="related-meta">${dayNames[e.day]} · ${e.start} – ${e.end} · ${e.location}</div>
-      <div class="related-title">${e.title}</div>
-      <span class="related-tag ${tagClass[e.theme]}">${tagLabel[e.theme]}</span>
-    </div>
-  </a>
-`).join('');
+const themaLabels = { talks: 'TURF Talks', live: 'TURF Live', night: 'TURF by Night' };
+const tagClass = { talks: 'tag-talks', live: 'tag-live', night: 'tag-night' };
+const tagLabel = { talks: '⬡ Talks', live: '◈ Live', night: '◉ By Night' };
+
+// ─── LOAD EVENT ─────────────────────────────────────────────────────────────
+const eventId = new URLSearchParams(window.location.search).get('id');
+
+async function loadEvent() {
+  if (!eventId) { window.location.href = 'turf-programma.html'; return; }
+
+  const e = await sanityFetch(
+    `*[_type == "event" && _id == $id][0] {
+      _id, titel, ondertitel, beschrijving, dag, startTijd, eindTijd, type, tags, gratis, aanmelding, aanmeldLink,
+      "themaSlug": thema->slug,
+      "themaNaam": thema->naam,
+      "themaKleur": thema->kleur,
+      "locatieNaam": locatie->naam,
+      "locatieAdres": locatie->adres,
+      "locatieRef": locatie._ref,
+      "sprekers": sprekers[]->{ naam, rol, organisatie, "foto": foto.asset->url },
+      "afbeelding": afbeelding.asset->url
+    }`,
+    { id: eventId }
+  );
+
+  if (!e) { window.location.href = 'turf-programma.html'; return; }
+
+  const dag = dagLabels[e.dag] || { short: e.dag, full: e.dag, num: '1' };
+  const theme = e.themaSlug || 'talks';
+  const timeStr = `${e.startTijd}${e.eindTijd ? ' – ' + e.eindTijd : ''}`;
+
+  // ── Populate hero ──
+  document.getElementById('eventTitle').textContent = e.titel;
+  document.getElementById('eventDate').textContent = dag.full;
+  document.getElementById('eventTime').textContent = timeStr;
+  document.getElementById('eventLocation').textContent = `${e.locatieNaam}${e.locatieAdres ? ' — ' + e.locatieAdres : ''}`;
+  document.title = `TURF — ${e.titel}`;
+
+  // ── Speaker(s) ──
+  const speakerCard = document.getElementById('speakerCard');
+  if (e.sprekers && e.sprekers.length > 0) {
+    speakerCard.innerHTML = e.sprekers.map(sp => `
+      <div class="speaker-avatar">${sp.foto ? `<img src="${sp.foto}?w=112&h=112&fit=crop" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : '🎙️'}</div>
+      <div>
+        <div class="speaker-name">${sp.naam}</div>
+        <div class="speaker-role">${[sp.rol, sp.organisatie].filter(Boolean).join(' · ')}</div>
+      </div>
+    `).join('');
+  } else {
+    speakerCard.style.display = 'none';
+  }
+
+  // ── Description ──
+  const descEl = document.getElementById('eventDescription');
+  descEl.innerHTML = e.beschrijving ? e.beschrijving.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>') : '';
+
+  // ── Sidebar details ──
+  document.getElementById('detailTheme').textContent = themaLabels[theme] || e.themaNaam;
+  document.getElementById('detailType').textContent = e.type || '—';
+  document.getElementById('detailDay').textContent = dag.full.replace(' 2026', '');
+  document.getElementById('detailTime').textContent = timeStr;
+  document.getElementById('detailLocation').textContent = e.locatieNaam;
+
+  // ── Badge ──
+  const badgeRow = document.querySelector('.badge-row');
+  badgeRow.innerHTML = `<div class="badge badge-${theme}">${theme[0].toUpperCase()}</div>`;
+  document.getElementById('accessLabel').textContent = `${themaLabels[theme] || e.themaNaam} tickets`;
+
+  // ── Tags ──
+  const tagsList = document.getElementById('tagsList');
+  if (e.tags && e.tags.length > 0) {
+    tagsList.innerHTML = e.tags.map(t => `<span class="sidebar-tag">${t}</span>`).join('');
+  } else {
+    tagsList.closest('.sidebar-card').style.display = 'none';
+  }
+
+  // ── Related events (same venue) ──
+  if (e.locatieRef) {
+    const related = await sanityFetch(
+      `*[_type == "event" && locatie._ref == $locRef && _id != $id && gepubliceerd == true][0..3] | order(dag asc, startTijd asc) {
+        _id, titel, dag, startTijd, eindTijd, type,
+        "themaSlug": thema->slug,
+        "locatieNaam": locatie->naam,
+        "afbeelding": afbeelding.asset->url
+      }`,
+      { locRef: e.locatieRef, id: eventId }
+    );
+
+    const relatedList = document.getElementById('relatedList');
+    if (related && related.length > 0) {
+      relatedList.innerHTML = related.map(r => {
+        const rdag = dagLabels[r.dag] || { short: r.dag };
+        const rtheme = r.themaSlug || 'talks';
+        const imgHtml = r.afbeelding
+          ? `<img src="${r.afbeelding}?w=120&h=120&fit=crop" style="width:100%;height:100%;object-fit:cover;">`
+          : (tagLabel[rtheme]?.[0] || '◈');
+        return `
+        <a class="related-event" href="turf-detail.html?id=${r._id}">
+          <div class="related-img">${imgHtml}</div>
+          <div>
+            <div class="related-meta">${rdag.short} · ${r.startTijd}${r.eindTijd ? ' – ' + r.eindTijd : ''} · ${r.locatieNaam}</div>
+            <div class="related-title">${r.titel}</div>
+            <span class="related-tag ${tagClass[rtheme]}">${tagLabel[rtheme]}</span>
+          </div>
+        </a>`;
+      }).join('');
+    } else {
+      relatedList.innerHTML = '<p style="color:var(--muted);font-size:13px;">Geen andere events op deze locatie</p>';
+    }
+  }
+}
 
 // ─── INTERACTIONS ─────────────────────────────────────────────────────────────
 let isFav = false;
@@ -726,13 +735,16 @@ function toggleFav(btn) {
 
 function toggleShare(btn) {
   if (navigator.share) {
-    navigator.share({ title, url: window.location.href });
+    navigator.share({ title: document.title, url: window.location.href });
   } else {
     navigator.clipboard.writeText(window.location.href);
-    btn.querySelector('span') && (btn.querySelector('span').textContent = 'Copied!');
-    setTimeout(() => btn.querySelector('span') && (btn.querySelector('span').textContent = 'Share'), 2000);
+    const span = btn.querySelector('span');
+    if (span) { span.textContent = 'Copied!'; setTimeout(() => span.textContent = 'Share', 2000); }
   }
 }
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadEvent();
 </script>
 </body>
 </html>

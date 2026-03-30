@@ -527,86 +527,81 @@
 </div>
 
 <script>
-// ─── DATA ────────────────────────────────────────────────────────────────────
-const locations = [
-  "Chassé Theater", "Nieuwe Veste", "Doornbos", "De Zwaan",
-  "Mark", "Wilhelminapark", "Turfschip", "Rat Verlegh Stadion",
-  "Lantaarnpaal", "Paradox", "Club Skûll", "Grand Café Uno",
-  "Boei 10", "Muziekgieterij", "Schuytgraaf", "Station Hall",
-  "Academie St. Joost", "Mex", "Lokaal", "De Centrale"
-];
+// ─── SANITY CLIENT ──────────────────────────────────────────────────────────
+const SANITY_PROJECT_ID = 'x545nfex';
+const SANITY_DATASET = 'production';
+const SANITY_CDN = `https://${SANITY_PROJECT_ID}.api.sanity.io/v2024-01-01/data/query/${SANITY_DATASET}`;
 
-const themes = ["talks", "talks", "live", "live", "night", "night"];
-const types = ["Keynote", "Panel", "Performance", "Installation", "Club Night", "Workshop", "Showcase", "DJ Set"];
-const emojis = ["🎵","🎨","💡","🌐","🎭","🔊","⚡","🎙️","🌙","🔮","🎛️","🏙️","🌀","🎤","✨"];
-
-const timeSlots = [
-  { time: "10:00", label: "DO 26 nov @ 10:00" },
-  { time: "12:00", label: "DO 26 nov @ 12:00" },
-  { time: "14:00", label: "DO 26 nov @ 14:00" },
-  { time: "18:00", label: "VR 27 nov @ 18:00" },
-  { time: "20:00", label: "VR 27 nov @ 20:00" },
-  { time: "22:00", label: "VR 27 nov @ 22:00" },
-  { time: "00:00", label: "ZA 28 nov @ 00:00" },
-  { time: "14:00", label: "ZA 28 nov @ 14:00" },
-  { time: "21:00", label: "ZA 28 nov @ 21:00" },
-];
-
-const eventNames = [
-  "The Future of Nightlife Culture", "AI & Creative Expression", "Techno as Political Act",
-  "Breda After Dark", "Sound Systems & Society", "Digital Identities",
-  "Club Culture Roundtable", "Generative Music Workshop", "Light Art & Space",
-  "Urban Sound Mapping", "Inclusive Dance Floors", "The Algorithm Sessions",
-  "Hardware Hacking Live", "Club Night: Residents", "Vinyl & Memory",
-  "Open Source Beats", "Neon City Showcase", "Bass & Architecture",
-  "Electronic Futures Panel", "Drone Soundscape", "Rave History Talks",
-  "Community Radio Live", "Warehouse Aesthetics", "Decibel Discourse",
-  "Human × Machine", "Night Walks Audio Tour", "Coding the Club",
-  "Ambient & Drift", "Field Recordings Session", "Hybrid Performances",
-];
-
-const subtitles = ["Presented by:", "In collaboration with:", "Hosted by:", "Curated by:"];
-const partners = ["Paradox Breda", "Academie St. Joost", "BKKC", "Mezrab", "Stroomwerk", "Studio Lakmoes"];
-
-function makeEvents() {
-  const events = [];
-  let id = 0;
-  timeSlots.forEach((slot, si) => {
-    const day = si < 3 ? "1" : si < 6 ? "2" : "3";
-    const count = si < 2 ? 7 : si < 5 ? 9 : 8;
-    for (let i = 0; i < count && id < 75; i++) {
-      const theme = themes[Math.floor(Math.random() * themes.length)];
-      const endHour = (parseInt(slot.time) + 2) % 24;
-      events.push({
-        id: id++,
-        day,
-        timeLabel: slot.label,
-        startTime: slot.time,
-        endTime: `${String(endHour).padStart(2,'0')}:00`,
-        location: locations[Math.floor(Math.random() * locations.length)],
-        title: eventNames[id % eventNames.length],
-        subtitle: `${subtitles[Math.floor(Math.random()*subtitles.length)]} ${partners[Math.floor(Math.random()*partners.length)]}`,
-        theme,
-        type: types[Math.floor(Math.random() * types.length)],
-        emoji: emojis[Math.floor(Math.random() * emojis.length)],
-        saved: false,
-      });
-    }
-  });
-  return events;
+async function sanityFetch(query) {
+  const url = `${SANITY_CDN}?query=${encodeURIComponent(query)}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.result;
 }
 
-let events = makeEvents();
+// ─── DAG MAPPING ────────────────────────────────────────────────────────────
+const dagLabels = {
+  dag1: { short: 'DO 26/11', prefix: 'DO 26 nov', num: '1' },
+  dag2: { short: 'VR 27/11', prefix: 'VR 27 nov', num: '2' },
+  dag3: { short: 'ZA 28/11', prefix: 'ZA 28 nov', num: '3' },
+};
+
+const themaLabels = {
+  talks: '⬡ TURF Talks',
+  live: '◈ TURF Live',
+  night: '◉ TURF by Night',
+};
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let events = [];
+let locations = [];
 let activeDay = null;
-let activeCat = "all";
+let activeCat = 'all';
 let activeLocation = null;
+
+// ─── FETCH DATA ─────────────────────────────────────────────────────────────
+async function loadEvents() {
+  const query = `*[_type == "event" && gepubliceerd == true] | order(dag asc, startTijd asc) {
+    _id, titel, ondertitel, dag, startTijd, eindTijd, type,
+    "themaSlug": thema->slug,
+    "themaNaam": thema->naam,
+    "themaKleur": thema->kleur,
+    "locatieNaam": locatie->naam,
+    "afbeelding": afbeelding.asset->url
+  }`;
+
+  const raw = await sanityFetch(query);
+
+  events = raw.map(e => ({
+    _id: e._id,
+    title: e.titel,
+    subtitle: e.ondertitel || '',
+    day: dagLabels[e.dag]?.num || '1',
+    dag: e.dag,
+    timeLabel: `${dagLabels[e.dag]?.prefix || e.dag} @ ${e.startTijd}`,
+    startTime: e.startTijd,
+    endTime: e.eindTijd || '',
+    location: e.locatieNaam || '',
+    theme: e.themaSlug || 'talks',
+    themeName: e.themaNaam || '',
+    type: e.type || '',
+    image: e.afbeelding || '',
+    saved: false,
+  }));
+
+  // Extract unique locations sorted alphabetically
+  locations = [...new Set(events.map(e => e.location))].filter(Boolean).sort();
+
+  renderLocations();
+  applyFilters();
+}
 
 // ─── RENDER LOCATIONS ────────────────────────────────────────────────────────
 function renderLocations() {
   const list = document.getElementById('locationList');
   list.innerHTML = locations.map(loc => `
     <button class="loc-btn ${activeLocation === loc ? 'active' : ''}"
-      onclick="filterLocation('${loc}', this)">${loc}</button>
+      onclick="filterLocation('${loc.replace(/'/g, "\\'")}', this)">${loc}</button>
   `).join('');
 }
 
@@ -618,8 +613,8 @@ function renderEvents(filtered) {
   if (filtered.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
-        <h3>No Events Found</h3>
-        <p>Try adjusting your filters</p>
+        <h3>Geen Events Gevonden</h3>
+        <p>Pas je filters aan</p>
       </div>`;
     return;
   }
@@ -633,18 +628,22 @@ function renderEvents(filtered) {
 
   container.innerHTML = Object.entries(groups).map(([label, evts]) => `
     <div class="time-divider">${label}</div>
-    ${evts.map(e => `
-      <a class="event-card" href="turf-detail.html?id=${e.id}&title=${encodeURIComponent(e.title)}&day=${e.day}&start=${e.startTime}&end=${e.endTime}&location=${encodeURIComponent(e.location)}&theme=${e.theme}&type=${encodeURIComponent(e.type)}">
-        <div class="event-img">${e.emoji}</div>
+    ${evts.map(e => {
+      const imgHtml = e.image
+        ? `<img class="event-img" src="${e.image}?w=200&h=200&fit=crop" alt="${e.title}">`
+        : `<div class="event-img">${themaLabels[e.theme]?.[0] || '◈'}</div>`;
+      return `
+      <a class="event-card" href="turf-detail.html?id=${e._id}">
+        ${imgHtml}
         <div>
           <div class="event-meta">
             <span class="meta-item">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z"/></svg>
-              ${['DO 26/11','VR 27/11','ZA 28/11'][e.day-1]}
+              ${dagLabels[e.dag]?.short || e.dag}
             </span>
             <span class="meta-item">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
-              ${e.startTime} – ${e.endTime}
+              ${e.startTime}${e.endTime ? ' – ' + e.endTime : ''}
             </span>
             <span class="meta-item">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
@@ -652,17 +651,17 @@ function renderEvents(filtered) {
             </span>
           </div>
           <div class="event-title">${e.title}</div>
-          <div class="event-subtitle">${e.subtitle}</div>
+          ${e.subtitle ? `<div class="event-subtitle">${e.subtitle}</div>` : ''}
           <div class="event-tags">
-            <span class="tag tag-${e.theme}">${e.theme === 'talks' ? '⬡ TURF Talks' : e.theme === 'live' ? '◈ TURF Live' : '◉ By Night'}</span>
-            <span class="tag tag-type">${e.type}</span>
+            <span class="tag tag-${e.theme}">${themaLabels[e.theme] || e.themeName}</span>
+            ${e.type ? `<span class="tag tag-type">${e.type}</span>` : ''}
           </div>
         </div>
-        <button class="bookmark-btn ${e.saved ? 'saved' : ''}" onclick="event.stopPropagation(); event.preventDefault(); toggleSave(${e.id}, this)">
+        <button class="bookmark-btn ${e.saved ? 'saved' : ''}" onclick="event.stopPropagation(); event.preventDefault(); toggleSave('${e._id}', this)">
           ${e.saved ? '★' : '☆'}
         </button>
-      </a>
-    `).join('')}
+      </a>`;
+    }).join('')}
   `).join('');
 }
 
@@ -721,7 +720,7 @@ function clearLocation() {
 }
 
 function toggleSave(id, btn) {
-  const e = events.find(x => x.id === id);
+  const e = events.find(x => x._id === id);
   if (e) {
     e.saved = !e.saved;
     btn.classList.toggle('saved');
@@ -730,8 +729,7 @@ function toggleSave(id, btn) {
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-renderLocations();
-applyFilters();
+loadEvents();
 </script>
 </body>
 </html>
