@@ -685,7 +685,8 @@ class TurfProgramma extends HTMLElement {
         font-size: 14px; outline: none; transition: border-color 0.2s;
         border-radius: var(--radius);
       }
-      .search-box input:focus { border-color: var(--accent); }
+      .search-box input:focus { border-color: #fff; background: #fff; color: #111; }
+      .search-box input:focus + .search-icon, .search-box:focus-within .search-icon { color: #111; }
       .search-box input::placeholder { color: var(--muted); }
       .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 16px; }
       .filter-section { margin-bottom: 28px; }
