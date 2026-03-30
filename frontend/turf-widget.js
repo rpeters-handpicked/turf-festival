@@ -475,6 +475,14 @@ class TurfProgramma extends HTMLElement {
       ? e.beschrijving.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>')
       : ''
 
+    // Check if this event is live
+    const detailLiveData = { _id: e._id, dag: e.dag, startTime: e.startTijd, endTime: e.eindTijd }
+    const isLive = this.isEventLive(detailLiveData)
+
+    // Google Maps embed URL
+    const mapQuery = encodeURIComponent(`${e.locatieNaam}${e.locatieAdres ? ', ' + e.locatieAdres : ', Breda'}`)
+    const mapHtml = `<div class="map-container"><iframe src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${mapQuery}&zoom=15" allowfullscreen loading="lazy"></iframe></div>`
+
     root.innerHTML = `
       <div class="back-bar">
         <button class="back-btn" id="backBtn">
@@ -489,7 +497,8 @@ class TurfProgramma extends HTMLElement {
       <div class="detail-page">
         <div class="detail-left">
           ${e.afbeelding ? `<div class="hero-image"><img src="${e.afbeelding}?w=800&h=400&fit=crop" alt="${e.titel}"></div>` : ''}
-          <div class="hero">
+          <div class="hero ${isLive ? 'hero-live' : ''}">
+            ${isLive ? '<div class="detail-live-badge"><span class="live-dot"></span>LIVE NU</div>' : ''}
             <h1 class="event-title-detail">${e.titel}</h1>
             <div class="event-meta-row">
               <span class="meta-item">
@@ -510,6 +519,10 @@ class TurfProgramma extends HTMLElement {
             ${sprekersHtml}
           </div>
           ${beschrijving ? `<div class="section"><h2 class="section-title">Over dit event</h2><p class="description">${beschrijving}</p></div>` : ''}
+          <div class="section">
+            <h2 class="section-title">Locatie</h2>
+            ${mapHtml}
+          </div>
           <div class="section"><h2 class="section-title">Andere events op deze locatie</h2><div id="relatedList"></div></div>
         </div>
         <aside class="detail-sidebar">
@@ -781,6 +794,26 @@ class TurfProgramma extends HTMLElement {
       @keyframes liveDot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.7)} }
 
       .event-live { background: rgba(229,57,53,0.06); }
+
+      .hero-live { border-color: #e53935; }
+      .hero-live::before { background: #e53935; }
+      .detail-live-badge {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: #e53935; color: #fff; padding: 6px 16px;
+        border-radius: var(--radius); font-family: var(--font-body);
+        font-size: 13px; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; margin-bottom: 16px;
+        animation: livePulse 1.5s infinite;
+      }
+
+      .map-container {
+        border-radius: var(--radius-card); overflow: hidden;
+        border: 1px solid var(--border); margin-top: 8px;
+      }
+      .map-container iframe {
+        width: 100%; height: 280px; border: none; display: block;
+        filter: grayscale(0.3);
+      }
 
       /* ── EVENT CARD ── */
       .event-card {
