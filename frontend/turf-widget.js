@@ -8,6 +8,7 @@ class TurfProgramma extends HTMLElement {
     this.activeCat = 'all'
     this.activeLocation = null
     this.activeType = null
+    this.activeTag = null
     this.showFavoritesOnly = false
     this.searchQuery = ''
     this.currentView = 'list'
@@ -89,7 +90,7 @@ class TurfProgramma extends HTMLElement {
 
   async loadEvents() {
     const raw = await this.sanityFetch(`*[_type == "event" && gepubliceerd == true] | order(dag asc, startTijd asc) {
-      _id, titel, ondertitel, dag, startTijd, eindTijd, type,
+      _id, titel, ondertitel, dag, startTijd, eindTijd, type, tags,
       "themaSlug": thema->slug,
       "themaNaam": thema->naam,
       "themaKleur": thema->kleur,
@@ -112,6 +113,7 @@ class TurfProgramma extends HTMLElement {
       theme: e.themaSlug || 'talks',
       themeName: e.themaNaam || '',
       type: e.type || '',
+      tags: e.tags || [],
       image: e.afbeelding || '',
     }))
 
@@ -132,6 +134,7 @@ class TurfProgramma extends HTMLElement {
         <button class="cat-tab" data-cat="night">◉ TURF by Night</button>
         <button class="cat-tab cat-tab-fav ${this.showFavoritesOnly ? 'active' : ''}" id="favFilter">★ Favorites</button>
       </div>
+      ${this.activeTag ? `<div class="active-tag-bar">Filtered by tag: <strong>${this.activeTag}</strong> <button id="clearTag">✕</button></div>` : ''}
       <div class="main">
         <aside class="sidebar">
           <div class="results-count">Showing <strong id="count">0</strong> results</div>
@@ -180,6 +183,12 @@ class TurfProgramma extends HTMLElement {
     this.bindListEvents()
     this.renderLocations()
     this.applyFilters()
+
+    // Clear tag filter
+    root.querySelector('#clearTag')?.addEventListener('click', () => {
+      this.activeTag = null
+      this.renderList()
+    })
 
     if (this.scrollPos) {
       root.querySelector('.content')?.scrollTo(0, this.scrollPos)
@@ -315,6 +324,7 @@ class TurfProgramma extends HTMLElement {
       if (this.activeDay && e.day !== this.activeDay) return false
       if (this.activeCat !== 'all' && e.theme !== this.activeCat) return false
       if (this.activeLocation && e.location !== this.activeLocation) return false
+      if (this.activeTag && (!e.tags || !e.tags.includes(this.activeTag))) return false
       if (q && !e.title.toLowerCase().includes(q) && !e.location.toLowerCase().includes(q)) return false
       return true
     })
@@ -436,7 +446,7 @@ class TurfProgramma extends HTMLElement {
       : ''
 
     const tagsHtml = e.tags && e.tags.length > 0
-      ? `<div class="sidebar-card"><div class="sidebar-heading">Tags</div><div class="tags-list">${e.tags.map(t => `<span class="sidebar-tag">${t}</span>`).join('')}</div></div>`
+      ? `<div class="sidebar-card"><div class="sidebar-heading">Tags</div><div class="tags-list">${e.tags.map(t => `<span class="sidebar-tag sidebar-tag-clickable" data-tag="${t}">${t}</span>`).join('')}</div></div>`
       : ''
 
     const beschrijving = e.beschrijving
@@ -499,6 +509,15 @@ class TurfProgramma extends HTMLElement {
     root.querySelector('#backBtn')?.addEventListener('click', () => {
       window.history.pushState(null, '', window.location.pathname + window.location.search)
       this.renderList()
+    })
+
+    // Clickable tags → filter list by tag
+    root.querySelectorAll('.sidebar-tag-clickable').forEach(tag => {
+      tag.addEventListener('click', () => {
+        this.activeTag = tag.dataset.tag
+        window.history.pushState(null, '', window.location.pathname + window.location.search)
+        this.renderList()
+      })
     })
 
     // Detail favorite button
@@ -781,6 +800,22 @@ class TurfProgramma extends HTMLElement {
       .detail-fav-icon { font-size: 14px; }
 
       .cat-tab-fav { margin-left: auto; }
+
+      .active-tag-bar {
+        padding: 12px 40px; background: rgba(255,255,255,0.1);
+        font-family: var(--font-body); font-size: 13px; font-weight: 500;
+        color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 12px;
+      }
+      .active-tag-bar strong { color: #fff; font-weight: 700; }
+      .active-tag-bar button {
+        background: none; border: none; color: rgba(255,255,255,0.5);
+        font-size: 16px; cursor: pointer; transition: color 0.2s;
+        margin-left: 4px;
+      }
+      .active-tag-bar button:hover { color: #fff; }
+
+      .sidebar-tag-clickable { cursor: pointer; }
+      .sidebar-tag-clickable:hover { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.4); }
       .mobile-fav-btn {
         width: 46px; height: 46px; border: none; background: #111; color: rgba(255,255,255,0.4);
         font-size: 20px; border-radius: 50%; cursor: pointer; transition: all 0.2s;
