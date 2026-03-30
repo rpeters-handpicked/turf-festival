@@ -128,7 +128,7 @@
 const SANITY_PROJECT_ID = 'x545nfex';
 const SANITY_DATASET = 'production';
 const SANITY_CDN = `https://${SANITY_PROJECT_ID}.api.sanity.io/v2024-01-01/data/query/${SANITY_DATASET}`;
-const PROGRAM_URL = 'turf-programma.html';
+const PROGRAM_URL = new URLSearchParams(window.location.search).get('programUrl') || 'https://turf-breda.webflow.io/program-copy';
 
 const dagLabels = {
   dag1: 'DO 26/11',
