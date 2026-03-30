@@ -975,6 +975,10 @@ class TurfProgramma extends HTMLElement {
       ::-webkit-scrollbar { width: 4px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+      .location-list::-webkit-scrollbar { width: 8px; }
+      .location-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; }
+      .location-list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.5); }
+      .location-list { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent; }
 
       /* ── MOBILE ── */
       @media (max-width: 768px) {
