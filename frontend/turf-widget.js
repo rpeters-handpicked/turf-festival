@@ -6,7 +6,8 @@ class TurfProgramma extends HTMLElement {
     this.locations = []
     this.activeDay = null
     this.activeCat = 'all'
-    this.activeLocation = null
+    this.activeLocations = new Set()
+    this.locationsExpanded = false
     this.activeType = null
     this.activeTag = null
     this.showFavoritesOnly = false
@@ -64,7 +65,7 @@ class TurfProgramma extends HTMLElement {
     // Check for location filter from URL param
     const urlParams = new URLSearchParams(window.location.search)
     const locationParam = urlParams.get('location')
-    if (locationParam) this.activeLocation = locationParam
+    if (locationParam) this.activeLocations.add(locationParam)
 
     // Check for deep link in URL hash
     const hash = window.location.hash.slice(1)
@@ -177,8 +178,9 @@ class TurfProgramma extends HTMLElement {
             </div>
           </div>
           <div class="filter-section desktop-only">
-            <div class="filter-label">Location <button id="clearLoc">—</button></div>
-            <div class="location-list" id="locationList"></div>
+            <div class="filter-label loc-toggle" id="locToggle">Location <span class="loc-arrow ${this.locationsExpanded ? 'expanded' : ''}">▸</span></div>
+            ${this.activeLocations.size > 0 ? `<div class="loc-active-count">${this.activeLocations.size} geselecteerd <button id="clearLoc">✕</button></div>` : ''}
+            <div class="location-list ${this.locationsExpanded ? 'expanded' : ''}" id="locationList"></div>
           </div>
           <a href="${this.routeUrl}" target="_blank" class="route-btn desktop-only">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
@@ -193,10 +195,9 @@ class TurfProgramma extends HTMLElement {
               <option value="2" ${this.activeDay === '2' ? 'selected' : ''}>VR 27-11</option>
               <option value="3" ${this.activeDay === '3' ? 'selected' : ''}>ZA 28-11</option>
             </select>
-            <select class="mobile-select" id="mobileLocation">
-              <option value="">Alle locaties</option>
-              ${this.locations.map(loc => `<option value="${loc}" ${this.activeLocation === loc ? 'selected' : ''}>${loc}</option>`).join('')}
-            </select>
+            <button class="mobile-select mobile-loc-btn" id="mobileLocBtn">
+              ${this.activeLocations.size > 0 ? `Locaties (${this.activeLocations.size})` : 'Alle locaties'}
+            </button>
             <select class="mobile-select" id="mobileCat">
               <option value="all" ${this.activeCat === 'all' ? 'selected' : ''}>All Events</option>
               <option value="talks" ${this.activeCat === 'talks' ? 'selected' : ''}>⬡ TURF Talks</option>
@@ -282,9 +283,30 @@ class TurfProgramma extends HTMLElement {
     })
 
     root.getElementById('clearLoc')?.addEventListener('click', () => {
-      this.activeLocation = null
-      this.renderLocations()
-      this.applyFilters()
+      this.activeLocations.clear()
+      this.renderList()
+    })
+
+    // Location toggle expand/collapse
+    root.getElementById('locToggle')?.addEventListener('click', () => {
+      this.locationsExpanded = !this.locationsExpanded
+      const list = root.getElementById('locationList')
+      const arrow = root.querySelector('.loc-arrow')
+      if (list) list.classList.toggle('expanded', this.locationsExpanded)
+      if (arrow) arrow.classList.toggle('expanded', this.locationsExpanded)
+    })
+
+    // Mobile location picker
+    root.getElementById('mobileLocBtn')?.addEventListener('click', () => {
+      this.locationsExpanded = !this.locationsExpanded
+      const overlay = root.getElementById('mobileLocOverlay')
+      if (overlay) overlay.classList.toggle('show', this.locationsExpanded)
+    })
+
+    root.getElementById('mobileLocClose')?.addEventListener('click', () => {
+      this.locationsExpanded = false
+      const overlay = root.getElementById('mobileLocOverlay')
+      if (overlay) overlay.classList.remove('show')
     })
 
     // Search
@@ -301,11 +323,7 @@ class TurfProgramma extends HTMLElement {
       this.applyFilters()
     })
 
-    root.getElementById('mobileLocation')?.addEventListener('change', (e) => {
-      this.activeLocation = e.target.value || null
-      this.renderLocations()
-      this.applyFilters()
-    })
+    // Mobile location checkboxes handled in renderLocations
 
     root.getElementById('mobileCat')?.addEventListener('change', (e) => {
       this.activeCat = e.target.value
@@ -335,20 +353,87 @@ class TurfProgramma extends HTMLElement {
   }
 
   renderLocations() {
-    const list = this.shadowRoot.getElementById('locationList')
-    if (!list) return
-    list.innerHTML = this.locations.map(loc =>
-      `<button class="loc-btn ${this.activeLocation === loc ? 'active' : ''}" data-loc="${loc}">${loc}</button>`
-    ).join('')
+    const root = this.shadowRoot
 
-    list.querySelectorAll('.loc-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const loc = btn.dataset.loc
-        this.activeLocation = this.activeLocation === loc ? null : loc
-        this.renderLocations()
-        this.applyFilters()
+    // Desktop checkboxes
+    const list = root.getElementById('locationList')
+    if (list) {
+      list.innerHTML = this.locations.map(loc =>
+        `<label class="loc-check ${this.activeLocations.has(loc) ? 'active' : ''}">
+          <span class="loc-checkbox">${this.activeLocations.has(loc) ? '✓' : ''}</span>
+          <span>${loc}</span>
+        </label>`
+      ).join('')
+
+      list.querySelectorAll('.loc-check').forEach((label, i) => {
+        label.addEventListener('click', () => {
+          const loc = this.locations[i]
+          if (this.activeLocations.has(loc)) {
+            this.activeLocations.delete(loc)
+          } else {
+            this.activeLocations.add(loc)
+          }
+          this.renderLocations()
+          this.applyFilters()
+          // Update mobile button text
+          const mBtn = root.getElementById('mobileLocBtn')
+          if (mBtn) mBtn.textContent = this.activeLocations.size > 0 ? `Locaties (${this.activeLocations.size})` : 'Alle locaties'
+          // Update desktop count
+          const countEl = root.querySelector('.loc-active-count')
+          if (countEl && this.activeLocations.size > 0) {
+            countEl.innerHTML = `${this.activeLocations.size} geselecteerd <button id="clearLoc">✕</button>`
+            countEl.querySelector('#clearLoc')?.addEventListener('click', () => { this.activeLocations.clear(); this.renderList() })
+          } else if (countEl && this.activeLocations.size === 0) {
+            this.renderList()
+          }
+        })
       })
-    })
+    }
+
+    // Mobile overlay checkboxes
+    const overlay = root.getElementById('mobileLocOverlay')
+    if (!overlay) {
+      // Create overlay once
+      const div = document.createElement('div')
+      div.id = 'mobileLocOverlay'
+      div.className = 'mobile-loc-overlay mobile-only'
+      div.innerHTML = `
+        <div class="mobile-loc-panel">
+          <div class="mobile-loc-header">
+            <span>Locaties</span>
+            <button id="mobileLocClose">✕</button>
+          </div>
+          <div class="mobile-loc-list" id="mobileLocList"></div>
+        </div>
+      `
+      root.querySelector('.root')?.appendChild(div)
+      root.getElementById('mobileLocClose')?.addEventListener('click', () => {
+        root.getElementById('mobileLocOverlay')?.classList.remove('show')
+        this.locationsExpanded = false
+      })
+    }
+
+    const mobileList = root.getElementById('mobileLocList')
+    if (mobileList) {
+      mobileList.innerHTML = this.locations.map(loc =>
+        `<label class="loc-check ${this.activeLocations.has(loc) ? 'active' : ''}">
+          <span class="loc-checkbox">${this.activeLocations.has(loc) ? '✓' : ''}</span>
+          <span>${loc}</span>
+        </label>`
+      ).join('')
+
+      mobileList.querySelectorAll('.loc-check').forEach((label, i) => {
+        label.addEventListener('click', () => {
+          const loc = this.locations[i]
+          if (this.activeLocations.has(loc)) this.activeLocations.delete(loc)
+          else this.activeLocations.add(loc)
+          this.renderLocations()
+          this.applyFilters()
+          const mBtn = root.getElementById('mobileLocBtn')
+          if (mBtn) mBtn.textContent = this.activeLocations.size > 0 ? `Locaties (${this.activeLocations.size})` : 'Alle locaties'
+        })
+      })
+    }
   }
 
   applyFilters() {
@@ -358,7 +443,7 @@ class TurfProgramma extends HTMLElement {
       if (favs && !favs.includes(e._id)) return false
       if (this.activeDay && e.day !== this.activeDay) return false
       if (this.activeCat !== 'all' && e.theme !== this.activeCat) return false
-      if (this.activeLocation && e.location !== this.activeLocation) return false
+      if (this.activeLocations.size > 0 && !this.activeLocations.has(e.location)) return false
       if (this.activeTag && (!e.tags || !e.tags.includes(this.activeTag))) return false
       if (q && !e.title.toLowerCase().includes(q) && !e.location.toLowerCase().includes(q) && !(e.tags && e.tags.some(t => t.toLowerCase().includes(q)))) return false
       return true
@@ -765,18 +850,57 @@ class TurfProgramma extends HTMLElement {
       .date-btn .day-num { display: block; font-size: 12px; opacity: 0.7; margin-top: 2px; font-family: var(--font-body); font-weight: 500; }
 
       /* ── LOCATION ── */
-      .location-list { display: flex; flex-direction: column; gap: 2px; max-height: 220px; overflow-y: auto; }
-      .loc-btn {
-        padding: 8px 14px; border: none; background: transparent;
-        color: rgba(255,255,255,0.7); font-family: var(--font-body); font-size: 13px; font-weight: 500;
-        cursor: pointer; text-align: left; transition: all 0.2s;
-        display: flex; align-items: center; gap: 10px;
-        border-radius: 8px;
+      .loc-toggle { cursor: pointer; }
+      .loc-toggle:hover { color: #fff; }
+      .loc-arrow { display: inline-block; transition: transform 0.2s; font-size: 14px; }
+      .loc-arrow.expanded { transform: rotate(90deg); }
+      .loc-active-count {
+        font-family: var(--font-body); font-size: 11px; font-weight: 600;
+        color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
       }
-      .loc-btn::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3); flex-shrink: 0; transition: all 0.2s; }
-      .loc-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
-      .loc-btn.active { color: #fff; font-weight: 700; background: rgba(255,255,255,0.1); }
-      .loc-btn.active::before { background: #fff; }
+      .loc-active-count button {
+        background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer;
+        font-size: 14px; transition: color 0.2s;
+      }
+      .loc-active-count button:hover { color: #fff; }
+      .location-list {
+        display: none; flex-direction: column; gap: 2px; max-height: 300px; overflow-y: auto;
+      }
+      .location-list.expanded { display: flex; }
+      .loc-check {
+        padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 10px;
+        color: rgba(255,255,255,0.7); font-family: var(--font-body); font-size: 13px; font-weight: 500;
+        transition: all 0.2s; border-radius: 8px;
+      }
+      .loc-check:hover { color: #fff; background: rgba(255,255,255,0.06); }
+      .loc-check.active { color: #fff; font-weight: 600; }
+      .loc-checkbox {
+        width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-radius: 4px;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        font-size: 12px; font-weight: 700; color: #111; transition: all 0.15s;
+      }
+      .loc-check.active .loc-checkbox { background: #fff; border-color: #fff; }
+
+      /* Mobile location overlay */
+      .mobile-loc-overlay {
+        display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.6); z-index: 1000; align-items: flex-end; justify-content: center;
+      }
+      .mobile-loc-overlay.show { display: flex; }
+      .mobile-loc-panel {
+        background: #111; border-radius: 16px 16px 0 0; width: 100%; max-height: 70vh;
+        display: flex; flex-direction: column; overflow: hidden;
+      }
+      .mobile-loc-header {
+        padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+        border-bottom: 1px solid rgba(255,255,255,0.1); font-family: var(--font-body);
+        font-size: 15px; font-weight: 700; text-transform: uppercase; color: #fff;
+      }
+      .mobile-loc-header button {
+        background: none; border: none; color: rgba(255,255,255,0.5); font-size: 18px; cursor: pointer;
+      }
+      .mobile-loc-list { padding: 8px 12px; overflow-y: auto; flex: 1; }
+      .mobile-loc-btn { text-align: left; }
 
       /* ── TIME DIVIDER ── */
       .time-divider {
