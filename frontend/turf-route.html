@@ -175,17 +175,7 @@ async function initMap() {
   map = new google.maps.Map(document.getElementById('map'), {
     center: { lat: 51.5880, lng: 4.7760 },
     zoom: 14,
-    styles: [
-      { elementType: 'geometry', stylers: [{ color: '#1a1a1a' }] },
-      { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a1a' }] },
-      { elementType: 'labels.text.fill', stylers: [{ color: '#666' }] },
-      { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2a2a2a' }] },
-      { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#555' }] },
-      { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#111' }] },
-      { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-      { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#1e1e1e' }] },
-      { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-    ],
+    styles: [],
     disableDefaultUI: true,
     zoomControl: true,
     fullscreenControl: true,
