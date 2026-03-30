@@ -501,6 +501,13 @@ class TurfProgramma extends HTMLElement {
         font-weight: 600;
         font-display: swap;
       }
+      @font-face {
+        font-family: 'Thunder';
+        src: url('${base}fonts/THUNDER/Thunder-LC.woff2') format('woff2'),
+             url('${base}fonts/THUNDER/Thunder-LC.woff') format('woff');
+        font-weight: 400;
+        font-display: swap;
+      }
 
       :host {
         display: block;
@@ -548,9 +555,9 @@ class TurfProgramma extends HTMLElement {
       }
       .cat-tab {
         padding: 14px 28px; border: none; background: #111;
-        color: #fff; font-family: var(--font-body); font-size: 14px;
-        font-weight: 700; cursor: pointer; transition: all 0.2s;
-        white-space: nowrap; text-transform: uppercase; letter-spacing: 0.5px;
+        color: #fff; font-family: var(--font-heading); font-size: 18px;
+        font-weight: 400; cursor: pointer; transition: all 0.2s;
+        white-space: nowrap; text-transform: uppercase; letter-spacing: 1px;
         border-radius: var(--radius);
       }
       .cat-tab:hover { background: transparent; outline: 2px solid #fff; outline-offset: -2px; color: #fff; }
@@ -592,14 +599,14 @@ class TurfProgramma extends HTMLElement {
       .date-grid { display: flex; gap: 8px; }
       .date-btn {
         padding: 12px 18px; border: none; background: #111;
-        color: #fff; font-family: var(--font-body); font-size: 12px; font-weight: 700;
+        color: #fff; font-family: var(--font-heading); font-size: 16px; font-weight: 400;
         cursor: pointer; text-align: center; transition: all 0.2s; line-height: 1.4;
         border-radius: var(--radius);
       }
       .date-btn:hover { background: transparent; outline: 2px solid #fff; outline-offset: -2px; color: #fff; }
       .date-btn.active { background: #fff; color: #111; }
-      .date-btn .day-name { display: block; font-size: 14px; font-weight: 700; text-transform: uppercase; }
-      .date-btn .day-num { display: block; font-size: 10px; opacity: 0.7; margin-top: 2px; }
+      .date-btn .day-name { display: block; font-size: 18px; font-weight: 400; text-transform: uppercase; letter-spacing: 1px; }
+      .date-btn .day-num { display: block; font-size: 12px; opacity: 0.7; margin-top: 2px; font-family: var(--font-body); font-weight: 500; }
 
       /* ── LOCATION ── */
       .location-list { display: flex; flex-direction: column; gap: 2px; max-height: 220px; overflow-y: auto; }
