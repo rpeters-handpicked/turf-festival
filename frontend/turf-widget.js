@@ -1138,10 +1138,12 @@ class TurfProgramma extends HTMLElement {
       ::-webkit-scrollbar { width: 4px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-      .location-list::-webkit-scrollbar { width: 8px; }
-      .location-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; }
-      .location-list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.5); }
-      .location-list { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent; }
+      .location-list::-webkit-scrollbar { width: 10px; }
+      .location-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 5px; }
+      .location-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.35); border-radius: 5px; min-height: 40px; }
+      .location-list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.55); }
+      .location-list::-webkit-scrollbar-thumb:active { background: rgba(255,255,255,0.7); }
+      .location-list { scrollbar-width: auto; scrollbar-color: rgba(255,255,255,0.35) rgba(255,255,255,0.05); overflow-y: scroll; }
 
       /* ── FLOATING ROUTE BUTTON (mobile) ── */
       .floating-route-btn {
