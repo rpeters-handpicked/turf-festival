@@ -183,9 +183,8 @@ class TurfProgramma extends HTMLElement {
             <div class="location-list ${this.locationsExpanded ? 'expanded' : ''}" id="locationList"></div>
           </div>
           <a href="${this.routeUrl}" target="_blank" class="route-btn desktop-only">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="13.5" cy="2.5" r="2"/><path d="M9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7"/></svg>
             TURF ROUTE
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </a>
           <!-- Mobile filters (dropdowns) -->
           <div class="mobile-filters mobile-only">
@@ -970,13 +969,13 @@ class TurfProgramma extends HTMLElement {
 
       .route-btn {
         display: inline-flex; align-items: center; gap: 8px;
-        padding: 12px 24px; background: #111; color: #fff;
-        font-family: var(--font-heading); font-size: 16px; font-weight: 400;
-        text-transform: uppercase; letter-spacing: 1px;
+        padding: 12px 24px; background: #fff; color: #111;
+        font-family: var(--font-heading); font-size: 16px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 1.5px;
         text-decoration: none; border-radius: var(--radius);
         transition: all 0.2s; margin-top: 16px; cursor: pointer;
       }
-      .route-btn:hover { background: transparent; outline: 2px solid #fff; outline-offset: -2px; }
+      .route-btn:hover { background: rgba(255,255,255,0.85); }
       .route-btn svg { flex-shrink: 0; }
 
       .sidebar-tag-clickable { cursor: pointer; }
