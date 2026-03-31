@@ -207,12 +207,12 @@ class TurfProgramma extends HTMLElement {
             </select>
             <button class="mobile-fav-btn ${this.showFavoritesOnly ? 'fav-active' : ''}" id="mobileFavFilter">★</button>
           </div>
-          <a href="${this.routeUrl}" target="_blank" class="route-btn mobile-only">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-            TURF ROUTE
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </a>
         </aside>
+        <!-- Floating mobile route button -->
+        <a href="${this.routeUrl}" target="_blank" class="floating-route-btn mobile-only">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="13.5" cy="2.5" r="2"/><path d="M9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7"/></svg>
+          TURF ROUTE
+        </a>
         <main class="content" id="eventList"></main>
       </div>
     `
@@ -1144,6 +1144,19 @@ class TurfProgramma extends HTMLElement {
       .location-list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.5); }
       .location-list { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent; }
 
+      /* ── FLOATING ROUTE BUTTON (mobile) ── */
+      .floating-route-btn {
+        display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+        z-index: 1000; align-items: center; gap: 8px;
+        padding: 14px 28px; background: #fff; color: #111;
+        font-family: var(--font-heading); font-size: 14px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 1.5px;
+        text-decoration: none; border-radius: var(--radius);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        transition: all 0.2s; cursor: pointer;
+      }
+      .floating-route-btn:hover { box-shadow: 0 6px 28px rgba(0,0,0,0.5); }
+
       /* ── MOBILE ── */
       @media (max-width: 768px) {
         .category-bar { padding: 12px 16px; gap: 6px; }
@@ -1152,6 +1165,7 @@ class TurfProgramma extends HTMLElement {
         .sidebar { position: static; height: auto; padding: 16px; }
         .desktop-only { display: none; }
         .mobile-only { display: block; }
+        .floating-route-btn.mobile-only { display: flex; }
         .mobile-filters { display: flex; }
         .event-card { grid-template-columns: 70px 1fr auto; gap: 14px; padding: 16px 16px; }
         .fav-btn { width: 34px; height: 34px; font-size: 14px; }
