@@ -8,6 +8,7 @@ class TurfProgramma extends HTMLElement {
     this.activeCat = 'all'
     this.activeLocations = new Set()
     this.locationsExpanded = true
+    this.locationsShowAll = false
     this.activeType = null
     this.activeTag = null
     this.showFavoritesOnly = false
@@ -178,9 +179,12 @@ class TurfProgramma extends HTMLElement {
             </div>
           </div>
           <div class="filter-section desktop-only">
-            <div class="filter-label loc-toggle" id="locToggle">Location <span class="loc-arrow ${this.locationsExpanded ? 'expanded' : ''}">▸</span></div>
+            <div class="filter-label">Location</div>
             ${this.activeLocations.size > 0 ? `<div class="loc-active-count">${this.activeLocations.size} geselecteerd <button id="clearLoc">✕</button></div>` : ''}
-            <div class="location-list ${this.locationsExpanded ? 'expanded' : ''}" id="locationList"></div>
+            <div class="location-list expanded ${this.locationsShowAll ? 'show-all' : ''}" id="locationList"></div>
+            <button class="loc-more-btn" id="locMoreBtn">
+              <span class="loc-more-arrow">${this.locationsShowAll ? '▴' : '▾'}</span> ${this.locationsShowAll ? 'Minder' : 'Meer'}
+            </button>
           </div>
           <a href="${this.routeUrl}" target="_blank" class="route-btn desktop-only">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="13.5" cy="2.5" r="2"/><path d="M9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7"/></svg>
@@ -287,13 +291,13 @@ class TurfProgramma extends HTMLElement {
       this.renderList()
     })
 
-    // Location toggle expand/collapse
-    root.getElementById('locToggle')?.addEventListener('click', () => {
-      this.locationsExpanded = !this.locationsExpanded
+    // Location show more/less toggle
+    root.getElementById('locMoreBtn')?.addEventListener('click', () => {
+      this.locationsShowAll = !this.locationsShowAll
       const list = root.getElementById('locationList')
-      const arrow = root.querySelector('.loc-arrow')
-      if (list) list.classList.toggle('expanded', this.locationsExpanded)
-      if (arrow) arrow.classList.toggle('expanded', this.locationsExpanded)
+      const btn = root.getElementById('locMoreBtn')
+      if (list) list.classList.toggle('show-all', this.locationsShowAll)
+      if (btn) btn.innerHTML = `<span class="loc-more-arrow">${this.locationsShowAll ? '▴' : '▾'}</span> ${this.locationsShowAll ? 'Minder' : 'Meer'}`
     })
 
 
@@ -799,10 +803,6 @@ class TurfProgramma extends HTMLElement {
       .date-btn .day-num { display: block; font-size: 12px; opacity: 0.7; margin-top: 2px; font-family: var(--font-body); font-weight: 500; }
 
       /* ── LOCATION ── */
-      .loc-toggle { cursor: pointer; }
-      .loc-toggle:hover { color: #fff; }
-      .loc-arrow { display: inline-block; transition: transform 0.2s; font-size: 14px; }
-      .loc-arrow.expanded { transform: rotate(90deg); }
       .loc-active-count {
         font-family: var(--font-body); font-size: 11px; font-weight: 600;
         color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
@@ -813,9 +813,19 @@ class TurfProgramma extends HTMLElement {
       }
       .loc-active-count button:hover { color: #fff; }
       .location-list {
-        display: none; flex-direction: column; gap: 2px; max-height: 300px; overflow-y: auto;
+        display: none; flex-direction: column; gap: 2px; overflow-y: auto;
       }
-      .location-list.expanded { display: flex; }
+      .location-list.expanded {
+        display: flex; max-height: 304px;
+      }
+      .location-list.expanded.show-all { max-height: 600px; }
+      .loc-more-btn {
+        background: none; border: none; color: rgba(255,255,255,0.5);
+        font-family: var(--font-body); font-size: 12px; font-weight: 600;
+        cursor: pointer; padding: 8px 0 0 0; transition: color 0.2s;
+        display: flex; align-items: center; gap: 4px;
+      }
+      .loc-more-btn:hover { color: #fff; }
       .loc-check {
         padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 10px;
         color: rgba(255,255,255,0.7); font-family: var(--font-body); font-size: 13px; font-weight: 500;
