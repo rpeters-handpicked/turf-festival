@@ -29,6 +29,24 @@ class TurfTeaser extends HTMLElement {
     return { talks: '⬡ TURF Talks', live: '◈ TURF Live', night: '◉ TURF by Night' }
   }
 
+  // ── Favorites (shared localStorage key met turf-widget) ──────────────────
+  getFavorites() {
+    try { return JSON.parse(localStorage.getItem('turf-favorites') || '[]') } catch { return [] }
+  }
+  saveFavorites(favs) {
+    try { localStorage.setItem('turf-favorites', JSON.stringify(favs)) } catch {}
+  }
+  isFavorite(id) {
+    return this.getFavorites().includes(id)
+  }
+  toggleFavorite(id) {
+    const favs = this.getFavorites()
+    const idx = favs.indexOf(id)
+    if (idx > -1) { favs.splice(idx, 1) } else { favs.push(id) }
+    this.saveFavorites(favs)
+    return idx === -1
+  }
+
   async connectedCallback() {
     this.shadowRoot.innerHTML = `<style>${this.getStyles()}</style><div class="root"><div class="loading">Programma laden…</div></div>`
     await this.loadEvents()
@@ -110,6 +128,14 @@ class TurfTeaser extends HTMLElement {
         this.render()
       })
     })
+
+    root.querySelectorAll('.fav-btn').forEach(btn => {
+      btn.addEventListener('click', (ev) => {
+        ev.stopPropagation()
+        const isFav = this.toggleFavorite(btn.dataset.fav)
+        btn.classList.toggle('fav-active', isFav)
+      })
+    })
   }
 
   renderCard(e) {
@@ -133,8 +159,9 @@ class TurfTeaser extends HTMLElement {
           </div>
           <div class="card-title">${e.title}</div>
           ${e.desc ? `<div class="card-desc">${e.desc}</div>` : ''}
-          <div class="card-theme">
+          <div class="card-footer">
             <span class="theme-pill">${themeLabel}</span>
+            <button class="fav-btn ${this.isFavorite(e._id) ? 'fav-active' : ''}" data-fav="${e._id}" title="Bewaar als favoriet">★</button>
           </div>
         </div>
       </div>
@@ -339,7 +366,10 @@ class TurfTeaser extends HTMLElement {
         max-width: 500px;
       }
 
-      .card-theme {
+      .card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         margin-top: 16px;
       }
 
@@ -356,6 +386,32 @@ class TurfTeaser extends HTMLElement {
         letter-spacing: 0.5px;
         text-transform: uppercase;
         color: var(--muted);
+      }
+
+      /* ── FAV BUTTON ── */
+      .fav-btn {
+        background: none;
+        border: 1px solid rgba(255,255,255,0.2);
+        color: rgba(255,255,255,0.3);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        flex-shrink: 0;
+      }
+      .fav-btn:hover {
+        border-color: #fff;
+        color: #fff;
+      }
+      .fav-btn.fav-active {
+        background: #fff;
+        border-color: #fff;
+        color: #111;
       }
 
       /* ── EMPTY ── */
