@@ -130,7 +130,7 @@ class TurfTeaser2 extends HTMLElement {
       })
     })
 
-    root.getElementById('favFilterBtn')?.addEventListener('click', () => {
+    root.querySelector('#favFilterBtn')?.addEventListener('click', () => {
       this.showFavoritesOnly = !this.showFavoritesOnly
       this.render()
     })
