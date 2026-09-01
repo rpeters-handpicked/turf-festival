@@ -4,6 +4,7 @@ class TurfTeaser extends HTMLElement {
     this.attachShadow({ mode: 'open' })
     this.events = []
     this.activeDay = null
+    this.showFavoritesOnly = false
   }
 
   get cfg() { return typeof TURF_CONFIG !== 'undefined' ? TURF_CONFIG : {} }
@@ -96,9 +97,12 @@ class TurfTeaser extends HTMLElement {
 
   render() {
     const root = this.shadowRoot.querySelector('.root')
-    const filtered = this.activeDay
-      ? this.events.filter(e => e.dag === this.activeDay)
-      : this.events
+    const favs = this.showFavoritesOnly ? this.getFavorites() : null
+    const filtered = this.events.filter(e => {
+      if (this.activeDay && e.dag !== this.activeDay) return false
+      if (favs && !favs.includes(e._id)) return false
+      return true
+    })
 
     root.innerHTML = `
       <div class="day-filter">
@@ -112,6 +116,7 @@ class TurfTeaser extends HTMLElement {
         <button class="day-tab ${this.activeDay === 'dag3' ? 'active' : ''}" data-day="dag3">
           Zaterdag <span class="sub">28 nov</span>
         </button>
+        <button class="fav-filter-btn ${this.showFavoritesOnly ? 'active' : ''}" id="favFilterBtn">★ Favorites</button>
       </div>
       <div class="count-line"><strong>${filtered.length}</strong> events</div>
       <div class="event-list">
@@ -127,6 +132,11 @@ class TurfTeaser extends HTMLElement {
         this.activeDay = btn.dataset.day || null
         this.render()
       })
+    })
+
+    root.getElementById('favFilterBtn')?.addEventListener('click', () => {
+      this.showFavoritesOnly = !this.showFavoritesOnly
+      this.render()
     })
 
     root.querySelectorAll('.fav-btn').forEach(btn => {
@@ -261,6 +271,34 @@ class TurfTeaser extends HTMLElement {
         text-transform: none;
       }
       .day-tab.active .sub { opacity: 0.45; }
+
+      /* ── FAVORITES FILTER ── */
+      .fav-filter-btn {
+        margin-left: auto;
+        padding: 14px 28px;
+        border: none;
+        background: rgba(0,0,0,0.5);
+        color: var(--text);
+        font-family: var(--font-heading);
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        cursor: pointer;
+        border-radius: var(--radius);
+        transition: background 0.2s, outline 0.1s;
+        white-space: nowrap;
+        line-height: 1;
+      }
+      .fav-filter-btn:hover {
+        background: transparent;
+        outline: 2px solid var(--text);
+        outline-offset: -2px;
+      }
+      .fav-filter-btn.active {
+        background: var(--text);
+        color: #111;
+      }
 
       /* ── COUNT ── */
       .count-line {
