@@ -6,7 +6,13 @@ const TYPE_PRIORITY = { club: 1, theater: 2, outdoor: 3, galerie: 4, overig: 5 }
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=900')
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=900')
+
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET')
+    return res.status(405).json({ error: 'Method Not Allowed' })
+  }
 
   const query = `
     *[_type == "locatie"] | order(naam asc) {
