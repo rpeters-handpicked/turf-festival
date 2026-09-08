@@ -31,8 +31,7 @@ export default {
     {
       name: 'beschrijving',
       title: 'Korte beschrijving',
-      type: 'text',
-      rows: 2
+      type: 'localeText',
     }
   ],
   preview: {

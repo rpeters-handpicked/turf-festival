@@ -12,8 +12,8 @@ export default {
     {
       name: 'rol',
       title: 'Rol / Functietitel',
-      type: 'string',
-      description: 'Bijv. DJ / Activist · Rotterdam'
+      type: 'localeString',
+      description: 'Bijv. DJ / Activist · Rotterdam',
     },
     {
       name: 'organisatie',
@@ -23,8 +23,7 @@ export default {
     {
       name: 'bio',
       title: 'Biografie',
-      type: 'text',
-      rows: 4
+      type: 'localeText',
     },
     {
       name: 'foto',
@@ -44,6 +43,6 @@ export default {
     }
   ],
   preview: {
-    select: { title: 'naam', subtitle: 'rol', media: 'foto' }
+    select: { title: 'naam', subtitle: 'rol.nl', media: 'foto' }
   }
 }

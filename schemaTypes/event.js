@@ -7,20 +7,19 @@ export default {
     {
       name: 'titel',
       title: 'Titel',
-      type: 'string',
-      validation: Rule => Rule.required()
+      type: 'localeString',
+      validation: Rule => Rule.custom(v => v?.nl ? true : 'Nederlandstalige titel is verplicht'),
     },
     {
       name: 'ondertitel',
       title: 'Ondertitel / Gepresenteerd door',
-      type: 'string'
+      type: 'localeString',
     },
     {
       name: 'beschrijving',
       title: 'Beschrijving',
-      type: 'text',
-      rows: 6,
-      validation: Rule => Rule.required()
+      type: 'localeText',
+      validation: Rule => Rule.custom(v => v?.nl ? true : 'Nederlandstalige beschrijving is verplicht'),
     },
     {
       name: 'afbeelding',
@@ -149,7 +148,7 @@ export default {
 
   preview: {
     select: {
-      title: 'titel',
+      title: 'titel.nl',
       subtitle: 'startTijd',
       media: 'afbeelding'
     },

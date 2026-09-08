@@ -37,7 +37,11 @@ export default async function handler(req, res) {
         priority: (TYPE_PRIORITY[loc.type] ?? 10) * 10 + index,
       }
 
-      if (loc.beschrijving) stage.description = loc.beschrijving
+      // Normaliseer locale veld: plain string → { nl: string }, object → doorsturen
+      const desc = loc.beschrijving
+        ? (typeof loc.beschrijving === 'string' ? { nl: loc.beschrijving } : loc.beschrijving)
+        : undefined
+      if (desc) stage.description = desc
       if (loc.capaciteit)   stage.capacity    = String(loc.capaciteit)
       // Minimaal 1500×1500 vereist door Appmiral
       if (loc.afbeelding)   stage.image       = `${loc.afbeelding}?w=1500&h=1500&fit=crop`

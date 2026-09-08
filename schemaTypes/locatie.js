@@ -36,8 +36,7 @@ export default {
     {
       name: 'beschrijving',
       title: 'Beschrijving',
-      type: 'text',
-      rows: 3
+      type: 'localeText',
     },
     {
       name: 'afbeelding',

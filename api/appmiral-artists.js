@@ -95,16 +95,20 @@ export default async function handler(req, res) {
       if (perfStart) performance.start_time = perfStart
       if (perfEnd)   performance.end_time   = perfEnd
 
+      // Normaliseer locale velden: plain string → { nl: string }, object → doorsturen
+      const toLocale = v => (v && typeof v === 'string') ? { nl: v } : (v || undefined)
+
       const artist = {
         id:       event._id,
-        name:     event.titel,
+        name:     toLocale(event.titel),
         priority: index + 1,
         category: THEMA_CATEGORY[event.themaSlug] ?? 'regular',
         performances: [performance],
         show_in_artists: true,
       }
 
-      if (event.beschrijving) artist.description = event.beschrijving
+      const desc = toLocale(event.beschrijving)
+      if (desc) artist.description = desc
       // Minimaal 1500×1500 vereist door Appmiral
       if (event.afbeelding)   artist.image       = `${event.afbeelding}?w=1500&h=1500&fit=crop`
 

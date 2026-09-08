@@ -42,7 +42,9 @@ class TurfHighlights extends HTMLElement {
   async loadEvents() {
     const raw = await this.sanityFetch(`
       *[_type == "event" && gepubliceerd == true] | order(dag asc, startTijd asc) {
-        _id, titel, dag,
+        _id,
+        "titel": coalesce(titel.nl, titel),
+        dag,
         "themaSlug": thema->slug,
         "themaNaam": thema->naam,
         "afbeelding": afbeelding.asset->url

@@ -67,7 +67,11 @@ class TurfTeaser3 extends HTMLElement {
   async loadEvents() {
     const raw = await this.sanityFetch(`
       *[_type == "event" && gepubliceerd == true] | order(dag asc, startTijd asc) {
-        _id, titel, ondertitel, beschrijving, dag, startTijd, eindTijd,
+        _id,
+        "titel": coalesce(titel.nl, titel),
+        "ondertitel": coalesce(ondertitel.nl, ondertitel),
+        "beschrijving": coalesce(beschrijving.nl, beschrijving),
+        dag, startTijd, eindTijd,
         "themaSlug": thema->slug,
         "themaNaam": thema->naam,
         "locatieNaam": locatie->naam,
