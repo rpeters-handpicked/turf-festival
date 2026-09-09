@@ -148,7 +148,6 @@ class TurfTeaser3 extends HTMLElement {
     }
     return result
   }
-  }
 
   // Patroon per positie in groep van 8:
   // 0 → large (2 col × 2 row), 3 → wide (2 col × 1 row), rest → small
