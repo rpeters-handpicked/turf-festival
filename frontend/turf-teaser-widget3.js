@@ -32,10 +32,23 @@ class TurfTeaser3 extends HTMLElement {
   }
 
   get dagLabels() {
+    const en = this.lang === 'en'
     return {
-      dag1: { short: 'DO 26/11', full: 'Donderdag 26 nov' },
-      dag2: { short: 'VR 27/11', full: 'Vrijdag 27 nov' },
-      dag3: { short: 'ZA 28/11', full: 'Zaterdag 28 nov' },
+      dag1: { short: en ? 'THU 26/11' : 'DO 26/11',  full: en ? 'Thursday' : 'Donderdag', sub: '26 Nov' },
+      dag2: { short: en ? 'FRI 27/11' : 'VR 27/11',  full: en ? 'Friday'   : 'Vrijdag',   sub: '27 Nov' },
+      dag3: { short: en ? 'SAT 28/11' : 'ZA 28/11',  full: en ? 'Saturday' : 'Zaterdag',  sub: '28 Nov' },
+    }
+  }
+
+  get ui() {
+    const en = this.lang === 'en'
+    return {
+      allDays:  en ? 'All Days'         : 'Alle Dagen',
+      favorites: '★ Favorites',
+      loading:  en ? 'Loading…'         : 'Programma laden…',
+      noEvents: en ? 'No events found'  : 'Geen events gevonden',
+      by:       en ? 'By'               : 'Door',
+      events:   'events',
     }
   }
 
@@ -65,7 +78,7 @@ class TurfTeaser3 extends HTMLElement {
   }
 
   async connectedCallback() {
-    this.shadowRoot.innerHTML = `<style>${this.getStyles()}</style><div class="root"><div class="loading">Programma laden…</div></div>`
+    this.shadowRoot.innerHTML = `<style>${this.getStyles()}</style><div class="root"><div class="loading">${this.ui.loading}</div></div>`
     await this.loadEvents()
     this.render()
   }
@@ -136,25 +149,25 @@ class TurfTeaser3 extends HTMLElement {
     root.innerHTML = `
       <div class="day-filter">
         <div class="filter-top">
-          <button class="day-tab ${!this.activeDay ? 'active' : ''}" data-day="">Alle Dagen</button>
-          <button class="fav-filter-btn ${this.showFavoritesOnly ? 'active' : ''}" id="favFilterBtn">★ Favorites</button>
+          <button class="day-tab ${!this.activeDay ? 'active' : ''}" data-day="">${this.ui.allDays}</button>
+          <button class="fav-filter-btn ${this.showFavoritesOnly ? 'active' : ''}" id="favFilterBtn">${this.ui.favorites}</button>
         </div>
         <div class="filter-days">
           <button class="day-tab ${this.activeDay === 'dag1' ? 'active' : ''}" data-day="dag1">
-            Donderdag <span class="sub">26 nov</span>
+            ${this.dagLabels.dag1.full} <span class="sub">${this.dagLabels.dag1.sub}</span>
           </button>
           <button class="day-tab ${this.activeDay === 'dag2' ? 'active' : ''}" data-day="dag2">
-            Vrijdag <span class="sub">27 nov</span>
+            ${this.dagLabels.dag2.full} <span class="sub">${this.dagLabels.dag2.sub}</span>
           </button>
           <button class="day-tab ${this.activeDay === 'dag3' ? 'active' : ''}" data-day="dag3">
-            Zaterdag <span class="sub">28 nov</span>
+            ${this.dagLabels.dag3.full} <span class="sub">${this.dagLabels.dag3.sub}</span>
           </button>
         </div>
       </div>
-      <div class="count-line"><strong>${filtered.length}</strong> events</div>
+      <div class="count-line"><strong>${filtered.length}</strong> ${this.ui.events}</div>
       <div class="card-grid">
         ${filtered.length === 0
-          ? `<div class="empty">Geen events gevonden</div>`
+          ? `<div class="empty">${this.ui.noEvents}</div>`
           : filtered.map((e, i) => this.renderCard(e, this.getCardType(i))).join('')
         }
       </div>
@@ -194,7 +207,7 @@ class TurfTeaser3 extends HTMLElement {
     const themePill = `<div class="theme-pill"><span class="theme-dot" style="background:${themeColor}"></span>${themeLabel}</div>`
 
     if (!e.image) {
-      const speakerStr = e.speakers?.length ? ` · Door ${e.speakers.join(' & ')}` : ''
+      const speakerStr = e.speakers?.length ? ` · ${this.ui.by} ${e.speakers.join(' & ')}` : ''
       const metaStr = `${dag.short} · ${timeStr} · ${e.location}${speakerStr}`
       return `
         <div class="event-card card-${type} card-no-photo" data-id="${e._id}">
