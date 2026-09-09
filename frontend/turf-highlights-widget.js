@@ -16,6 +16,17 @@ class TurfHighlights extends HTMLElement {
     return ''
   }
 
+  get lang() {
+    const l = (document.documentElement.lang || 'nl').toLowerCase()
+    return l.startsWith('en') ? 'en' : 'nl'
+  }
+
+  localeField(field) {
+    return this.lang === 'en'
+      ? `coalesce(${field}.en, ${field}.nl, ${field})`
+      : `coalesce(${field}.nl, ${field})`
+  }
+
   // Kleur per thema (voor categorie-label)
   get themaConfig() {
     return {
@@ -43,7 +54,7 @@ class TurfHighlights extends HTMLElement {
     const raw = await this.sanityFetch(`
       *[_type == "event" && gepubliceerd == true] | order(dag asc, startTijd asc) {
         _id,
-        "titel": coalesce(titel.nl, titel),
+        "titel": ${this.localeField('titel')},
         dag,
         "themaSlug": thema->slug,
         "themaNaam": thema->naam,
