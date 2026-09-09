@@ -75,6 +75,7 @@ class TurfTeaser3 extends HTMLElement {
         "themaSlug": thema->slug,
         "themaNaam": thema->naam,
         "locatieNaam": locatie->naam,
+        "sprekerNamen": sprekers[]->naam,
         "afbeelding": afbeelding.asset->url
       }
     `)
@@ -92,6 +93,7 @@ class TurfTeaser3 extends HTMLElement {
         startTime: e.startTijd || '',
         endTime: e.eindTijd || '',
         location: e.locatieNaam || '',
+        speakers: e.sprekerNamen || [],
         theme: e.themaSlug || 'talks',
         themeName: e.themaNaam || '',
         image: e.afbeelding || '',
@@ -167,29 +169,43 @@ class TurfTeaser3 extends HTMLElement {
     const timeStr = e.startTime + (e.endTime ? ` – ${e.endTime}` : '')
     const themeLabel = this.themaLabels[e.theme] || e.themeName
     const themeColor = this.themaColors[e.theme] || '#fff'
-
-    // Grotere afbeelding voor large cards
     const imgSize = type === 'large' ? '?w=1200&h=1200&fit=crop'
       : type === 'wide' ? '?w=1200&h=600&fit=crop'
       : '?w=600&h=600&fit=crop'
 
-    const bgStyle = e.image
-      ? `background-image: url('${e.image}${imgSize}')`
-      : `background: #111`
+    const favBtn = `<button class="fav-btn ${this.isFavorite(e._id) ? 'fav-active' : ''}" data-fav="${e._id}" title="Bewaar als favoriet">★</button>`
+    const themePill = `<div class="theme-pill"><span class="theme-dot" style="background:${themeColor}"></span>${themeLabel}</div>`
+
+    if (!e.image) {
+      const speakerStr = e.speakers?.length ? ` · Door ${e.speakers.join(' & ')}` : ''
+      const metaStr = `${dag.short} · ${timeStr} · ${e.location}${speakerStr}`
+      return `
+        <div class="event-card card-${type} card-no-photo" data-id="${e._id}">
+          ${favBtn}
+          <div class="card-content">
+            <div class="card-title">${e.title}</div>
+            <div class="card-bottom">
+              <div class="meta-separator"></div>
+              <div class="card-meta-row">
+                <span class="card-meta">${metaStr}</span>
+                ${themePill}
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    }
 
     return `
       <div class="event-card card-${type}" data-id="${e._id}">
-        <div class="card-bg" style="${bgStyle}"></div>
+        <div class="card-bg" style="background-image: url('${e.image}${imgSize}')"></div>
         <div class="card-overlay"></div>
-        <button class="fav-btn ${this.isFavorite(e._id) ? 'fav-active' : ''}" data-fav="${e._id}" title="Bewaar als favoriet">★</button>
+        ${favBtn}
         <div class="card-content">
           <div class="card-meta">${dag.short} · ${timeStr} · ${e.location}</div>
           <div class="card-title">${e.title}</div>
           ${e.desc && type !== 'small' ? `<div class="card-desc">${e.desc}</div>` : ''}
-          <div class="theme-pill">
-            <span class="theme-dot" style="background:${themeColor}"></span>
-            ${themeLabel}
-          </div>
+          ${themePill}
         </div>
       </div>
     `
@@ -502,6 +518,60 @@ class TurfTeaser3 extends HTMLElement {
         letter-spacing: 2px;
       }
 
+      /* ── KAART ZONDER FOTO ── */
+      .card-no-photo {
+        border-top: 6px solid #e85d3a;
+        background: #111;
+      }
+
+      .card-no-photo .card-content {
+        position: absolute;
+        inset: 0;
+        padding: 22px 20px 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .card-no-photo .card-title {
+        font-size: 44px;
+        margin-bottom: 0;
+        overflow: hidden;
+        line-height: 0.92;
+      }
+
+      .card-no-photo.card-large .card-content { padding: 26px 28px 22px; }
+      .card-no-photo.card-large .card-title   { font-size: 96px; }
+      .card-no-photo.card-wide .card-content  { padding: 22px 24px 18px; }
+      .card-no-photo.card-wide .card-title    { font-size: 56px; }
+
+      .meta-separator {
+        height: 1px;
+        background: rgba(255,255,255,0.15);
+        margin-bottom: 12px;
+      }
+
+      .card-meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .card-meta-row .card-meta {
+        margin-bottom: 0;
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 10px;
+      }
+
+      .card-meta-row .theme-pill {
+        flex-shrink: 0;
+      }
+
       /* ── TABLET: 2 kolommen, large = full width ── */
       @media (max-width: 900px) {
         .card-grid {
@@ -510,6 +580,8 @@ class TurfTeaser3 extends HTMLElement {
         }
         .card-large .card-title { font-size: 48px; }
         .card-wide .card-title  { font-size: 36px; }
+        .card-no-photo.card-large .card-title { font-size: 64px; }
+        .card-no-photo.card-wide .card-title  { font-size: 44px; }
       }
 
       /* ── MOBILE: 2 kolommen, large = full width, alles 1 hoog ── */
@@ -539,6 +611,13 @@ class TurfTeaser3 extends HTMLElement {
         .card-wide .card-title   { font-size: 32px; }
         .card-title { font-size: 26px; }
         .card-meta  { font-size: 9px; }
+
+        .card-no-photo .card-title { font-size: 32px; }
+        .card-no-photo.card-large .card-title { font-size: 44px; }
+        .card-no-photo.card-wide .card-title  { font-size: 36px; }
+        .card-no-photo .card-content { padding: 16px 16px 14px; }
+        .card-no-photo.card-large .card-content { padding: 16px 16px 14px; }
+        .card-meta-row .card-meta { font-size: 8px; }
       }
     `
   }
