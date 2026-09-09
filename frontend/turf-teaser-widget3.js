@@ -122,17 +122,21 @@ class TurfTeaser3 extends HTMLElement {
 
     root.innerHTML = `
       <div class="day-filter">
-        <button class="day-tab ${!this.activeDay ? 'active' : ''}" data-day="">Alle Dagen</button>
-        <button class="day-tab ${this.activeDay === 'dag1' ? 'active' : ''}" data-day="dag1">
-          Donderdag <span class="sub">26 nov</span>
-        </button>
-        <button class="day-tab ${this.activeDay === 'dag2' ? 'active' : ''}" data-day="dag2">
-          Vrijdag <span class="sub">27 nov</span>
-        </button>
-        <button class="day-tab ${this.activeDay === 'dag3' ? 'active' : ''}" data-day="dag3">
-          Zaterdag <span class="sub">28 nov</span>
-        </button>
-        <button class="fav-filter-btn ${this.showFavoritesOnly ? 'active' : ''}" id="favFilterBtn">★ Favorites</button>
+        <div class="filter-top">
+          <button class="day-tab ${!this.activeDay ? 'active' : ''}" data-day="">Alle Dagen</button>
+          <button class="fav-filter-btn ${this.showFavoritesOnly ? 'active' : ''}" id="favFilterBtn">★ Favorites</button>
+        </div>
+        <div class="filter-days">
+          <button class="day-tab ${this.activeDay === 'dag1' ? 'active' : ''}" data-day="dag1">
+            Donderdag <span class="sub">26 nov</span>
+          </button>
+          <button class="day-tab ${this.activeDay === 'dag2' ? 'active' : ''}" data-day="dag2">
+            Vrijdag <span class="sub">27 nov</span>
+          </button>
+          <button class="day-tab ${this.activeDay === 'dag3' ? 'active' : ''}" data-day="dag3">
+            Zaterdag <span class="sub">28 nov</span>
+          </button>
+        </div>
       </div>
       <div class="count-line"><strong>${filtered.length}</strong> events</div>
       <div class="card-grid">
@@ -260,10 +264,20 @@ class TurfTeaser3 extends HTMLElement {
       /* ── DAY FILTER ── */
       .day-filter {
         display: flex;
+        flex-direction: column;
         gap: 10px;
         padding-bottom: 28px;
-        flex-wrap: wrap;
+      }
+
+      .filter-top {
+        display: flex;
+        gap: 10px;
         align-items: center;
+      }
+
+      .filter-days {
+        display: flex;
+        gap: 10px;
       }
 
       .day-tab {
@@ -584,11 +598,57 @@ class TurfTeaser3 extends HTMLElement {
         .card-no-photo.card-wide .card-title  { font-size: 44px; }
       }
 
-      /* ── MOBILE: 2 kolommen, large = full width, alles 1 hoog ── */
+      /* ── TABLET KLEIN / GROTE TELEFOON (600–768px) ── */
+      @media (max-width: 768px) {
+        .day-filter  { gap: 8px; padding-bottom: 22px; }
+        .filter-days { gap: 8px; }
+        .day-tab     { padding: 12px 22px; font-size: 16px; }
+        .fav-filter-btn { padding: 12px 22px; font-size: 16px; }
+
+        /* dag-knoppen vullen rij gelijk */
+        .filter-days .day-tab {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 12px 8px;
+          white-space: normal;
+          text-align: center;
+          line-height: 1.15;
+        }
+        .filter-days .day-tab .sub {
+          margin-left: 0;
+          margin-top: 3px;
+          display: block;
+          font-size: 10px;
+        }
+      }
+
+      /* ── MOBILE (≤ 600px) ── */
       @media (max-width: 600px) {
-        .day-filter { gap: 8px; padding-bottom: 20px; }
-        .day-tab { padding: 10px 18px; font-size: 15px; }
-        .fav-filter-btn { padding: 10px 18px; font-size: 15px; }
+        .day-filter  { gap: 7px; padding-bottom: 18px; }
+        .filter-days { gap: 7px; }
+        .day-tab     { padding: 10px 16px; font-size: 14px; }
+        .fav-filter-btn { padding: 10px 16px; font-size: 14px; }
+
+        /* dag-knoppen: elk 1/3 breed, datum op nieuwe regel */
+        .filter-days .day-tab {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 10px 4px;
+          white-space: normal;
+          text-align: center;
+          line-height: 1.15;
+          font-size: 13px;
+        }
+        .filter-days .day-tab .sub {
+          margin-left: 0;
+          margin-top: 3px;
+          display: block;
+          font-size: 9px;
+        }
 
         .card-grid {
           grid-template-columns: repeat(2, 1fr);
@@ -596,15 +656,8 @@ class TurfTeaser3 extends HTMLElement {
         }
 
         /* op mobile: large = volledige breedte, 1 rij hoog */
-        .event-card.card-large {
-          grid-column: span 2;
-          grid-row: span 1;
-        }
-        /* wide blijft 2 breed */
-        .event-card.card-wide {
-          grid-column: span 2;
-          grid-row: span 1;
-        }
+        .event-card.card-large { grid-column: span 2; grid-row: span 1; }
+        .event-card.card-wide  { grid-column: span 2; grid-row: span 1; }
 
         .card-large .card-title { font-size: 40px; }
         .card-large .card-content { padding: 0 16px 16px; }
@@ -618,6 +671,14 @@ class TurfTeaser3 extends HTMLElement {
         .card-no-photo .card-content { padding: 16px 16px 14px; }
         .card-no-photo.card-large .card-content { padding: 16px 16px 14px; }
         .card-meta-row .card-meta { font-size: 8px; }
+      }
+
+      /* ── KLEINE TELEFOON (≤ 375px) ── */
+      @media (max-width: 375px) {
+        .day-tab    { font-size: 12px; }
+        .fav-filter-btn { font-size: 12px; padding: 10px 12px; }
+        .filter-days .day-tab { font-size: 11px; padding: 10px 2px; }
+        .filter-days .day-tab .sub { font-size: 8px; }
       }
     `
   }
