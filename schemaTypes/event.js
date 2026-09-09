@@ -85,6 +85,22 @@ export default {
       options: { layout: 'tags' }
     },
 
+    // ── Prioriteit ──
+    {
+      name: 'prioriteit',
+      title: 'Prioriteit',
+      type: 'number',
+      description: '1 = uitgelicht, 2 = normaal, 3 = laag',
+      options: {
+        list: [
+          { title: '1 — Uitgelicht', value: 1 },
+          { title: '2 — Normaal',    value: 2 },
+          { title: '3 — Laag',       value: 3 },
+        ]
+      },
+      initialValue: 1,
+    },
+
     // ── Locatie ──
     {
       name: 'locatie',

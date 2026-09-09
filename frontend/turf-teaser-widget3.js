@@ -92,12 +92,12 @@ class TurfTeaser3 extends HTMLElement {
 
   async loadEvents() {
     const raw = await this.sanityFetch(`
-      *[_type == "event" && gepubliceerd == true] | order(dag asc, startTijd asc) {
+      *[_type == "event" && gepubliceerd == true] | order(dag asc, prioriteit asc) {
         _id,
         "titel": ${this.localeField('titel')},
         "ondertitel": ${this.localeField('ondertitel')},
         "beschrijving": ${this.localeField('beschrijving')},
-        dag, startTijd, eindTijd,
+        dag, startTijd, eindTijd, prioriteit,
         "themaSlug": thema->slug,
         "themaNaam": thema->naam,
         "locatieNaam": locatie->naam,
@@ -116,6 +116,7 @@ class TurfTeaser3 extends HTMLElement {
         _id: e._id,
         title: e.titel,
         dag: e.dag,
+        priority: e.prioriteit || 1,
         startTime: e.startTijd || '',
         endTime: e.eindTijd || '',
         location: e.locatieNaam || '',
@@ -126,6 +127,27 @@ class TurfTeaser3 extends HTMLElement {
         desc,
       }
     })
+
+    // Shuffle within each (dag, prioriteit) group
+    this.events = this._shuffleGroups(this.events)
+  }
+
+  _shuffleGroups(arr) {
+    const result = []
+    let i = 0
+    while (i < arr.length) {
+      let j = i + 1
+      while (j < arr.length && arr[j].dag === arr[i].dag && arr[j].priority === arr[i].priority) j++
+      const group = arr.slice(i, j)
+      for (let k = group.length - 1; k > 0; k--) {
+        const m = Math.floor(Math.random() * (k + 1));
+        [group[k], group[m]] = [group[m], group[k]]
+      }
+      result.push(...group)
+      i = j
+    }
+    return result
+  }
   }
 
   // Patroon per positie in groep van 8:

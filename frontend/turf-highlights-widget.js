@@ -52,7 +52,7 @@ class TurfHighlights extends HTMLElement {
 
   async loadEvents() {
     const raw = await this.sanityFetch(`
-      *[_type == "event" && gepubliceerd == true] | order(dag asc, startTijd asc) {
+      *[_type == "event" && gepubliceerd == true && coalesce(prioriteit, 1) == 1] {
         _id,
         "titel": ${this.localeField('titel')},
         dag,
@@ -68,7 +68,7 @@ class TurfHighlights extends HTMLElement {
       dag3: 'ZA 28/11',
     }
 
-    this.events = (raw || []).map(e => ({
+    const mapped = (raw || []).map(e => ({
       _id: e._id,
       title: e.titel,
       dag: dagLabels[e.dag] || e.dag || '',
@@ -76,6 +76,13 @@ class TurfHighlights extends HTMLElement {
       themeName: e.themaNaam || '',
       image: e.afbeelding || '',
     }))
+
+    // Random volgorde
+    for (let i = mapped.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [mapped[i], mapped[j]] = [mapped[j], mapped[i]]
+    }
+    this.events = mapped
   }
 
   render() {
