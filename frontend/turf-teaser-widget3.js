@@ -18,6 +18,19 @@ class TurfTeaser3 extends HTMLElement {
     return ''
   }
 
+  // Detecteer paginataal via Webflow html[lang]; 'en' als prefix → Engels
+  get lang() {
+    const l = (document.documentElement.lang || 'nl').toLowerCase()
+    return l.startsWith('en') ? 'en' : 'nl'
+  }
+
+  // Bouw GROQ coalesce op basis van taal, met NL als fallback
+  localeField(field) {
+    return this.lang === 'en'
+      ? `coalesce(${field}.en, ${field}.nl, ${field})`
+      : `coalesce(${field}.nl, ${field})`
+  }
+
   get dagLabels() {
     return {
       dag1: { short: 'DO 26/11', full: 'Donderdag 26 nov' },
@@ -68,9 +81,9 @@ class TurfTeaser3 extends HTMLElement {
     const raw = await this.sanityFetch(`
       *[_type == "event" && gepubliceerd == true] | order(dag asc, startTijd asc) {
         _id,
-        "titel": coalesce(titel.nl, titel),
-        "ondertitel": coalesce(ondertitel.nl, ondertitel),
-        "beschrijving": coalesce(beschrijving.nl, beschrijving),
+        "titel": ${this.localeField('titel')},
+        "ondertitel": ${this.localeField('ondertitel')},
+        "beschrijving": ${this.localeField('beschrijving')},
         dag, startTijd, eindTijd,
         "themaSlug": thema->slug,
         "themaNaam": thema->naam,
