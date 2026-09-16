@@ -60,7 +60,7 @@ class TurfProgramma extends HTMLElement {
   get cdnUrl() { return `https://${this.projectId}.api.sanity.io/v2024-01-01/data/query/${this.dataset}` }
 
   async connectedCallback() {
-    this.shadowRoot.innerHTML = `<style>${this.getStyles()}</style><div class="root"><div class="loading">Programma laden...</div></div>`
+    this.shadowRoot.innerHTML = `<style>${this.getStyles()}</style><div class="root"><div class="loading">${this.ui.loading}</div></div>`
     await this.loadEvents()
 
     // Check for location filter from URL param
@@ -100,10 +100,11 @@ class TurfProgramma extends HTMLElement {
   // ─── DATA ───────────────────────────────────────────────────────────────────
 
   get dagLabels() {
+    const en = this.lang === 'en'
     return {
-      dag1: { short: 'DO 26/11', prefix: 'DO 26 nov', full: 'Donderdag 26 november 2026', num: '1' },
-      dag2: { short: 'VR 27/11', prefix: 'VR 27 nov', full: 'Vrijdag 27 november 2026', num: '2' },
-      dag3: { short: 'ZA 28/11', prefix: 'ZA 28 nov', full: 'Zaterdag 28 november 2026', num: '3' },
+      dag1: { short: en ? 'THU 26/11' : 'DO 26/11', name: en ? 'THU' : 'DO', date: '26-11', prefix: en ? 'THU 26 Nov' : 'DO 26 nov', full: en ? 'Thursday 26 November 2026'  : 'Donderdag 26 november 2026', num: '1' },
+      dag2: { short: en ? 'FRI 27/11' : 'VR 27/11', name: en ? 'FRI' : 'VR', date: '27-11', prefix: en ? 'FRI 27 Nov' : 'VR 27 nov', full: en ? 'Friday 27 November 2026'    : 'Vrijdag 27 november 2026',   num: '2' },
+      dag3: { short: en ? 'SAT 28/11' : 'ZA 28/11', name: en ? 'SAT' : 'ZA', date: '28-11', prefix: en ? 'SAT 28 Nov' : 'ZA 28 nov', full: en ? 'Saturday 28 November 2026' : 'Zaterdag 28 november 2026',  num: '3' },
     }
   }
 
@@ -115,18 +116,72 @@ class TurfProgramma extends HTMLElement {
     return { talks: 'tag-talks', live: 'tag-live', night: 'tag-night' }
   }
 
+  get lang() {
+    const l = (document.documentElement.lang || 'nl').toLowerCase()
+    return l.startsWith('en') ? 'en' : 'nl'
+  }
+
+  localeField(field) {
+    return this.lang === 'en'
+      ? `coalesce(${field}.en, ${field}.nl, ${field})`
+      : `coalesce(${field}.nl, ${field})`
+  }
+
+  get ui() {
+    const en = this.lang === 'en'
+    return {
+      loading:         en ? 'Loading programme…'              : 'Programma laden...',
+      loadingEvent:    en ? 'Loading event…'                   : 'Event laden...',
+      allEvents:       en ? 'All Events'                       : 'Alle Events',
+      favorites:       '★ Favorites',
+      showing:         en ? 'Showing'                          : 'Gevonden',
+      results:         en ? 'results'                          : 'resultaten',
+      searchPlaceholder: en ? 'Search event…'                 : 'Zoek event...',
+      dateLabel:       en ? 'Date'                             : 'Datum',
+      locationLabel:   en ? 'Location'                         : 'Locatie',
+      allDays:         en ? 'All days'                         : 'Alle dagen',
+      more:            en ? 'More'                             : 'Meer',
+      less:            en ? 'Less'                             : 'Minder',
+      selected:        en ? 'selected'                         : 'geselecteerd',
+      filteredByTag:   en ? 'Filtered by tag:'                 : 'Gefilterd op tag:',
+      noEvents:        en ? 'No Events Found'                  : 'Geen Events Gevonden',
+      adjustFilters:   en ? 'Adjust your filters'              : 'Pas je filters aan',
+      backBtn:         en ? 'Back to programme'                : 'Terug naar programma',
+      saved:           en ? 'Saved'                            : 'Opgeslagen',
+      favorite:        en ? 'Favorite'                         : 'Favoriet',
+      aboutEvent:      en ? 'About this event'                 : 'Over dit event',
+      locationSection: en ? 'Location'                         : 'Locatie',
+      otherEvents:     en ? 'Other events at this location'    : 'Andere events op deze locatie',
+      noOtherEvents:   en ? 'No other events at this location' : 'Geen andere events op deze locatie',
+      thema:           en ? 'Theme'                            : 'Thema',
+      typeLabel:       'Type',
+      dagLabel:        en ? 'Day'                              : 'Dag',
+      tijdLabel:       en ? 'Time'                             : 'Tijd',
+      locatieLabel:    en ? 'Location'                         : 'Locatie',
+      accessLabel:     en ? 'Access'                           : 'Toegang',
+      freeAccess:      en ? 'Free'                             : 'Gratis',
+      tags:            'Tags',
+      allLocations:    en ? 'All locations'                    : 'Alle locaties',
+    }
+  }
+
   async loadEvents() {
-    const raw = await this.sanityFetch(`*[_type == "event" && gepubliceerd == true] | order(dag asc, startTijd asc) {
-      _id, titel, ondertitel, dag, startTijd, eindTijd, type, tags,
+    const raw = await this.sanityFetch(`*[_type == "event" && gepubliceerd == true] | order(dag asc, prioriteit asc) {
+      _id,
+      "titel": ${this.localeField('titel')},
+      "ondertitel": ${this.localeField('ondertitel')},
+      dag, startTijd, eindTijd, type, tags,
+      prioriteit,
       "themaSlug": thema->slug,
       "themaNaam": thema->naam,
       "themaKleur": thema->kleur,
       "locatieNaam": locatie->naam,
       "locatieRef": locatie._ref,
-      "afbeelding": afbeelding.asset->url
+      "afbeelding": afbeelding.asset->url,
+      "sprekerNamen": sprekers[]->naam
     }`)
 
-    this.events = raw.map(e => ({
+    this.events = this._shuffleGroups((raw || []).map(e => ({
       _id: e._id,
       title: e.titel,
       subtitle: e.ondertitel || '',
@@ -142,10 +197,29 @@ class TurfProgramma extends HTMLElement {
       type: e.type || '',
       tags: e.tags || [],
       image: e.afbeelding || '',
-    }))
+      priority: e.prioriteit || 1,
+      speakers: (e.sprekerNamen || []).filter(Boolean),
+    })))
 
     this.locations = [...new Set(this.events.map(e => e.location))].filter(Boolean).sort()
     this.types = [...new Set(this.events.map(e => e.type))].filter(Boolean).sort()
+  }
+
+  _shuffleGroups(arr) {
+    const result = []
+    let i = 0
+    while (i < arr.length) {
+      let j = i + 1
+      while (j < arr.length && arr[j].dag === arr[i].dag && (arr[j].priority || 1) === (arr[i].priority || 1)) j++
+      const group = arr.slice(i, j)
+      for (let k = group.length - 1; k > 0; k--) {
+        const m = Math.floor(Math.random() * (k + 1));
+        [group[k], group[m]] = [group[m], group[k]]
+      }
+      result.push(...group)
+      i = j
+    }
+    return result
   }
 
   // ─── LIST VIEW ──────────────────────────────────────────────────────────────
@@ -155,35 +229,35 @@ class TurfProgramma extends HTMLElement {
     const root = this.shadowRoot.querySelector('.root')
     root.innerHTML = `
       <div class="category-bar desktop-only">
-        <button class="cat-tab active" data-cat="all">All Events</button>
+        <button class="cat-tab active" data-cat="all">${this.ui.allEvents}</button>
         <button class="cat-tab" data-cat="talks">⬡ TURF Talks</button>
         <button class="cat-tab" data-cat="live">◈ TURF Live</button>
         <button class="cat-tab" data-cat="night">◉ TURF by Night</button>
-        <button class="cat-tab cat-tab-fav ${this.showFavoritesOnly ? 'active' : ''}" id="favFilter">★ Favorites</button>
+        <button class="cat-tab cat-tab-fav ${this.showFavoritesOnly ? 'active' : ''}" id="favFilter">${this.ui.favorites}</button>
       </div>
-      ${this.activeTag ? `<div class="active-tag-bar">Filtered by tag: <strong>${this.activeTag}</strong> <button id="clearTag">✕</button></div>` : ''}
+      ${this.activeTag ? `<div class="active-tag-bar">${this.ui.filteredByTag} <strong>${this.activeTag}</strong> <button id="clearTag">✕</button></div>` : ''}
       <div class="main">
         <aside class="sidebar">
-          <div class="results-count">Showing <strong id="count">0</strong> results</div>
+          <div class="results-count">${this.ui.showing} <strong id="count">0</strong> ${this.ui.results}</div>
           <div class="search-box">
             <span class="search-icon">⌕</span>
-            <input type="text" id="search" placeholder="Search event..." value="${this.searchQuery}">
+            <input type="text" id="search" placeholder="${this.ui.searchPlaceholder}" value="${this.searchQuery}">
           </div>
           <!-- Desktop filters -->
           <div class="filter-section desktop-only">
-            <div class="filter-label">Date <button id="clearDate">—</button></div>
+            <div class="filter-label">${this.ui.dateLabel} <button id="clearDate">—</button></div>
             <div class="date-grid">
-              <button class="date-btn ${this.activeDay === '1' ? 'active' : ''}" data-day="1"><span class="day-name">DO</span><span class="day-num">26-11</span></button>
-              <button class="date-btn ${this.activeDay === '2' ? 'active' : ''}" data-day="2"><span class="day-name">VR</span><span class="day-num">27-11</span></button>
-              <button class="date-btn ${this.activeDay === '3' ? 'active' : ''}" data-day="3"><span class="day-name">ZA</span><span class="day-num">28-11</span></button>
+              <button class="date-btn ${this.activeDay === '1' ? 'active' : ''}" data-day="1"><span class="day-name">${this.dagLabels.dag1.name}</span><span class="day-num">${this.dagLabels.dag1.date}</span></button>
+              <button class="date-btn ${this.activeDay === '2' ? 'active' : ''}" data-day="2"><span class="day-name">${this.dagLabels.dag2.name}</span><span class="day-num">${this.dagLabels.dag2.date}</span></button>
+              <button class="date-btn ${this.activeDay === '3' ? 'active' : ''}" data-day="3"><span class="day-name">${this.dagLabels.dag3.name}</span><span class="day-num">${this.dagLabels.dag3.date}</span></button>
             </div>
           </div>
           <div class="filter-section desktop-only">
-            <div class="filter-label">Location</div>
-            ${this.activeLocations.size > 0 ? `<div class="loc-active-count">${this.activeLocations.size} geselecteerd <button id="clearLoc">✕</button></div>` : ''}
+            <div class="filter-label">${this.ui.locationLabel}</div>
+            ${this.activeLocations.size > 0 ? `<div class="loc-active-count">${this.activeLocations.size} ${this.ui.selected} <button id="clearLoc">✕</button></div>` : ''}
             <div class="location-list expanded ${this.locationsShowAll ? 'show-all' : ''}" id="locationList"></div>
             <button class="loc-more-btn" id="locMoreBtn">
-              <span class="loc-more-arrow">${this.locationsShowAll ? '▴' : '▾'}</span> ${this.locationsShowAll ? 'Minder' : 'Meer'}
+              <span class="loc-more-arrow">${this.locationsShowAll ? '▴' : '▾'}</span> ${this.locationsShowAll ? this.ui.less : this.ui.more}
             </button>
           </div>
           <a href="${this.routeUrl}" target="_blank" class="route-btn desktop-only">
@@ -193,17 +267,17 @@ class TurfProgramma extends HTMLElement {
           <!-- Mobile filters (dropdowns) -->
           <div class="mobile-filters mobile-only">
             <select class="mobile-select" id="mobileDate">
-              <option value="">Alle dagen</option>
-              <option value="1" ${this.activeDay === '1' ? 'selected' : ''}>DO 26-11</option>
-              <option value="2" ${this.activeDay === '2' ? 'selected' : ''}>VR 27-11</option>
-              <option value="3" ${this.activeDay === '3' ? 'selected' : ''}>ZA 28-11</option>
+              <option value="">${this.ui.allDays}</option>
+              <option value="1" ${this.activeDay === '1' ? 'selected' : ''}>${this.dagLabels.dag1.name} ${this.dagLabels.dag1.date}</option>
+              <option value="2" ${this.activeDay === '2' ? 'selected' : ''}>${this.dagLabels.dag2.name} ${this.dagLabels.dag2.date}</option>
+              <option value="3" ${this.activeDay === '3' ? 'selected' : ''}>${this.dagLabels.dag3.name} ${this.dagLabels.dag3.date}</option>
             </select>
             <select class="mobile-select" id="mobileLocation">
-              <option value="">Alle locaties</option>
+              <option value="">${this.ui.allLocations}</option>
               ${this.locations.map(loc => `<option value="${loc}" ${this.activeLocations.has(loc) ? 'selected' : ''}>${loc}</option>`).join('')}
             </select>
             <select class="mobile-select" id="mobileCat">
-              <option value="all" ${this.activeCat === 'all' ? 'selected' : ''}>All Events</option>
+              <option value="all" ${this.activeCat === 'all' ? 'selected' : ''}>${this.ui.allEvents}</option>
               <option value="talks" ${this.activeCat === 'talks' ? 'selected' : ''}>⬡ TURF Talks</option>
               <option value="live" ${this.activeCat === 'live' ? 'selected' : ''}>◈ TURF Live</option>
               <option value="night" ${this.activeCat === 'night' ? 'selected' : ''}>◉ TURF by Night</option>
@@ -297,7 +371,7 @@ class TurfProgramma extends HTMLElement {
       const list = root.getElementById('locationList')
       const btn = root.getElementById('locMoreBtn')
       if (list) list.classList.toggle('show-all', this.locationsShowAll)
-      if (btn) btn.innerHTML = `<span class="loc-more-arrow">${this.locationsShowAll ? '▴' : '▾'}</span> ${this.locationsShowAll ? 'Minder' : 'Meer'}`
+      if (btn) btn.innerHTML = `<span class="loc-more-arrow">${this.locationsShowAll ? '▴' : '▾'}</span> ${this.locationsShowAll ? this.ui.less : this.ui.more}`
     })
 
 
@@ -378,7 +452,7 @@ class TurfProgramma extends HTMLElement {
           // Update desktop count
           const countEl = root.querySelector('.loc-active-count')
           if (countEl && this.activeLocations.size > 0) {
-            countEl.innerHTML = `${this.activeLocations.size} geselecteerd <button id="clearLoc">✕</button>`
+            countEl.innerHTML = `${this.activeLocations.size} ${this.ui.selected} <button id="clearLoc">✕</button>`
             countEl.querySelector('#clearLoc')?.addEventListener('click', () => { this.activeLocations.clear(); this.renderList() })
           } else if (countEl && this.activeLocations.size === 0) {
             this.renderList()
@@ -411,7 +485,7 @@ class TurfProgramma extends HTMLElement {
     if (countEl) countEl.textContent = filtered.length
 
     if (filtered.length === 0) {
-      container.innerHTML = `<div class="empty-state"><h3>Geen Events Gevonden</h3><p>Pas je filters aan</p></div>`
+      container.innerHTML = `<div class="empty-state"><h3>${this.ui.noEvents}</h3><p>${this.ui.adjustFilters}</p></div>`
       return
     }
 
@@ -488,11 +562,15 @@ class TurfProgramma extends HTMLElement {
   async renderDetail(eventId) {
     this.currentView = 'detail'
     const root = this.shadowRoot.querySelector('.root')
-    root.innerHTML = `<div class="loading">Event laden...</div>`
+    root.innerHTML = `<div class="loading">${this.ui.loadingEvent}</div>`
 
     const e = await this.sanityFetch(
       `*[_type == "event" && _id == $id][0] {
-        _id, titel, ondertitel, beschrijving, dag, startTijd, eindTijd, type, tags, gratis, aanmelding, aanmeldLink,
+        _id,
+        "titel": ${this.localeField('titel')},
+        "ondertitel": ${this.localeField('ondertitel')},
+        "beschrijving": ${this.localeField('beschrijving')},
+        dag, startTijd, eindTijd, type, tags, gratis, aanmelding, aanmeldLink,
         "themaSlug": thema->slug,
         "themaNaam": thema->naam,
         "locatieNaam": locatie->naam,
@@ -523,7 +601,7 @@ class TurfProgramma extends HTMLElement {
       : ''
 
     const tagsHtml = e.tags && e.tags.length > 0
-      ? `<div class="sidebar-card"><div class="sidebar-heading">Tags</div><div class="tags-list">${e.tags.map(t => `<span class="sidebar-tag sidebar-tag-clickable" data-tag="${t}">${t}</span>`).join('')}</div></div>`
+      ? `<div class="sidebar-card"><div class="sidebar-heading">${this.ui.tags}</div><div class="tags-list">${e.tags.map(t => `<span class="sidebar-tag sidebar-tag-clickable" data-tag="${t}">${t}</span>`).join('')}</div></div>`
       : ''
 
     const beschrijving = e.beschrijving
@@ -543,11 +621,11 @@ class TurfProgramma extends HTMLElement {
       <div class="back-bar">
         <button class="back-btn" id="backBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
-          Terug naar programma
+          ${this.ui.backBtn}
         </button>
         <button class="detail-fav-btn ${this.isFavorite(eventId) ? 'fav-active' : ''}" id="detailFav">
           <span class="detail-fav-icon">★</span>
-          <span class="detail-fav-label">${this.isFavorite(eventId) ? 'Saved' : 'Favorite'}</span>
+          <span class="detail-fav-label">${this.isFavorite(eventId) ? this.ui.saved : this.ui.favorite}</span>
         </button>
       </div>
       <div class="detail-page">
@@ -574,22 +652,22 @@ class TurfProgramma extends HTMLElement {
             </div>
             ${sprekersHtml}
           </div>
-          ${beschrijving ? `<div class="section"><h2 class="section-title">Over dit event</h2><p class="description">${beschrijving}</p></div>` : ''}
+          ${beschrijving ? `<div class="section"><h2 class="section-title">${this.ui.aboutEvent}</h2><p class="description">${beschrijving}</p></div>` : ''}
           <div class="section">
-            <h2 class="section-title">Locatie</h2>
+            <h2 class="section-title">${this.ui.locationSection}</h2>
             ${mapHtml}
           </div>
-          <div class="section"><h2 class="section-title">Andere events op deze locatie</h2><div id="relatedList"></div></div>
+          <div class="section"><h2 class="section-title">${this.ui.otherEvents}</h2><div id="relatedList"></div></div>
         </div>
         <aside class="detail-sidebar">
           <div class="sidebar-card">
             <div class="sidebar-heading">Details</div>
-            <div class="detail-row"><span class="detail-key">Thema</span><span class="detail-val">${themeLabel[theme] || e.themaNaam}</span></div>
-            ${e.type ? `<div class="detail-row"><span class="detail-key">Type</span><span class="detail-val">${e.type}</span></div>` : ''}
-            <div class="detail-row"><span class="detail-key">Dag</span><span class="detail-val">${dag.full?.replace(' 2026', '') || ''}</span></div>
-            <div class="detail-row"><span class="detail-key">Tijd</span><span class="detail-val">${timeStr}</span></div>
-            <div class="detail-row"><span class="detail-key">Locatie</span><span class="detail-val">${e.locatieNaam}</span></div>
-            ${e.gratis ? `<div class="detail-row"><span class="detail-key">Toegang</span><span class="detail-val" style="color:var(--accent-lime)">Gratis</span></div>` : ''}
+            <div class="detail-row"><span class="detail-key">${this.ui.thema}</span><span class="detail-val">${themeLabel[theme] || e.themaNaam}</span></div>
+            ${e.type ? `<div class="detail-row"><span class="detail-key">${this.ui.typeLabel}</span><span class="detail-val">${e.type}</span></div>` : ''}
+            <div class="detail-row"><span class="detail-key">${this.ui.dagLabel}</span><span class="detail-val">${dag.full?.replace(' 2026', '') || ''}</span></div>
+            <div class="detail-row"><span class="detail-key">${this.ui.tijdLabel}</span><span class="detail-val">${timeStr}</span></div>
+            <div class="detail-row"><span class="detail-key">${this.ui.locatieLabel}</span><span class="detail-val">${e.locatieNaam}</span></div>
+            ${e.gratis ? `<div class="detail-row"><span class="detail-key">${this.ui.accessLabel}</span><span class="detail-val" style="color:var(--accent-lime)">${this.ui.freeAccess}</span></div>` : ''}
           </div>
           ${tagsHtml}
         </aside>
@@ -616,14 +694,16 @@ class TurfProgramma extends HTMLElement {
       const isFav = this.toggleFavorite(eventId)
       const btn = root.querySelector('#detailFav')
       btn.classList.toggle('fav-active', isFav)
-      btn.querySelector('.detail-fav-label').textContent = isFav ? 'Saved' : 'Favorite'
+      btn.querySelector('.detail-fav-label').textContent = isFav ? this.ui.saved : this.ui.favorite
     })
 
     // Load related events
     if (e.locatieRef) {
       const related = await this.sanityFetch(
         `*[_type == "event" && locatie._ref == $locRef && _id != $id && gepubliceerd == true][0..3] | order(dag asc, startTijd asc) {
-          _id, titel, dag, startTijd, eindTijd,
+          _id,
+          "titel": ${this.localeField('titel')},
+          dag, startTijd, eindTijd,
           "themaSlug": thema->slug,
           "locatieNaam": locatie->naam
         }`,
@@ -653,7 +733,7 @@ class TurfProgramma extends HTMLElement {
           })
         })
       } else if (relatedList) {
-        relatedList.innerHTML = '<p style="color:var(--muted);font-size:13px;">Geen andere events op deze locatie</p>'
+        relatedList.innerHTML = `<p style="color:var(--muted);font-size:13px;">${this.ui.noOtherEvents}</p>`
       }
     }
 
