@@ -57,8 +57,8 @@ export default async function handler(req, res) {
   const query = `
     *[_type == "event" && gepubliceerd == true] | order(dag asc, startTijd asc) {
       _id,
-      "titel": coalesce(titel.nl, titel),
-      "beschrijving": coalesce(beschrijving.nl, beschrijving),
+      titel,
+      beschrijving,
       dag,
       startTijd,
       eindTijd,
@@ -95,8 +95,13 @@ export default async function handler(req, res) {
       if (perfStart) performance.start_time = perfStart
       if (perfEnd)   performance.end_time   = perfEnd
 
-      // Normaliseer locale velden: plain string → { nl: string }, object → doorsturen
-      const toLocale = v => (v && typeof v === 'string') ? { nl: v } : (v || undefined)
+      // Normaliseer locale velden: plain string → { nl: string }, localeObject → strip _type
+      const toLocale = v => {
+        if (!v) return undefined
+        if (typeof v === 'string') return { nl: v }
+        const { _type, ...langs } = v
+        return Object.keys(langs).length ? langs : undefined
+      }
 
       const artist = {
         id:       event._id,
