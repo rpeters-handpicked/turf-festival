@@ -57,8 +57,8 @@ export default async function handler(req, res) {
   const query = `
     *[_type == "event" && gepubliceerd == true] | order(dag asc, startTijd asc) {
       _id,
-      titel,
-      beschrijving,
+      "titel": coalesce(titel.nl, titel),
+      "beschrijving": coalesce(beschrijving.nl, beschrijving),
       dag,
       startTijd,
       eindTijd,
