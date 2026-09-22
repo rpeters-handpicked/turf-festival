@@ -30,6 +30,14 @@ export default async function handler(req, res) {
     const response = await fetch(url)
     const data = await response.json()
 
+    // Normaliseer locale velden: plain string → { nl: string }, localeObject → strip _type
+    const toLocale = v => {
+      if (!v) return undefined
+      if (typeof v === 'string') return { nl: v }
+      const { _type, ...langs } = v
+      return Object.keys(langs).length ? langs : undefined
+    }
+
     const stages = (data.result || []).map((loc, index) => {
       const stage = {
         id: loc._id,
@@ -37,10 +45,7 @@ export default async function handler(req, res) {
         priority: (TYPE_PRIORITY[loc.type] ?? 10) * 10 + index,
       }
 
-      // Normaliseer locale veld: plain string → { nl: string }, object → doorsturen
-      const desc = loc.beschrijving
-        ? (typeof loc.beschrijving === 'string' ? { nl: loc.beschrijving } : loc.beschrijving)
-        : undefined
+      const desc = toLocale(loc.beschrijving)
       if (desc) stage.description = desc
       if (loc.capaciteit)   stage.capacity    = String(loc.capaciteit)
       // Minimaal 1500×1500 vereist door Appmiral
