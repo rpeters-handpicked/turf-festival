@@ -381,6 +381,10 @@ class TurfProgrammaV2 extends HTMLElement {
       root.getElementById('trackPanel')?.classList.remove('open')
     })
 
+    // Stop wheel events from bubbling to Lenis (smooth scroll library on host page)
+    locPanel?.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true })
+    locPanel?.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true })
+
     root.getElementById('clearLocOption')?.addEventListener('click', () => {
       this.activeLocations.clear()
       this.locDropdownOpen = false
@@ -412,6 +416,9 @@ class TurfProgrammaV2 extends HTMLElement {
       trackPanel?.classList.toggle('open', this.trackDropdownOpen)
       locPanel?.classList.remove('open')
     })
+
+    trackPanel?.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true })
+    trackPanel?.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true })
 
     root.getElementById('clearTrackOption')?.addEventListener('click', () => {
       this.activeTrack = null
@@ -888,7 +895,9 @@ class TurfProgrammaV2 extends HTMLElement {
         background: #1a1a1a; border: 1px solid var(--border);
         border-radius: 12px; min-width: 200px; z-index: 200;
         padding: 6px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);
-        max-height: 300px; overflow-y: auto;
+        max-height: 300px; overflow-y: scroll;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
       }
       .dropdown-panel.open { display: block; }
 
