@@ -1166,7 +1166,7 @@ class TurfProgrammaV2 extends HTMLElement {
       @media (max-width: 768px) {
         .nav-row { padding: 0 12px; }
 
-        .nav-row-days { padding-top: 12px; padding-bottom: 8px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+        .nav-row-days { padding-top: 12px; padding-bottom: 8px; flex-wrap: wrap; overflow-x: visible; scrollbar-width: none; }
         .nav-row-days::-webkit-scrollbar { display: none; }
 
         .day-btn { padding: 7px 14px; font-size: 22px; }
