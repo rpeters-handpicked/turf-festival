@@ -167,7 +167,7 @@ class TurfProgrammaV2 extends HTMLElement {
         "trackSlug": track->slug.current,
         "trackNaam": ${this.localeField('track->naam')}
       }`),
-      this.sanityFetch(`*[_type == "track" && gepubliceerd == true] | order(dag asc) {
+      this.sanityFetch(`*[_type == "track" && gepubliceerd == true] | order(naam.nl asc) {
         "slug": slug.current,
         "naam": ${this.localeField('naam')},
         dag, kleur
