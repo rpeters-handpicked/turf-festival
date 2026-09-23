@@ -776,7 +776,7 @@ class TurfProgrammaV2 extends HTMLElement {
         font-family: var(--font-body);
         min-height: 400px;
         border-radius: 20px;
-        overflow: hidden;
+        overflow: clip;
       }
 
       /* ── LOADING ── */
