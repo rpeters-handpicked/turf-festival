@@ -119,12 +119,9 @@ class TurfProgrammaV2 extends HTMLElement {
   async connectedCallback() {
     this.shadowRoot.innerHTML = `<style>${this.getStyles()}</style><div class="root"><div class="loading">${this.ui.loading}</div></div>`
 
-    // Wheel events from shadow DOM are composed — they cross the shadow boundary and reach
-    // Lenis (smooth-scroll lib on the host page) before native scroll can fire on the panel.
-    // Intercepting on the host element (light DOM) stops propagation before Lenis sees it.
-    this.addEventListener('wheel', (e) => {
-      if (this.locDropdownOpen || this.trackDropdownOpen) e.stopPropagation()
-    }, { passive: true })
+    // Stop wheel/touch from reaching Lenis on the host page — widget handles its own scroll
+    this.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true })
+    this.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true })
 
     await this.loadData()
 
@@ -749,6 +746,7 @@ class TurfProgrammaV2 extends HTMLElement {
 
       :host {
         display: block;
+        height: var(--widget-height, calc(100svh - 120px));
         --bg: transparent;
         --surface: rgba(255,255,255,0.08);
         --surface2: rgba(255,255,255,0.05);
@@ -774,7 +772,9 @@ class TurfProgrammaV2 extends HTMLElement {
         background: var(--nav-bg);
         color: var(--text);
         font-family: var(--font-body);
-        min-height: 400px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
         border-radius: 20px;
         overflow: clip;
       }
@@ -791,6 +791,7 @@ class TurfProgrammaV2 extends HTMLElement {
       .top-nav {
         background: rgba(0,0,0,0.3);
         border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
         position: sticky; top: 100px; z-index: 100;
       }
 
@@ -951,7 +952,14 @@ class TurfProgrammaV2 extends HTMLElement {
       /* ────────────────────────────────────────
          EVENT LIST
       ──────────────────────────────────────── */
-      .event-list { padding: 24px 20px; }
+      .event-list {
+        padding: 24px 20px;
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+      }
 
       .time-divider {
         font-family: var(--font-heading); font-size: 13px; font-weight: 600;
