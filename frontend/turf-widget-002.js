@@ -119,10 +119,6 @@ class TurfProgrammaV2 extends HTMLElement {
   async connectedCallback() {
     this.shadowRoot.innerHTML = `<style>${this.getStyles()}</style><div class="root"><div class="loading">${this.ui.loading}</div></div>`
 
-    // Stop wheel/touch from reaching Lenis on the host page — widget handles its own scroll
-    this.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true })
-    this.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true })
-
     await this.loadData()
 
     const urlParams = new URLSearchParams(window.location.search)
@@ -746,7 +742,7 @@ class TurfProgrammaV2 extends HTMLElement {
 
       :host {
         display: block;
-        height: var(--widget-height, calc(100svh - 120px));
+        height: auto;
         --bg: transparent;
         --surface: rgba(255,255,255,0.08);
         --surface2: rgba(255,255,255,0.05);
@@ -772,7 +768,6 @@ class TurfProgrammaV2 extends HTMLElement {
         background: var(--nav-bg);
         color: var(--text);
         font-family: var(--font-body);
-        height: 100%;
         display: flex;
         flex-direction: column;
         border-radius: 20px;
@@ -954,11 +949,6 @@ class TurfProgrammaV2 extends HTMLElement {
       ──────────────────────────────────────── */
       .event-list {
         padding: 24px 20px;
-        flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        -webkit-overflow-scrolling: touch;
       }
 
       .time-divider {
