@@ -845,7 +845,7 @@ class TurfProgrammaV2 extends HTMLElement {
         width: 100%; background: var(--surface);
         border: 1.5px solid var(--border); color: var(--text);
         padding: 8px 40px 8px 16px; font-family: var(--font-body);
-        font-size: 20px; font-weight: 400; outline: none;
+        font-size: 14px; font-weight: 400; outline: none;
         transition: border-color 0.15s, background 0.15s;
         border-radius: var(--radius);
       }
@@ -1169,7 +1169,7 @@ class TurfProgrammaV2 extends HTMLElement {
         .day-btn .day-date { display: none; }
 
         .search-wrap { min-width: 100%; max-width: 100%; margin-left: 0; order: 10; flex-basis: 100%; padding-bottom: 10px; }
-        .search-input { font-size: 20px; }
+        .search-input { font-size: 14px; }
 
         .nav-row-filters {
           padding-top: 8px; padding-bottom: 10px;
