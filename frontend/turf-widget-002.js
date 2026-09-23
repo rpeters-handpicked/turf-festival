@@ -96,6 +96,10 @@ class TurfProgrammaV2 extends HTMLElement {
       allLocations:     en ? 'All Locations'                    : 'Alle Locaties',
       allTracks:        en ? 'All Tracks'                       : 'Alle Tracks',
       tracks:           en ? 'TRACKS'                           : 'TRACKS',
+      locationSingular: en ? 'LOCATION'                         : 'LOCATIE',
+      locationPlural:   en ? 'LOCATIONS'                        : 'LOCATIES',
+      allPrefix:        en ? 'ALL'                              : 'ALLE',
+      clearSearch:      en ? 'Clear search'                     : 'Wis zoekopdracht',
     }
   }
 
@@ -223,8 +227,8 @@ class TurfProgrammaV2 extends HTMLElement {
     this.currentView = 'list'
     const locCount = this.locations.length
     const activeLocLabel = this.activeLocations.size > 0
-      ? `${this.activeLocations.size} LOCATIE${this.activeLocations.size !== 1 ? 'S' : ''} ↓`
-      : `ALLE ${locCount} LOCATIES ↓`
+      ? `${this.activeLocations.size} ${this.activeLocations.size !== 1 ? this.ui.locationPlural : this.ui.locationSingular} ↓`
+      : `${this.ui.allPrefix} ${locCount} ${this.ui.locationPlural} ↓`
     const activeTrackLabel = this.activeTrack
       ? `${(this.tracks.find(t => t.slug === this.activeTrack)?.naam || this.activeTrack).toUpperCase()} ↓`
       : `${this.ui.tracks} ↓`
@@ -247,7 +251,7 @@ class TurfProgrammaV2 extends HTMLElement {
           </div>
           <div class="search-wrap">
             <input type="text" id="search" class="search-input" placeholder="${this.ui.searchPlaceholder}" value="${this.searchQuery}" autocomplete="off">
-            <button id="search-clear" class="search-clear" aria-label="Wis zoekopdracht" style="display:${this.searchQuery ? 'flex' : 'none'}">
+            <button id="search-clear" class="search-clear" aria-label="${this.ui.clearSearch}" style="display:${this.searchQuery ? 'flex' : 'none'}">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
