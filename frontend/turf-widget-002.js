@@ -771,10 +771,12 @@ class TurfProgrammaV2 extends HTMLElement {
       * { margin: 0; padding: 0; box-sizing: border-box; }
 
       .root {
-        background: var(--bg);
+        background: var(--nav-bg);
         color: var(--text);
         font-family: var(--font-body);
         min-height: 400px;
+        border-radius: 20px;
+        overflow: hidden;
       }
 
       /* ── LOADING ── */
@@ -787,10 +789,8 @@ class TurfProgrammaV2 extends HTMLElement {
          TOP NAV
       ──────────────────────────────────────── */
       .top-nav {
-        background: var(--nav-bg);
+        background: rgba(0,0,0,0.3);
         border-bottom: 1px solid var(--border);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
         position: sticky; top: 0; z-index: 100;
       }
 
