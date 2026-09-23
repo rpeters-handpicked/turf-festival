@@ -1104,7 +1104,7 @@ class TurfProgrammaV2 extends HTMLElement {
       }
       .detail-fav-btn:hover { border-color: #fff; }
       .detail-fav-btn.fav-active { background: #ffd700; border-color: #ffd700; color: #111; }
-      .detail-fav-icon { font-size: 24px; }
+      .detail-fav-icon { font-size: 1.125rem; }
 
       .detail-page { display: grid; grid-template-columns: 1fr 300px; gap: 32px; padding: 32px 24px; max-width: 1100px; margin: 0 auto; }
 
@@ -1116,7 +1116,7 @@ class TurfProgrammaV2 extends HTMLElement {
       .detail-live-badge {
         display: inline-flex; align-items: center; gap: 6px;
         background: var(--accent); color: #fff; font-family: var(--font-heading);
-        font-size: 18px; font-weight: 700; padding: 4px 12px; border-radius: 100px;
+        font-size: 1.125rem; font-weight: 700; padding: 4px 12px; border-radius: 100px;
         letter-spacing: 1px; margin-bottom: 12px; animation: pulse 2s infinite;
       }
       .detail-live-dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: pulse 1.5s infinite; }
@@ -1129,14 +1129,14 @@ class TurfProgrammaV2 extends HTMLElement {
 
       .speakers-section { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
       .speaker-card { display: flex; gap: 12px; align-items: center; }
-      .speaker-avatar { width: 48px; height: 48px; border-radius: 50%; overflow: hidden; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 33px; flex-shrink: 0; }
+      .speaker-avatar { width: 48px; height: 48px; border-radius: 50%; overflow: hidden; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 1.125rem; flex-shrink: 0; }
       .speaker-avatar img { width: 100%; height: 100%; object-fit: cover; }
-      .speaker-name { font-weight: 600; font-size: 21px; margin-bottom: 2px; }
-      .speaker-role { font-size: 18px; color: var(--muted); }
+      .speaker-name { font-weight: 600; font-size: 1.125rem; margin-bottom: 2px; }
+      .speaker-role { font-size: 1.125rem; color: var(--muted); }
 
       .section { margin-bottom: 32px; }
-      .section-title { font-family: var(--font-heading); font-size: 30px; font-weight: 700; color: var(--text); margin-bottom: 14px; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-      .description { font-size: 22px; line-height: 1.7; color: rgba(255,255,255,0.8); }
+      .section-title { font-family: var(--font-heading); font-size: 1.125rem; font-weight: 700; color: var(--text); margin-bottom: 14px; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+      .description { font-size: 1.125rem; line-height: 1.7; color: rgba(255,255,255,0.8); }
 
       .map-container { border-radius: var(--radius-card); overflow: hidden; }
       .map-container iframe { width: 100%; height: 280px; border: none; display: block; }
@@ -1145,19 +1145,19 @@ class TurfProgrammaV2 extends HTMLElement {
       .related-event:hover { opacity: 0.7; }
       .related-event:last-child { border-bottom: none; }
       .related-img { width: 40px; height: 40px; border-radius: 8px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 27px; flex-shrink: 0; }
-      .related-meta { font-size: 16px; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
-      .related-title { font-family: var(--font-heading); font-size: 24px; font-weight: 700; margin-bottom: 4px; }
-      .related-tag { font-size: 15px; font-weight: 700; padding: 2px 8px; border-radius: 100px; }
+      .related-meta { font-size: 1.125rem; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
+      .related-title { font-family: var(--font-heading); font-size: 1.125rem; font-weight: 700; margin-bottom: 4px; }
+      .related-tag { font-size: 1.125rem; font-weight: 700; padding: 2px 8px; border-radius: 100px; }
 
       .detail-sidebar { display: flex; flex-direction: column; gap: 16px; }
       .sidebar-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 20px; }
-      .sidebar-heading { font-family: var(--font-heading); font-size: 21px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+      .sidebar-heading { font-family: var(--font-heading); font-size: 1.125rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
       .detail-row { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
       .detail-row:last-child { border-bottom: none; }
-      .detail-key { font-size: 18px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
-      .detail-val { font-size: 20px; font-weight: 600; text-align: right; }
+      .detail-key { font-size: 1.125rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
+      .detail-val { font-size: 1.125rem; font-weight: 600; text-align: right; }
       .tags-list { display: flex; flex-wrap: wrap; gap: 6px; }
-      .sidebar-tag { font-size: 18px; font-weight: 600; padding: 4px 12px; border-radius: 100px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; }
+      .sidebar-tag { font-size: 1.125rem; font-weight: 600; padding: 4px 12px; border-radius: 100px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; }
       .sidebar-tag:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
 
       /* ────────────────────────────────────────
