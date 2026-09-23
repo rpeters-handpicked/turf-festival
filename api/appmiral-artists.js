@@ -66,6 +66,7 @@ export default async function handler(req, res) {
       tags,
       "themaSlug": thema->slug,
       "themaNaam": thema->naam,
+      "trackSlug": track->slug.current,
       "locatieId": locatie->_id,
       "locatieNaam": locatie->naam,
       "afbeelding": afbeelding.asset->url
@@ -117,10 +118,11 @@ export default async function handler(req, res) {
       // Minimaal 1500×1500 vereist door Appmiral
       if (event.afbeelding)   artist.image       = `${event.afbeelding}?w=1500&h=1500&fit=crop`
 
-      // Thema + eventtype als tags
+      // Thema + track + eventtype als tags
       const tags = []
-      if (event.themaSlug) tags.push(event.themaSlug)
-      if (event.type)      tags.push(event.type.toLowerCase().replace(/\s+/g, '-'))
+      if (event.themaSlug)  tags.push(event.themaSlug)
+      if (event.trackSlug)  tags.push(event.trackSlug)
+      if (event.type)       tags.push(event.type.toLowerCase().replace(/\s+/g, '-'))
       if (event.tags?.length) tags.push(...event.tags.map(t => t.toLowerCase().replace(/\s+/g, '-')))
       if (tags.length) artist.tags = [...new Set(tags)]
 
