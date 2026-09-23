@@ -575,7 +575,7 @@ class TurfProgrammaV2 extends HTMLElement {
         "locatieNaam": locatie->naam,
         "locatieAdres": locatie->adres,
         "locatieRef": locatie._ref,
-        "sprekers": sprekers[]->{ naam, rol, organisatie, "foto": foto.asset->url },
+        "sprekers": sprekers[]->{ naam, "rol": ${this.localeField('rol')}, organisatie, "foto": foto.asset->url },
         "afbeelding": afbeelding.asset->url
       }`,
       { id: eventId }
