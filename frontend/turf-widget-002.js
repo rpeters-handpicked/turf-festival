@@ -247,6 +247,9 @@ class TurfProgrammaV2 extends HTMLElement {
           </div>
           <div class="search-wrap">
             <input type="text" id="search" class="search-input" placeholder="${this.ui.searchPlaceholder}" value="${this.searchQuery}" autocomplete="off">
+            <button id="search-clear" class="search-clear" aria-label="Wis zoekopdracht" style="display:${this.searchQuery ? 'flex' : 'none'}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
         </div>
 
@@ -356,6 +359,16 @@ class TurfProgrammaV2 extends HTMLElement {
     // Search
     root.getElementById('search')?.addEventListener('input', (e) => {
       this.searchQuery = e.target.value
+      const btn = root.getElementById('search-clear')
+      if (btn) btn.style.display = this.searchQuery ? 'flex' : 'none'
+      this.applyFilters()
+    })
+
+    root.getElementById('search-clear')?.addEventListener('click', () => {
+      this.searchQuery = ''
+      const inp = root.getElementById('search')
+      if (inp) inp.value = ''
+      root.getElementById('search-clear').style.display = 'none'
       this.applyFilters()
     })
 
@@ -826,11 +839,12 @@ class TurfProgrammaV2 extends HTMLElement {
 
       .search-wrap {
         flex: 1; min-width: 180px; max-width: 340px; margin-left: auto;
+        position: relative;
       }
       .search-input {
         width: 100%; background: var(--surface);
         border: 1.5px solid var(--border); color: var(--text);
-        padding: 8px 16px; font-family: var(--font-body);
+        padding: 8px 40px 8px 16px; font-family: var(--font-body);
         font-size: 20px; font-weight: 400; outline: none;
         transition: border-color 0.15s, background 0.15s;
         border-radius: var(--radius);
@@ -838,6 +852,15 @@ class TurfProgrammaV2 extends HTMLElement {
       .search-input::placeholder { color: var(--muted); }
       .search-input:focus { border-color: #fff; background: #fff; color: #111; }
       .search-input:focus::placeholder { color: #999; }
+      .search-clear {
+        position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+        background: none; border: none; cursor: pointer; padding: 4px;
+        color: var(--muted); display: flex; align-items: center; justify-content: center;
+        border-radius: 50%; transition: color 0.15s, background 0.15s;
+      }
+      .search-clear:hover { color: var(--text); background: var(--surface); }
+      .search-input:focus ~ .search-clear { color: #999; }
+      .search-input:focus ~ .search-clear:hover { color: #111; background: rgba(0,0,0,0.1); }
 
       /* Row 2: theme pills + dropdowns + results */
       .nav-row-filters {
