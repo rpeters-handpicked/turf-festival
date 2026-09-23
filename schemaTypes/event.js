@@ -66,6 +66,13 @@ export default {
       validation: Rule => Rule.required()
     },
     {
+      name: 'track',
+      title: 'Track',
+      type: 'reference',
+      to: [{ type: 'track' }],
+      description: 'Optioneel — bijv. een van de 4 Tech Thursday tracks',
+    },
+    {
       name: 'type',
       title: 'Event type',
       type: 'string',
