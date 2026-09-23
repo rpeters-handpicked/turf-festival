@@ -159,7 +159,7 @@ class TurfProgrammaV2 extends HTMLElement {
 
   async loadData() {
     const [rawEvents, rawTracks] = await Promise.all([
-      this.sanityFetch(`*[_type == "event" && gepubliceerd == true] | order(dag asc, prioriteit asc) {
+      this.sanityFetch(`*[_type == "event" && gepubliceerd == true] | order(dag asc, startTijd asc) {
         _id,
         "titel": ${this.localeField('titel')},
         "ondertitel": ${this.localeField('ondertitel')},
@@ -181,7 +181,7 @@ class TurfProgrammaV2 extends HTMLElement {
       }`)
     ])
 
-    this.events = this._shuffleGroups((rawEvents || []).map(e => ({
+    this.events = (rawEvents || []).map(e => ({
       _id: e._id,
       title: e.titel,
       subtitle: e.ondertitel || '',
@@ -201,7 +201,7 @@ class TurfProgrammaV2 extends HTMLElement {
       speakers: (e.sprekerNamen || []).filter(Boolean),
       trackSlug: e.trackSlug || null,
       trackNaam: e.trackNaam || '',
-    })))
+    }))
 
     this.tracks = (rawTracks || [])
     this.locations = [...new Set(this.events.map(e => e.location))].filter(Boolean).sort()
