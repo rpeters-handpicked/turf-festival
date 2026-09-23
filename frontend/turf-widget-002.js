@@ -238,6 +238,7 @@ class TurfProgrammaV2 extends HTMLElement {
 
     const root = this.shadowRoot.querySelector('.root')
     root.innerHTML = `
+      <div class="nav-curtain"></div>
       <nav class="top-nav">
         <!-- Row 1: Days + Search -->
         <div class="nav-row nav-row-days">
@@ -788,6 +789,13 @@ class TurfProgrammaV2 extends HTMLElement {
       /* ────────────────────────────────────────
          TOP NAV
       ──────────────────────────────────────── */
+      .nav-curtain {
+        position: sticky; top: 0; height: 100px;
+        background: var(--nav-bg);
+        margin-bottom: -100px;
+        z-index: 98; pointer-events: none;
+      }
+
       .top-nav {
         background: rgba(0,0,0,0.3);
         border-bottom: 1px solid var(--border);
