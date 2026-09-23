@@ -118,6 +118,14 @@ class TurfProgrammaV2 extends HTMLElement {
 
   async connectedCallback() {
     this.shadowRoot.innerHTML = `<style>${this.getStyles()}</style><div class="root"><div class="loading">${this.ui.loading}</div></div>`
+
+    // Wheel events from shadow DOM are composed — they cross the shadow boundary and reach
+    // Lenis (smooth-scroll lib on the host page) before native scroll can fire on the panel.
+    // Intercepting on the host element (light DOM) stops propagation before Lenis sees it.
+    this.addEventListener('wheel', (e) => {
+      if (this.locDropdownOpen || this.trackDropdownOpen) e.stopPropagation()
+    }, { passive: true })
+
     await this.loadData()
 
     const urlParams = new URLSearchParams(window.location.search)
