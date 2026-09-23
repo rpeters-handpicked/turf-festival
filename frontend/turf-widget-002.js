@@ -1049,7 +1049,7 @@ class TurfProgrammaV2 extends HTMLElement {
 
       .event-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
       .tag {
-        font-size: 15px; font-weight: 700; letter-spacing: 0.5px;
+        font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;
         padding: 3px 10px; border-radius: 100px; text-transform: uppercase;
         background: rgba(255,255,255,0.1); color: #fff;
       }
@@ -1145,9 +1145,9 @@ class TurfProgrammaV2 extends HTMLElement {
       .related-event:hover { opacity: 0.7; }
       .related-event:last-child { border-bottom: none; }
       .related-img { width: 40px; height: 40px; border-radius: 8px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 27px; flex-shrink: 0; }
-      .related-meta { font-size: 1.125rem; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
-      .related-title { font-family: var(--font-heading); font-size: 1.125rem; font-weight: 700; margin-bottom: 4px; }
-      .related-tag { font-size: 1.125rem; font-weight: 700; padding: 2px 8px; border-radius: 100px; }
+      .related-meta { font-size: 0.8rem; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
+      .related-title { font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; margin-bottom: 4px; }
+      .related-tag { font-size: 0.84rem; font-weight: 700; padding: 2px 8px; border-radius: 100px; }
 
       .detail-sidebar { display: flex; flex-direction: column; gap: 16px; }
       .sidebar-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 20px; }
@@ -1157,7 +1157,7 @@ class TurfProgrammaV2 extends HTMLElement {
       .detail-key { font-size: 1.125rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
       .detail-val { font-size: 1.125rem; font-weight: 600; text-align: right; }
       .tags-list { display: flex; flex-wrap: wrap; gap: 6px; }
-      .sidebar-tag { font-size: 1.125rem; font-weight: 600; padding: 4px 12px; border-radius: 100px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; }
+      .sidebar-tag { font-size: 0.84rem; font-weight: 600; padding: 4px 12px; border-radius: 100px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; }
       .sidebar-tag:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
 
       /* ────────────────────────────────────────
