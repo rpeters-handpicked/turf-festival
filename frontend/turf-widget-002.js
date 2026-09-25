@@ -120,6 +120,23 @@ class TurfProgrammaV2 extends HTMLElement {
     return { talks: 'tag-talks', live: 'tag-live', night: 'tag-night' }
   }
 
+  slugify(str) {
+    return (str || '')
+      .toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+  }
+
+  resolveHash(hash) {
+    if (!hash) return null
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}/.test(hash)) return hash
+    const match = this.events.find(e => this.slugify(e.title) === hash)
+    return match ? match._id : null
+  }
+
   async connectedCallback() {
     this.shadowRoot.innerHTML = `<style>${this.getStyles()}</style><div class="root"><div class="loading">${this.ui.loading}</div></div>`
 
@@ -130,14 +147,15 @@ class TurfProgrammaV2 extends HTMLElement {
     if (locationParam) this.activeLocations.add(locationParam)
 
     const hash = window.location.hash.slice(1)
-    if (hash) {
-      await this.renderDetail(hash)
+    const hashId = this.resolveHash(hash)
+    if (hashId) {
+      await this.renderDetail(hashId)
     } else {
       this.renderList()
     }
 
     window.addEventListener('hashchange', () => {
-      const id = window.location.hash.slice(1)
+      const id = this.resolveHash(window.location.hash.slice(1))
       if (id) { this.renderDetail(id) } else { this.renderList() }
     })
   }
@@ -550,7 +568,9 @@ class TurfProgrammaV2 extends HTMLElement {
     container.querySelectorAll('.event-card').forEach(card => {
       card.addEventListener('click', () => {
         this.scrollPos = container.scrollTop
-        window.history.pushState(null, '', `#${card.dataset.id}`)
+        const ev = this.events.find(e => e._id === card.dataset.id)
+        const slug = ev ? this.slugify(ev.title) : card.dataset.id
+        window.history.pushState(null, '', `#${slug}`)
         this.renderDetail(card.dataset.id)
       })
     })
@@ -576,12 +596,18 @@ class TurfProgrammaV2 extends HTMLElement {
         "locatieAdres": locatie->adres,
         "locatieRef": locatie._ref,
         "sprekers": sprekers[]->{ naam, "rol": ${this.localeField('rol')}, organisatie, "foto": foto.asset->url },
-        "afbeelding": afbeelding.asset->url
+        "afbeelding": afbeelding.asset->url,
+        "afbeeldingRatio": afbeelding.asset->metadata.dimensions.aspectRatio
       }`,
       { id: eventId }
     )
 
     if (!e) { this.renderList(); return }
+
+    const slug = this.slugify(e.titel)
+    if (slug && window.location.hash.slice(1) !== slug) {
+      window.history.replaceState(null, '', `#${slug}`)
+    }
 
     const dag = this.dagLabels[e.dag] || { short: e.dag, full: e.dag }
     const theme = e.themaSlug || 'talks'
@@ -627,7 +653,17 @@ class TurfProgrammaV2 extends HTMLElement {
       </div>
       <div class="detail-page">
         <div class="detail-left">
-          ${e.afbeelding ? `<div class="hero-image"><img src="${e.afbeelding}?w=800&h=400&fit=crop" alt="${e.titel}"></div>` : ''}
+          ${e.afbeelding ? (() => {
+            const ratio = e.afbeeldingRatio
+            const isLandscape = ratio && ratio > 1
+            const imgSrc = isLandscape
+              ? `${e.afbeelding}?w=1200&fit=max`
+              : `${e.afbeelding}?w=800&h=800&fit=crop`
+            const imgStyle = isLandscape
+              ? `style="width:100%;aspect-ratio:${ratio.toFixed(4)};object-fit:cover;display:block;"`
+              : `style="width:100%;aspect-ratio:1;object-fit:cover;display:block;"`
+            return `<div class="hero-image"><img src="${imgSrc}" alt="${e.titel}" ${imgStyle}></div>`
+          })() : ''}
           <div class="hero ${isLive ? 'hero-live' : ''}">
             ${isLive ? '<div class="detail-live-badge"><span class="detail-live-dot"></span>LIVE NU</div>' : ''}
             <h1 class="event-title-detail">${e.titel}</h1>
@@ -708,7 +744,9 @@ class TurfProgrammaV2 extends HTMLElement {
 
         relatedList.querySelectorAll('.related-event').forEach(el => {
           el.addEventListener('click', () => {
-            window.history.pushState(null, '', `#${el.dataset.id}`)
+            const ev = this.events.find(e => e._id === el.dataset.id)
+            const slug = ev ? this.slugify(ev.title) : el.dataset.id
+            window.history.pushState(null, '', `#${slug}`)
             this.renderDetail(el.dataset.id)
           })
         })
@@ -1109,7 +1147,7 @@ class TurfProgrammaV2 extends HTMLElement {
       .detail-page { display: grid; grid-template-columns: 1fr 300px; gap: 32px; padding: 32px 24px; max-width: 1100px; margin: 0 auto; }
 
       .hero-image { border-radius: var(--radius-card); overflow: hidden; margin-bottom: 24px; }
-      .hero-image img { width: 100%; height: 320px; object-fit: cover; display: block; }
+      .hero-image img { width: 100%; display: block; }
 
       .hero { margin-bottom: 28px; }
       .hero.hero-live { border-left: 3px solid var(--accent); padding-left: 16px; }
