@@ -1,5 +1,5 @@
 class TurfProgrammaV2Filter extends HTMLElement {
-  static get observedAttributes() { return ['nav', 'dag', 'thema', 'track', 'view'] }
+  static get observedAttributes() { return ['nav', 'dag', 'thema', 'track', 'view', 'heading'] }
 
   constructor() {
     super()
@@ -24,6 +24,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
     this.attrTracks = null     // Set of track slugs or null (all)
     this.attrView = 'list'     // 'list'|'timetable'
     this.viewMode = 'list'     // current view state
+    this.attrHeading = null    // optional heading text above widget
   }
 
   attributeChangedCallback(name, _old, val) {
@@ -32,7 +33,8 @@ class TurfProgrammaV2Filter extends HTMLElement {
     if (name === 'dag')   this.attrDag = dagMap[val?.toLowerCase()] || null
     if (name === 'thema') this.attrThemas = val ? new Set(val.split(',').map(s => s.trim()).filter(Boolean)) : null
     if (name === 'track') this.attrTracks = val ? new Set(val.split(',').map(s => s.trim()).filter(Boolean)) : null
-    if (name === 'view')  { this.attrView = val === 'timetable' ? 'timetable' : 'list'; this.viewMode = this.attrView }
+    if (name === 'view')    { this.attrView = val === 'timetable' ? 'timetable' : 'list'; this.viewMode = this.attrView }
+    if (name === 'heading') this.attrHeading = val || null
     if (this.events.length > 0) this.currentView === 'detail' ? null : this._renderCurrentView()
   }
 
@@ -169,13 +171,15 @@ class TurfProgrammaV2Filter extends HTMLElement {
     const navAttr   = this.getAttribute('nav')
     const dagAttr   = this.getAttribute('dag')
     const themaAttr = this.getAttribute('thema')
-    const trackAttr = this.getAttribute('track')
-    const viewAttr  = this.getAttribute('view')
-    if (navAttr)   this.attrNav = navAttr !== 'no'
-    if (dagAttr)   this.attrDag = dagMap[dagAttr.toLowerCase()] || null
-    if (themaAttr) this.attrThemas = new Set(themaAttr.split(',').map(s => s.trim()).filter(Boolean))
-    if (trackAttr) this.attrTracks = new Set(trackAttr.split(',').map(s => s.trim()).filter(Boolean))
-    if (viewAttr)  { this.attrView = viewAttr === 'timetable' ? 'timetable' : 'list'; this.viewMode = this.attrView }
+    const trackAttr   = this.getAttribute('track')
+    const viewAttr    = this.getAttribute('view')
+    const headingAttr = this.getAttribute('heading')
+    if (navAttr)     this.attrNav = navAttr !== 'no'
+    if (dagAttr)     this.attrDag = dagMap[dagAttr.toLowerCase()] || null
+    if (themaAttr)   this.attrThemas = new Set(themaAttr.split(',').map(s => s.trim()).filter(Boolean))
+    if (trackAttr)   this.attrTracks = new Set(trackAttr.split(',').map(s => s.trim()).filter(Boolean))
+    if (viewAttr)    { this.attrView = viewAttr === 'timetable' ? 'timetable' : 'list'; this.viewMode = this.attrView }
+    if (headingAttr) this.attrHeading = headingAttr
 
     // Pre-set day from attribute
     if (this.attrDag) {
@@ -309,6 +313,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
 
     const root = this.shadowRoot.querySelector('.root')
     root.innerHTML = `
+      ${this.attrHeading ? `<h2 class="widget-heading">${this.attrHeading}</h2>` : ''}
       ${this.attrNav ? `<nav class="top-nav">
         <!-- Row 1: Days + Search -->
         <div class="nav-row nav-row-days">
@@ -482,6 +487,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
 
     const root = this.shadowRoot.querySelector('.root')
     root.innerHTML = `
+      ${this.attrHeading ? `<h2 class="widget-heading">${this.attrHeading}</h2>` : ''}
       ${this.attrNav ? `<nav class="top-nav">
         <div class="nav-row nav-row-days">
           ${!this.attrDag ? `<div class="day-filters" role="group">
@@ -1267,6 +1273,17 @@ class TurfProgrammaV2Filter extends HTMLElement {
       }
       .view-toggle-btn:hover { border-color: #fff; color: #fff; }
       .view-toggle-btn.active { background: #fff; color: #111; border-color: #fff; }
+
+      /* ────────────────────────────────────────
+         HEADING
+      ──────────────────────────────────────── */
+      .widget-heading {
+        font-family: var(--font-heading); font-weight: 900;
+        font-size: clamp(36px, 8vw, 96px);
+        line-height: 0.95; letter-spacing: -0.5px;
+        text-transform: uppercase; color: var(--text);
+        margin: 0; padding: 24px 20px 16px;
+      }
 
       /* ────────────────────────────────────────
          VIEW STRIP (shown when nav="no")
