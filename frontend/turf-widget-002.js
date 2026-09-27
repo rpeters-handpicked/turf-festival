@@ -1226,6 +1226,7 @@ class TurfProgrammaV2 extends HTMLElement {
         .filter-divider { display: none; }
         .dropdown-group { flex-shrink: 0; }
         .dropdown-btn { font-size: 18px; padding: 5px 11px; }
+        .dropdown-panel { top: auto; bottom: calc(100% + 8px); }
 
         .nav-spacer { display: none; }
         .results-fav { flex-shrink: 0; gap: 8px; }
