@@ -1,5 +1,5 @@
 class TurfProgrammaV2Filter extends HTMLElement {
-  static get observedAttributes() { return ['nav', 'dag', 'thema', 'track', 'view', 'heading'] }
+  static get observedAttributes() { return ['nav', 'dag', 'thema', 'track', 'view', 'heading', 'programurl'] }
 
   constructor() {
     super()
@@ -25,6 +25,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
     this.attrView = 'list'     // 'list'|'timetable'
     this.viewMode = 'list'     // current view state
     this.attrHeading = null    // optional heading text above widget
+    this.attrProgramUrl = null // optional "view full program" link URL
   }
 
   attributeChangedCallback(name, _old, val) {
@@ -34,7 +35,8 @@ class TurfProgrammaV2Filter extends HTMLElement {
     if (name === 'thema') this.attrThemas = val ? new Set(val.split(',').map(s => s.trim()).filter(Boolean)) : null
     if (name === 'track') this.attrTracks = val ? new Set(val.split(',').map(s => s.trim()).filter(Boolean)) : null
     if (name === 'view')    { this.attrView = val === 'timetable' ? 'timetable' : 'list'; this.viewMode = this.attrView }
-    if (name === 'heading') this.attrHeading = val || null
+    if (name === 'heading')    this.attrHeading = val || null
+    if (name === 'programurl') this.attrProgramUrl = val || null
     if (this.events.length > 0) this.currentView === 'detail' ? null : this._renderCurrentView()
   }
 
@@ -128,6 +130,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       clearSearch:      en ? 'Clear search'                     : 'Wis zoekopdracht',
       viewList:         en ? 'List view'                        : 'Lijstweergave',
       viewTimetable:    en ? 'Timetable view'                   : 'Timetableweergave',
+      viewFullProgram:  en ? 'View full program'                : 'Volledig programma',
     }
   }
 
@@ -180,6 +183,8 @@ class TurfProgrammaV2Filter extends HTMLElement {
     if (trackAttr)   this.attrTracks = new Set(trackAttr.split(',').map(s => s.trim()).filter(Boolean))
     if (viewAttr)    { this.attrView = viewAttr === 'timetable' ? 'timetable' : 'list'; this.viewMode = this.attrView }
     if (headingAttr) this.attrHeading = headingAttr
+    const programUrlAttr = this.getAttribute('programurl')
+    if (programUrlAttr) this.attrProgramUrl = programUrlAttr
 
     // Pre-set day from attribute
     if (this.attrDag) {
@@ -399,14 +404,17 @@ class TurfProgrammaV2Filter extends HTMLElement {
       </nav>` : ''}
 
       ${!this.attrNav ? `<div class="view-strip">
-        <button class="view-strip-btn ${this.viewMode !== 'timetable' ? 'active' : ''}" id="viewToggle" title="${this.ui.viewList}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="18" height="3" rx="1"/><rect x="3" y="10.5" width="18" height="3" rx="1"/><rect x="3" y="17" width="18" height="3" rx="1"/></svg>
-          ${this.ui.viewList}
-        </button>
-        <button class="view-strip-btn ${this.viewMode === 'timetable' ? 'active' : ''}" id="viewToggleTt" title="${this.ui.viewTimetable}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="4" height="4" rx="0.5"/><rect x="10" y="3" width="4" height="4" rx="0.5"/><rect x="17" y="3" width="4" height="4" rx="0.5"/><rect x="3" y="10" width="4" height="4" rx="0.5"/><rect x="10" y="10" width="11" height="4" rx="0.5"/><rect x="3" y="17" width="4" height="4" rx="0.5"/><rect x="10" y="17" width="7" height="4" rx="0.5"/></svg>
-          ${this.ui.viewTimetable}
-        </button>
+        <div class="view-strip-left">
+          <button class="view-strip-btn ${this.viewMode !== 'timetable' ? 'active' : ''}" id="viewToggle" title="${this.ui.viewList}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="18" height="3" rx="1"/><rect x="3" y="10.5" width="18" height="3" rx="1"/><rect x="3" y="17" width="18" height="3" rx="1"/></svg>
+            ${this.ui.viewList}
+          </button>
+          <button class="view-strip-btn ${this.viewMode === 'timetable' ? 'active' : ''}" id="viewToggleTt" title="${this.ui.viewTimetable}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="4" height="4" rx="0.5"/><rect x="10" y="3" width="4" height="4" rx="0.5"/><rect x="17" y="3" width="4" height="4" rx="0.5"/><rect x="3" y="10" width="4" height="4" rx="0.5"/><rect x="10" y="10" width="11" height="4" rx="0.5"/><rect x="3" y="17" width="4" height="4" rx="0.5"/><rect x="10" y="17" width="7" height="4" rx="0.5"/></svg>
+            ${this.ui.viewTimetable}
+          </button>
+        </div>
+        ${this.attrProgramUrl ? `<a class="view-strip-fullprog" href="${this.attrProgramUrl}">${this.ui.viewFullProgram} →</a>` : ''}
       </div>` : ''}
 
       <main class="event-list" id="eventList"></main>
@@ -542,14 +550,17 @@ class TurfProgrammaV2Filter extends HTMLElement {
       </nav>` : ''}
 
       ${!this.attrNav ? `<div class="view-strip">
-        <button class="view-strip-btn" id="viewToggle" title="${this.ui.viewList}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="18" height="3" rx="1"/><rect x="3" y="10.5" width="18" height="3" rx="1"/><rect x="3" y="17" width="18" height="3" rx="1"/></svg>
-          ${this.ui.viewList}
-        </button>
-        <button class="view-strip-btn active" id="viewToggleTt" title="${this.ui.viewTimetable}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="4" height="4" rx="0.5"/><rect x="10" y="3" width="4" height="4" rx="0.5"/><rect x="17" y="3" width="4" height="4" rx="0.5"/><rect x="3" y="10" width="4" height="4" rx="0.5"/><rect x="10" y="10" width="11" height="4" rx="0.5"/><rect x="3" y="17" width="4" height="4" rx="0.5"/><rect x="10" y="17" width="7" height="4" rx="0.5"/></svg>
-          ${this.ui.viewTimetable}
-        </button>
+        <div class="view-strip-left">
+          <button class="view-strip-btn" id="viewToggle" title="${this.ui.viewList}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="18" height="3" rx="1"/><rect x="3" y="10.5" width="18" height="3" rx="1"/><rect x="3" y="17" width="18" height="3" rx="1"/></svg>
+            ${this.ui.viewList}
+          </button>
+          <button class="view-strip-btn active" id="viewToggleTt" title="${this.ui.viewTimetable}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="4" height="4" rx="0.5"/><rect x="10" y="3" width="4" height="4" rx="0.5"/><rect x="17" y="3" width="4" height="4" rx="0.5"/><rect x="3" y="10" width="4" height="4" rx="0.5"/><rect x="10" y="10" width="11" height="4" rx="0.5"/><rect x="3" y="17" width="4" height="4" rx="0.5"/><rect x="10" y="17" width="7" height="4" rx="0.5"/></svg>
+            ${this.ui.viewTimetable}
+          </button>
+        </div>
+        ${this.attrProgramUrl ? `<a class="view-strip-fullprog" href="${this.attrProgramUrl}">${this.ui.viewFullProgram} →</a>` : ''}
       </div>` : ''}
 
       <div class="tt-outer">
@@ -1315,9 +1326,19 @@ class TurfProgrammaV2Filter extends HTMLElement {
          VIEW STRIP (shown when nav="no")
       ──────────────────────────────────────── */
       .view-strip {
-        display: flex; gap: 8px; padding: 12px 20px 8px;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 8px; padding: 12px 20px 8px;
         border-bottom: 1px solid var(--border);
       }
+      .view-strip-left { display: flex; gap: 8px; flex-shrink: 0; }
+      .view-strip-fullprog {
+        font-family: var(--font-heading); font-size: 14px; font-weight: 700;
+        letter-spacing: 0.5px; text-transform: uppercase;
+        color: var(--muted); text-decoration: none;
+        white-space: nowrap; transition: color 0.15s;
+        flex-shrink: 0;
+      }
+      .view-strip-fullprog:hover { color: #fff; }
       .view-strip-btn {
         display: flex; align-items: center; gap: 8px;
         padding: 7px 16px; border: 1.5px solid var(--border);
