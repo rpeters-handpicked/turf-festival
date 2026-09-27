@@ -231,7 +231,6 @@ class TurfHighlightsList extends HTMLElement {
           ${e.desc ? `<div class="card-desc">${e.desc}</div>` : ''}
           <div class="card-footer">
             <span class="theme-pill theme-pill--${e.theme}">${themeLabel}</span>
-            <span class="card-cta">Lees meer →</span>
           </div>
         </div>
       </div>
