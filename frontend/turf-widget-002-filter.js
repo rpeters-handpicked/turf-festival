@@ -1,5 +1,5 @@
 class TurfProgrammaV2Filter extends HTMLElement {
-  static get observedAttributes() { return ['nav', 'dag', 'thema', 'view'] }
+  static get observedAttributes() { return ['nav', 'dag', 'thema', 'track', 'view'] }
 
   constructor() {
     super()
@@ -20,7 +20,8 @@ class TurfProgrammaV2Filter extends HTMLElement {
     // Attribute-driven config
     this.attrNav = true
     this.attrDag = null        // 'dag1'|'dag2'|'dag3'|null
-    this.attrThemas = null     // Set of slugs or null (all)
+    this.attrThemas = null     // Set of theme slugs or null (all)
+    this.attrTracks = null     // Set of track slugs or null (all)
     this.attrView = 'list'     // 'list'|'timetable'
     this.viewMode = 'list'     // current view state
   }
@@ -30,6 +31,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
     if (name === 'nav')   this.attrNav = val !== 'no'
     if (name === 'dag')   this.attrDag = dagMap[val?.toLowerCase()] || null
     if (name === 'thema') this.attrThemas = val ? new Set(val.split(',').map(s => s.trim()).filter(Boolean)) : null
+    if (name === 'track') this.attrTracks = val ? new Set(val.split(',').map(s => s.trim()).filter(Boolean)) : null
     if (name === 'view')  { this.attrView = val === 'timetable' ? 'timetable' : 'list'; this.viewMode = this.attrView }
     if (this.events.length > 0) this.currentView === 'detail' ? null : this._renderCurrentView()
   }
@@ -164,13 +166,15 @@ class TurfProgrammaV2Filter extends HTMLElement {
   async connectedCallback() {
     // Read attributes before first render
     const dagMap = { do: 'dag1', thu: 'dag1', vr: 'dag2', fri: 'dag2', za: 'dag3', sat: 'dag3' }
-    const navAttr  = this.getAttribute('nav')
-    const dagAttr  = this.getAttribute('dag')
+    const navAttr   = this.getAttribute('nav')
+    const dagAttr   = this.getAttribute('dag')
     const themaAttr = this.getAttribute('thema')
-    const viewAttr = this.getAttribute('view')
+    const trackAttr = this.getAttribute('track')
+    const viewAttr  = this.getAttribute('view')
     if (navAttr)   this.attrNav = navAttr !== 'no'
     if (dagAttr)   this.attrDag = dagMap[dagAttr.toLowerCase()] || null
     if (themaAttr) this.attrThemas = new Set(themaAttr.split(',').map(s => s.trim()).filter(Boolean))
+    if (trackAttr) this.attrTracks = new Set(trackAttr.split(',').map(s => s.trim()).filter(Boolean))
     if (viewAttr)  { this.attrView = viewAttr === 'timetable' ? 'timetable' : 'list'; this.viewMode = this.attrView }
 
     // Pre-set day from attribute
@@ -423,10 +427,11 @@ class TurfProgrammaV2Filter extends HTMLElement {
     const dayKey  = this.attrDag || ('dag' + this.activeDay) || 'dag1'
     const dayNum  = { dag1: '1', dag2: '2', dag3: '3' }[dayKey] || '1'
 
-    // Filter events for the day + attrThemas
+    // Filter events for the day + attrThemas + attrTracks
     const dayEvents = this.events.filter(e => {
       if (e.day !== dayNum) return false
       if (this.attrThemas && !this.attrThemas.has(e.theme)) return false
+      if (this.attrTracks && (!e.trackSlug || !this.attrTracks.has(e.trackSlug))) return false
       return true
     })
 
@@ -522,10 +527,13 @@ class TurfProgrammaV2Filter extends HTMLElement {
       </div>` : ''}
 
       <div class="tt-outer">
-        <div class="tt-scroll">
-          <!-- Time axis -->
-          <div class="tt-axis" style="margin-left:${LABEL_W}px; width:${gridW}px;">
-            ${hours.map(h => `<div class="tt-hour" style="left:${h.left}px">${h.label}</div>`).join('')}
+        <div class="tt-scroll" style="width:${LABEL_W + gridW + 40}px;">
+          <!-- Time axis row with sticky corner -->
+          <div class="tt-row tt-header-row">
+            <div class="tt-loc-label tt-corner" style="width:${LABEL_W}px;"></div>
+            <div class="tt-axis" style="width:${gridW}px; position:relative; flex-shrink:0;">
+              ${hours.map(h => `<div class="tt-hour" style="left:${h.left}px">${h.label}</div>`).join('')}
+            </div>
           </div>
           <!-- Location rows -->
           ${rows.map(({ loc, blocks }) => `
@@ -730,6 +738,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       // attrThemas restricts which themes are visible; activeCat further narrows within that
       if (this.attrThemas && !this.attrThemas.has(e.theme)) return false
       if (this.activeCat !== 'all' && e.theme !== this.activeCat) return false
+      if (this.attrTracks && (!e.trackSlug || !this.attrTracks.has(e.trackSlug))) return false
       if (this.activeLocations.size > 0 && !this.activeLocations.has(e.location)) return false
       if (this.activeTrack && e.trackSlug !== this.activeTrack) return false
       if (q && !e.title.toLowerCase().includes(q) && !e.location.toLowerCase().includes(q) && !(e.speakers && e.speakers.some(s => s.toLowerCase().includes(q))) && !(e.tags && e.tags.some(t => t.toLowerCase().includes(q)))) return false
@@ -1286,10 +1295,11 @@ class TurfProgrammaV2Filter extends HTMLElement {
         -webkit-overflow-scrolling: touch;
         padding: 0 0 16px;
       }
-      .tt-scroll { min-width: max-content; padding: 0 20px; }
+      .tt-scroll { display: block; padding: 0 20px; }
       .tt-axis {
-        position: relative; height: 28px; margin-bottom: 4px;
+        height: 28px; position: relative;
       }
+      .tt-header-row { border-top: none; }
       .tt-hour {
         position: absolute; top: 0;
         font-family: var(--font-heading); font-size: 13px; font-weight: 600;
@@ -1305,7 +1315,10 @@ class TurfProgrammaV2Filter extends HTMLElement {
         font-family: var(--font-heading); font-size: 13px; font-weight: 600;
         color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase;
         padding-right: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        position: sticky; left: 0; z-index: 2;
+        background: var(--bg);
       }
+      .tt-corner { background: var(--bg); z-index: 3; }
       .tt-lane {
         flex: 1; position: relative; overflow: visible;
       }
