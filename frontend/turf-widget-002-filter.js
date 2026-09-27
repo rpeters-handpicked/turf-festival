@@ -1294,7 +1294,8 @@ class TurfProgrammaV2Filter extends HTMLElement {
         -webkit-overflow-scrolling: touch;
         padding: 0 0 16px;
       }
-      .tt-scroll { display: block; padding: 0 20px; }
+      /* No left padding here — label carries its own so sticky left:0 matches start */
+      .tt-scroll { display: block; padding: 0 20px 0 0; }
       .tt-axis {
         height: 28px; position: relative;
       }
@@ -1312,12 +1313,14 @@ class TurfProgrammaV2Filter extends HTMLElement {
       .tt-loc-label {
         flex-shrink: 0; display: flex; align-items: center;
         font-family: var(--font-heading); font-size: 13px; font-weight: 600;
-        color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase;
-        padding-right: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        color: rgba(255,255,255,0.85); letter-spacing: 0.5px; text-transform: uppercase;
+        padding-left: 20px; padding-right: 16px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         position: sticky; left: 0; z-index: 2;
-        background: var(--bg);
+        background: rgba(0,0,0,0.88);
+        box-shadow: 12px 0 20px 8px rgba(0,0,0,0.7);
       }
-      .tt-corner { background: var(--bg); z-index: 3; }
+      .tt-corner { background: rgba(0,0,0,0.88); z-index: 3; box-shadow: 12px 0 20px 8px rgba(0,0,0,0.7); }
       .tt-lane {
         flex: 1; position: relative; overflow: visible;
       }
