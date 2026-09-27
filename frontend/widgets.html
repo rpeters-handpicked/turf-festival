@@ -147,6 +147,7 @@
 </div>
 
 <nav class="toc">
+  <a href="#highlights-list">turf-highlights-list</a>
   <a href="#programma-002">turf-programma-002</a>
   <a href="#programma-002-filter">turf-programma-002-filter</a>
   <a href="#programma-003">turf-programma-003</a>
@@ -156,6 +157,37 @@
   <a href="#highlights">turf-highlights</a>
   <a href="#programma-v1">turf-programma (v1)</a>
 </nav>
+
+<!-- ─── turf-highlights-list ──────────────────────────── -->
+<section class="section" id="highlights-list">
+  <div class="section-header">
+    <h2>turf-highlights-list</h2>
+    <span class="tag">turf-highlights-list-widget.js</span>
+    <span class="note">Tips van de redactie — uitgelichte events, lijst met doorklik</span>
+  </div>
+  <div class="widget-grid cols-1">
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">Met heading</span>
+        <span class="attrs">heading="Tips van de redactie"</span>
+      </div>
+      <div class="widget-card-body padded">
+        <turf-highlights-list heading="Tips van de redactie"></turf-highlights-list>
+      </div>
+    </div>
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">Zonder heading</span>
+        <span class="attrs">&lt;turf-highlights-list&gt;</span>
+      </div>
+      <div class="widget-card-body padded">
+        <turf-highlights-list></turf-highlights-list>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
 
 <!-- ─── turf-programma-002 ─────────────────────────────── -->
 <section class="section" id="programma-002">
@@ -402,6 +434,7 @@
 <div style="height: 60px;"></div>
 
 <script src="turf-config.js"></script>
+<script src="turf-highlights-list-widget.js"></script>
 <script src="turf-widget.js"></script>
 <script src="turf-widget-002.js"></script>
 <script src="turf-widget-002-filter.js"></script>
