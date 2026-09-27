@@ -455,7 +455,15 @@ class TurfHighlightsList extends HTMLElement {
 
       *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-      .root { color: var(--text); font-family: var(--font-body); }
+      .root {
+        background: var(--nav-bg);
+        color: var(--text);
+        font-family: var(--font-body);
+        display: flex;
+        flex-direction: column;
+        border-radius: 20px;
+        overflow: hidden;
+      }
 
       .loading {
         padding: 80px 0; text-align: center;
@@ -469,18 +477,15 @@ class TurfHighlightsList extends HTMLElement {
 
       /* ── WIDGET HEADING ── */
       .widget-heading {
-        font-family: var(--font-heading);
-        font-size: clamp(36px, 6vw, 64px);
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: var(--text);
-        margin-bottom: 32px;
-        line-height: 1;
+        font-family: var(--font-heading); font-weight: 900;
+        font-size: clamp(36px, 8vw, 96px);
+        line-height: 0.95; letter-spacing: -0.5px;
+        text-transform: uppercase; color: var(--text);
+        margin: 0; padding: 24px 20px 16px;
       }
 
       /* ── LIST ── */
-      .event-list { display: flex; flex-direction: column; gap: 3px; }
+      .event-list { display: flex; flex-direction: column; gap: 3px; padding: 24px 20px; }
 
       .empty-state { padding: 80px 32px; text-align: center; }
       .empty-state h3 {
@@ -691,6 +696,7 @@ class TurfHighlightsList extends HTMLElement {
 
       /* ── MOBILE ── */
       @media (max-width: 768px) {
+        .event-list { padding: 16px 12px; }
         .event-card { grid-template-columns: 1fr; }
         .card-img { width: 100%; height: 200px; }
         .card-img-placeholder { width: 100%; height: 200px; }
