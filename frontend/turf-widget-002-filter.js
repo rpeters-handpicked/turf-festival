@@ -428,25 +428,10 @@ class TurfProgrammaV2Filter extends HTMLElement {
     }
   }
 
-  renderTimetable() {
-    this.currentView = 'timetable'
-    this.viewMode = 'timetable'
-
-    const LABEL_W = 160   // px for location label column
-    const SLOT_W  = 240   // px per hour
-    const ROW_H   = 72    // px per location row
-
-    // Determine which day to show
-    const dayKey  = this.attrDag || ('dag' + this.activeDay) || 'dag1'
-    const dayNum  = { dag1: '1', dag2: '2', dag3: '3' }[dayKey] || '1'
-
-    // Filter events for the day + attrThemas + attrTracks
-    const dayEvents = this.events.filter(e => {
-      if (e.day !== dayNum) return false
-      if (this.attrThemas && !this.attrThemas.has(e.theme)) return false
-      if (this.attrTracks && (!e.trackSlug || !this.attrTracks.has(e.trackSlug))) return false
-      return true
-    })
+  _buildDayGrid(dayEvents) {
+    const LABEL_W = 160
+    const SLOT_W  = 240
+    const ROW_H   = 72
 
     const timeToMins = (t) => {
       if (!t) return null
@@ -454,47 +439,40 @@ class TurfProgrammaV2Filter extends HTMLElement {
       return h * 60 + (m || 0)
     }
 
-    // Resolve effective minutes for overnight events.
-    // Times < 6 AM that belong to an evening event crossing midnight get +1440 (next day).
-    const NEXT_DAY_CUTOFF = 6 * 60  // anything before 06:00 is treated as "next morning"
+    const NEXT_DAY_CUTOFF = 6 * 60
     const rawStarts = dayEvents.map(e => timeToMins(e.startTime)).filter(s => s !== null)
     const hasEveningEvents = rawStarts.some(s => s >= 12 * 60)
 
     const effectiveStart = (t) => {
       const mins = timeToMins(t)
       if (mins === null) return null
-      // A start time before 6 AM on a day that has afternoon/evening events = next morning
       if (hasEveningEvents && mins < NEXT_DAY_CUTOFF) return mins + 1440
       return mins
     }
     const effectiveEnd = (endT, startMins) => {
       const mins = timeToMins(endT)
       if (mins === null) return null
-      // End before start = crosses midnight
       if (startMins !== null && mins < startMins) return mins + 1440
-      // End time before 6 AM and day has evening events = next morning
       if (hasEveningEvents && mins < NEXT_DAY_CUTOFF) return mins + 1440
       return mins
     }
 
-    // Determine time range using overnight-aware effective times
     const starts = dayEvents.map(e => effectiveStart(e.startTime)).filter(s => s !== null)
     const ends   = dayEvents.map(e => {
       const s = effectiveStart(e.startTime)
       return effectiveEnd(e.endTime, s)
     }).filter(e => e !== null)
-    const dayStart = starts.length ? Math.min(...starts) : 10 * 60
-    const dayEnd   = ends.length   ? Math.max(...ends)   : 23 * 60
-    // Round to hour boundaries
+
+    if (!starts.length) return ''
+
+    const dayStart  = Math.min(...starts)
+    const dayEnd    = Math.max(...ends.length ? ends : [dayStart + 60])
     const gridStart = Math.floor(dayStart / 60) * 60
     const gridEnd   = Math.ceil(dayEnd   / 60) * 60
-    const totalMins = gridEnd - gridStart
-    const gridW     = (totalMins / 60) * SLOT_W
+    const gridW     = ((gridEnd - gridStart) / 60) * SLOT_W
 
-    // Unique locations in order
     const locs = [...new Set(dayEvents.map(e => e.location).filter(Boolean))]
 
-    // Build hour labels — hours past midnight display as 00:00, 01:00 etc.
     const midnightLeft = gridStart < 1440 && gridEnd > 1440
       ? ((1440 - gridStart) / 60) * SLOT_W
       : null
@@ -504,9 +482,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       hours.push({ label: `${String(h).padStart(2,'0')}:00`, left: ((m - gridStart) / 60) * SLOT_W, pastMidnight: m >= 1440 })
     }
 
-    // Assign events to lanes within each location row (collision detection)
     const assignLanes = (evts) => {
-      // Sort by start time
       const sorted = [...evts]
         .map(e => {
           const s  = effectiveStart(e.startTime)
@@ -515,16 +491,13 @@ class TurfProgrammaV2Filter extends HTMLElement {
         })
         .filter(b => b.s !== null)
         .sort((a, b) => a.s - b.s)
-
-      const lanes = [] // each lane is array of {s, en} end-times
+      const lanes = []
       const blocks = sorted.map(({ e, s, en }) => {
-        // Find first lane with no overlap
         let lane = lanes.findIndex(occupied =>
           !occupied.some(slot => s < slot.en && en > slot.s)
         )
         if (lane === -1) { lanes.push([]); lane = lanes.length - 1 }
         lanes[lane].push({ s, en })
-
         const left  = ((s - gridStart) / 60) * SLOT_W
         const width = Math.max(((en - s) / 60) * SLOT_W - 4, 20)
         return { e, left, width, lane }
@@ -532,15 +505,67 @@ class TurfProgrammaV2Filter extends HTMLElement {
       return { blocks, laneCount: lanes.length }
     }
 
+    const themeColor = { talks: '#6366f1', live: '#ec4899', night: '#f97316' }
+
     const rows = locs.map(loc => {
       const evts = dayEvents.filter(e => e.location === loc)
       const { blocks, laneCount } = assignLanes(evts)
       return { loc, blocks, laneCount }
     })
 
-    const themeColor = {
-      talks: '#6366f1', live: '#ec4899', night: '#f97316'
-    }
+    return `<div class="tt-outer">
+      <div class="tt-scroll" style="width:${LABEL_W + gridW + 40}px;">
+        <div class="tt-row tt-header-row">
+          <div class="tt-loc-label tt-corner" style="width:${LABEL_W}px;"></div>
+          <div class="tt-axis" style="width:${gridW}px; position:relative; flex-shrink:0;">
+            ${midnightLeft !== null ? `<div class="tt-midnight-label" style="left:${midnightLeft}px;">00:00</div>` : ''}
+            ${hours.filter(h => !(midnightLeft !== null && h.label === '00:00')).map(h => `<div class="tt-hour${h.pastMidnight ? ' tt-hour-night' : ''}" style="left:${h.left}px">${h.label}</div>`).join('')}
+          </div>
+        </div>
+        ${rows.map(({ loc, blocks, laneCount }) => {
+          const rowH = ROW_H * laneCount
+          const blockH = ROW_H - 8
+          return `
+        <div class="tt-row" style="height:${rowH}px;">
+          <div class="tt-loc-label" style="width:${LABEL_W}px;">${loc}</div>
+          <div class="tt-lane" style="width:${gridW}px; position:relative;">
+            ${hours.map(h => `<div class="tt-grid-line${h.pastMidnight ? ' tt-grid-line-night' : ''}" style="left:${h.left}px;"></div>`).join('')}
+            ${midnightLeft !== null ? `<div class="tt-midnight-line" style="left:${midnightLeft}px;height:${rowH}px;"></div>` : ''}
+            ${laneCount > 1 ? Array.from({length: laneCount - 1}, (_, i) =>
+              `<div class="tt-lane-divider" style="top:${(i + 1) * ROW_H}px;"></div>`
+            ).join('') : ''}
+            ${blocks.map(({ e, left, width, lane }) => `
+            <div class="tt-block" data-id="${e._id}"
+              style="left:${left}px;top:${lane * ROW_H + 4}px;width:${width}px;height:${blockH}px;background:${themeColor[e.theme] || '#555'};"
+              title="${e.title} ${e.startTime}${e.endTime ? '–' + e.endTime : ''}">
+              <div class="tt-block-time">${e.startTime}${e.endTime ? '–' + e.endTime : ''}</div>
+              <div class="tt-block-title">${e.title}</div>
+            </div>`).join('')}
+          </div>
+        </div>`}).join('')}
+      </div>
+    </div>`
+  }
+
+  renderTimetable() {
+    this.currentView = 'timetable'
+    this.viewMode = 'timetable'
+
+    // Determine which day(s) to show
+    // attrDag = locked to specific day; activeDay = user picked day via nav buttons; null = all days
+    const dayKeyMap = { dag1: '1', dag2: '2', dag3: '3' }
+    const lockedDayNum = this.attrDag ? (dayKeyMap[this.attrDag] || null) : null
+    const activeDayNum = this.activeDay || null
+    const showAllDays  = !lockedDayNum && !activeDayNum
+
+    const filterDay = lockedDayNum || activeDayNum  // null when showing all days
+
+    const getEventsForDay = (dayNum) => this.events.filter(e => {
+      if (e.day !== dayNum) return false
+      if (this.attrThemas && !this.attrThemas.has(e.theme)) return false
+      if (this.attrTracks && (!e.trackSlug || !this.attrTracks.has(e.trackSlug))) return false
+      return true
+    })
 
     const root = this.shadowRoot.querySelector('.root')
     root.innerHTML = `
@@ -592,40 +617,19 @@ class TurfProgrammaV2Filter extends HTMLElement {
         ${this.attrProgramUrl ? `<a class="view-strip-fullprog" href="${this.attrProgramUrl}">${this.ui.viewFullProgram} →</a>` : ''}
       </div>` : ''}
 
-      <div class="tt-outer">
-        <div class="tt-scroll" style="width:${LABEL_W + gridW + 40}px;">
-          <!-- Time axis row with sticky corner -->
-          <div class="tt-row tt-header-row">
-            <div class="tt-loc-label tt-corner" style="width:${LABEL_W}px;"></div>
-            <div class="tt-axis" style="width:${gridW}px; position:relative; flex-shrink:0;">
-              ${midnightLeft !== null ? `<div class="tt-midnight-label" style="left:${midnightLeft}px;">00:00</div>` : ''}
-              ${hours.filter(h => !(midnightLeft !== null && h.label === '00:00')).map(h => `<div class="tt-hour${h.pastMidnight ? ' tt-hour-night' : ''}" style="left:${h.left}px">${h.label}</div>`).join('')}
-            </div>
-          </div>
-          <!-- Location rows -->
-          ${rows.map(({ loc, blocks, laneCount }) => {
-            const rowH = ROW_H * laneCount
-            const blockH = ROW_H - 8
+      ${showAllDays
+        ? ['1','2','3'].map(dayNum => {
+            const dl = Object.values(this.dagLabels).find(d => d.num === dayNum)
+            const evts = getEventsForDay(dayNum)
+            if (!evts.length) return ''
             return `
-          <div class="tt-row" style="height:${rowH}px;">
-            <div class="tt-loc-label" style="width:${LABEL_W}px;">${loc}</div>
-            <div class="tt-lane" style="width:${gridW}px; position:relative;">
-              ${hours.map(h => `<div class="tt-grid-line${h.pastMidnight ? ' tt-grid-line-night' : ''}" style="left:${h.left}px;"></div>`).join('')}
-              ${midnightLeft !== null ? `<div class="tt-midnight-line" style="left:${midnightLeft}px;height:${rowH}px;"></div>` : ''}
-              ${laneCount > 1 ? Array.from({length: laneCount - 1}, (_, i) =>
-                `<div class="tt-lane-divider" style="top:${(i + 1) * ROW_H}px;"></div>`
-              ).join('') : ''}
-              ${blocks.map(({ e, left, width, lane }) => `
-              <div class="tt-block" data-id="${e._id}"
-                style="left:${left}px;top:${lane * ROW_H + 4}px;width:${width}px;height:${blockH}px;background:${themeColor[e.theme] || '#555'};"
-                title="${e.title} ${e.startTime}${e.endTime ? '–' + e.endTime : ''}">
-                <div class="tt-block-time">${e.startTime}${e.endTime ? '–' + e.endTime : ''}</div>
-                <div class="tt-block-title">${e.title}</div>
-              </div>`).join('')}
-            </div>
-          </div>`}).join('')}
-        </div>
-      </div>
+              <div class="tt-day-section">
+                <div class="tt-day-heading">${dl ? dl.name + ' · ' + dl.date : ''}</div>
+                ${this._buildDayGrid(evts)}
+              </div>`
+          }).join('')
+        : this._buildDayGrid(getEventsForDay(filterDay))
+      }
     `
 
     // Day buttons
@@ -1402,6 +1406,12 @@ class TurfProgrammaV2Filter extends HTMLElement {
         transform: translateX(-50%);
       }
       .tt-hour-night { color: rgba(249,115,22,0.7); }
+      .tt-day-section { margin-bottom: 32px; }
+      .tt-day-heading {
+        font-family: var(--font-heading); font-size: 13px; font-weight: 700;
+        color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase;
+        padding: 0 0 10px 0; border-bottom: 1px solid var(--border); margin-bottom: 0;
+      }
       .tt-midnight-label {
         position: absolute; top: 0;
         font-family: var(--font-heading); font-size: 13px; font-weight: 700;
