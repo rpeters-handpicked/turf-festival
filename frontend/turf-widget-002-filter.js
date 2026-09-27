@@ -725,8 +725,13 @@ class TurfProgrammaV2Filter extends HTMLElement {
       e.stopPropagation()
       this.locDropdownOpen = !this.locDropdownOpen
       this.trackDropdownOpen = false
-      locPanel?.classList.toggle('open', this.locDropdownOpen)
       root.getElementById('trackPanel')?.classList.remove('open')
+      if (this.locDropdownOpen) {
+        this._positionPanel(locBtn, locPanel)
+        locPanel?.classList.add('open')
+      } else {
+        locPanel?.classList.remove('open')
+      }
     })
 
     // Stop wheel events from bubbling to Lenis (smooth scroll library on host page)
@@ -761,8 +766,13 @@ class TurfProgrammaV2Filter extends HTMLElement {
       e.stopPropagation()
       this.trackDropdownOpen = !this.trackDropdownOpen
       this.locDropdownOpen = false
-      trackPanel?.classList.toggle('open', this.trackDropdownOpen)
       locPanel?.classList.remove('open')
+      if (this.trackDropdownOpen) {
+        this._positionPanel(trackBtn, trackPanel)
+        trackPanel?.classList.add('open')
+      } else {
+        trackPanel?.classList.remove('open')
+      }
     })
 
     trackPanel?.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true })
@@ -1087,6 +1097,23 @@ class TurfProgrammaV2Filter extends HTMLElement {
 
   // ─── STYLES ─────────────────────────────────────────────────────────────────
 
+  _positionPanel(btn, panel) {
+    if (!panel) return
+    const r = btn.getBoundingClientRect()
+    const panelH = Math.min(300, panel.scrollHeight || 300)
+    const spaceBelow = window.innerHeight - r.bottom
+    const spaceAbove = r.top
+    panel.style.left = r.left + 'px'
+    panel.style.minWidth = Math.max(r.width, 200) + 'px'
+    if (spaceBelow >= panelH + 8 || spaceBelow >= spaceAbove) {
+      panel.style.top = (r.bottom + 8) + 'px'
+      panel.style.bottom = 'auto'
+    } else {
+      panel.style.bottom = (window.innerHeight - r.top + 8) + 'px'
+      panel.style.top = 'auto'
+    }
+  }
+
   get baseUrl() {
     const script = document.querySelector('script[src*="turf-widget"]')
     if (script) return script.src.substring(0, script.src.lastIndexOf('/') + 1)
@@ -1287,9 +1314,9 @@ class TurfProgrammaV2Filter extends HTMLElement {
       .dropdown-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
       .dropdown-panel {
-        display: none; position: absolute; top: calc(100% + 8px); left: 0;
+        display: none; position: fixed;
         background: #1a1a1a; border: 1px solid var(--border);
-        border-radius: 12px; min-width: 200px; z-index: 200;
+        border-radius: 12px; min-width: 200px; z-index: 99999;
         padding: 6px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);
         max-height: 300px; overflow-y: scroll;
         overscroll-behavior: contain;
@@ -1686,7 +1713,6 @@ class TurfProgrammaV2Filter extends HTMLElement {
         .filter-divider { display: none; }
         .dropdown-group { flex-shrink: 0; }
         .dropdown-btn { font-size: 18px; padding: 5px 11px; }
-        .dropdown-panel { top: auto; bottom: calc(100% + 8px); }
 
         .nav-spacer { display: none; }
         .results-fav { flex-shrink: 0; gap: 8px; }
@@ -1703,7 +1729,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
         .detail-sidebar { order: -1; }
         .hero-image img { height: 220px; }
         .back-bar { padding: 12px 16px; }
-        .dropdown-panel { left: auto; right: 0; min-width: 220px; }
+        /* dropdown-panel positioned via JS (_positionPanel), no static override needed */
       }
 
       @media (max-width: 480px) {
