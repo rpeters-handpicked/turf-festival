@@ -389,6 +389,17 @@ class TurfProgrammaV2Filter extends HTMLElement {
         </div>
       </nav>` : ''}
 
+      ${!this.attrNav ? `<div class="view-strip">
+        <button class="view-strip-btn ${this.viewMode !== 'timetable' ? 'active' : ''}" id="viewToggle" title="${this.ui.viewList}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="18" height="3" rx="1"/><rect x="3" y="10.5" width="18" height="3" rx="1"/><rect x="3" y="17" width="18" height="3" rx="1"/></svg>
+          ${this.ui.viewList}
+        </button>
+        <button class="view-strip-btn ${this.viewMode === 'timetable' ? 'active' : ''}" id="viewToggleTt" title="${this.ui.viewTimetable}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="4" height="4" rx="0.5"/><rect x="10" y="3" width="4" height="4" rx="0.5"/><rect x="17" y="3" width="4" height="4" rx="0.5"/><rect x="3" y="10" width="4" height="4" rx="0.5"/><rect x="10" y="10" width="11" height="4" rx="0.5"/><rect x="3" y="17" width="4" height="4" rx="0.5"/><rect x="10" y="17" width="7" height="4" rx="0.5"/></svg>
+          ${this.ui.viewTimetable}
+        </button>
+      </div>` : ''}
+
       <main class="event-list" id="eventList"></main>
     `
 
@@ -498,6 +509,17 @@ class TurfProgrammaV2Filter extends HTMLElement {
           </div>
         </div>
       </nav>` : ''}
+
+      ${!this.attrNav ? `<div class="view-strip">
+        <button class="view-strip-btn" id="viewToggle" title="${this.ui.viewList}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="18" height="3" rx="1"/><rect x="3" y="10.5" width="18" height="3" rx="1"/><rect x="3" y="17" width="18" height="3" rx="1"/></svg>
+          ${this.ui.viewList}
+        </button>
+        <button class="view-strip-btn active" id="viewToggleTt" title="${this.ui.viewTimetable}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="4" height="4" rx="0.5"/><rect x="10" y="3" width="4" height="4" rx="0.5"/><rect x="17" y="3" width="4" height="4" rx="0.5"/><rect x="3" y="10" width="4" height="4" rx="0.5"/><rect x="10" y="10" width="11" height="4" rx="0.5"/><rect x="3" y="17" width="4" height="4" rx="0.5"/><rect x="10" y="17" width="7" height="4" rx="0.5"/></svg>
+          ${this.ui.viewTimetable}
+        </button>
+      </div>` : ''}
 
       <div class="tt-outer">
         <div class="tt-scroll">
@@ -916,13 +938,13 @@ class TurfProgrammaV2Filter extends HTMLElement {
 
     root.querySelector('#backBtn')?.addEventListener('click', () => {
       window.history.pushState(null, '', window.location.pathname + window.location.search)
-      this.renderList()
+      this._renderCurrentView()
     })
 
     root.querySelectorAll('.sidebar-tag[data-tag]').forEach(tag => {
       tag.addEventListener('click', () => {
         window.history.pushState(null, '', window.location.pathname + window.location.search)
-        this.renderList()
+        this._renderCurrentView()
       })
     })
 
@@ -1237,6 +1259,24 @@ class TurfProgrammaV2Filter extends HTMLElement {
       }
       .view-toggle-btn:hover { border-color: #fff; color: #fff; }
       .view-toggle-btn.active { background: #fff; color: #111; border-color: #fff; }
+
+      /* ────────────────────────────────────────
+         VIEW STRIP (shown when nav="no")
+      ──────────────────────────────────────── */
+      .view-strip {
+        display: flex; gap: 8px; padding: 12px 20px 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      .view-strip-btn {
+        display: flex; align-items: center; gap: 8px;
+        padding: 7px 16px; border: 1.5px solid var(--border);
+        border-radius: var(--radius); background: transparent;
+        color: var(--muted); cursor: pointer; transition: all 0.15s;
+        font-family: var(--font-heading); font-size: 14px; font-weight: 600;
+        letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap;
+      }
+      .view-strip-btn:hover { border-color: #fff; color: #fff; }
+      .view-strip-btn.active { background: #fff; color: #111; border-color: #fff; }
 
       /* ────────────────────────────────────────
          TIMETABLE VIEW
