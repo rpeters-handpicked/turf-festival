@@ -420,7 +420,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
     this.viewMode = 'timetable'
 
     const LABEL_W = 160   // px for location label column
-    const SLOT_W  = 120   // px per hour
+    const SLOT_W  = 240   // px per hour
     const ROW_H   = 72    // px per location row
 
     // Determine which day to show
@@ -576,8 +576,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
     // Click event block → detail
     this.shadowRoot.querySelectorAll('.tt-block').forEach(block => {
       block.addEventListener('click', () => {
-        const id = block.dataset.id
-        this.renderDetail(this.events.find(e => e._id === id))
+        this.renderDetail(block.dataset.id)
       })
     })
   }
