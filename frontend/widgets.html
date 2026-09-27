@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TURF — Widget Overzicht</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Barlow', Arial, sans-serif;
+    background: #0f0f0f;
+    color: #fff;
+  }
+  .page-header {
+    background: linear-gradient(135deg, #d4690e 0%, #e85d3a 30%, #d94080 65%, #9b3bf5 100%);
+    padding: 48px 40px 36px;
+    text-align: center;
+  }
+  .page-header h1 {
+    margin: 0 0 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    opacity: 0.75;
+  }
+  .page-header p {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 24px 40px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: #1a1a1a;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .toc a {
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 6px 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    transition: all 0.15s;
+  }
+  .toc a:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+
+  .section {
+    padding: 48px 0 0;
+  }
+  .section-header {
+    padding: 0 40px 24px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 0;
+  }
+  .section-header h2 {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+  }
+  .section-header .tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.06);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+  }
+  .section-header .note {
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    margin-left: auto;
+    font-style: italic;
+  }
+
+  .widget-grid {
+    padding: 32px 40px;
+    display: grid;
+    gap: 32px;
+  }
+  .widget-grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); }
+  .widget-grid.cols-1 { grid-template-columns: 1fr; }
+
+  .widget-card {
+    background: #181818;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .widget-card-header {
+    padding: 14px 18px;
+    background: rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .widget-card-header .label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+  }
+  .widget-card-header .attrs {
+    font-size: 11px;
+    font-family: monospace;
+    color: rgba(255,255,255,0.3);
+    margin-left: auto;
+  }
+  .widget-card-body {
+    padding: 0;
+  }
+  .widget-card-body.padded { padding: 24px; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>TURF Festival</h1>
+  <p>Widget Overzicht</p>
+</div>
+
+<nav class="toc">
+  <a href="#programma-002">turf-programma-002</a>
+  <a href="#programma-002-filter">turf-programma-002-filter</a>
+  <a href="#programma-003">turf-programma-003</a>
+  <a href="#teaser3">turf-teaser3</a>
+  <a href="#teaser2">turf-teaser2</a>
+  <a href="#teaser">turf-teaser</a>
+  <a href="#highlights">turf-highlights</a>
+  <a href="#programma-v1">turf-programma (v1)</a>
+</nav>
+
+<!-- ─── turf-programma-002 ─────────────────────────────── -->
+<section class="section" id="programma-002">
+  <div class="section-header">
+    <h2>turf-programma-002</h2>
+    <span class="tag">turf-widget-002.js</span>
+    <span class="note">Volledig programma met dag/locatie/track filters</span>
+  </div>
+  <div class="widget-grid cols-1">
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">Alle dagen</span>
+        <span class="attrs">&lt;turf-programma-002&gt;</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-programma-002></turf-programma-002>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ─── turf-programma-002-filter ────────────────────────── -->
+<section class="section" id="programma-002-filter">
+  <div class="section-header">
+    <h2>turf-programma-002-filter</h2>
+    <span class="tag">turf-widget-002-filter.js</span>
+    <span class="note">Filterbare embed variant (dag / thema / track attributen)</span>
+  </div>
+  <div class="widget-grid cols-1">
+
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">Alle dagen — volledig</span>
+        <span class="attrs">&lt;turf-programma-002-filter&gt;</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-programma-002-filter></turf-programma-002-filter>
+      </div>
+    </div>
+
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">Donderdag only</span>
+        <span class="attrs">dag="dag1"</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-programma-002-filter dag="dag1"></turf-programma-002-filter>
+      </div>
+    </div>
+
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">Vrijdag only</span>
+        <span class="attrs">dag="dag2"</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-programma-002-filter dag="dag2"></turf-programma-002-filter>
+      </div>
+    </div>
+
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">Zaterdag only</span>
+        <span class="attrs">dag="dag3"</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-programma-002-filter dag="dag3"></turf-programma-002-filter>
+      </div>
+    </div>
+
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">TURF TALKS — alle dagen</span>
+        <span class="attrs">thema="talks"</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-programma-002-filter thema="talks"></turf-programma-002-filter>
+      </div>
+    </div>
+
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">TURF LIVE — alle dagen</span>
+        <span class="attrs">thema="live"</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-programma-002-filter thema="live"></turf-programma-002-filter>
+      </div>
+    </div>
+
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">TURF BY NIGHT — alle dagen</span>
+        <span class="attrs">thema="night"</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-programma-002-filter thema="night"></turf-programma-002-filter>
+      </div>
+    </div>
+
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">Geen nav-balk</span>
+        <span class="attrs">nav="no"</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-programma-002-filter nav="no"></turf-programma-002-filter>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ─── turf-programma-003 ─────────────────────────────── -->
+<section class="section" id="programma-003">
+  <div class="section-header">
+    <h2>turf-programma-003</h2>
+    <span class="tag">turf-widget-003.js</span>
+  </div>
+  <div class="widget-grid cols-1">
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">Standaard</span>
+        <span class="attrs">&lt;turf-programma-003&gt;</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-programma-003></turf-programma-003>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ─── turf-teaser3 ─────────────────────────────────── -->
+<section class="section" id="teaser3">
+  <div class="section-header">
+    <h2>turf-teaser3</h2>
+    <span class="tag">turf-teaser-widget3.js</span>
+  </div>
+  <div class="widget-grid cols-1">
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">Standaard</span>
+        <span class="attrs">&lt;turf-teaser3&gt;</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-teaser3></turf-teaser3>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ─── turf-teaser2 ─────────────────────────────────── -->
+<section class="section" id="teaser2">
+  <div class="section-header">
+    <h2>turf-teaser2</h2>
+    <span class="tag">turf-teaser-widget2.js</span>
+  </div>
+  <div class="widget-grid cols-1">
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">Standaard</span>
+        <span class="attrs">&lt;turf-teaser2&gt;</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-teaser2></turf-teaser2>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ─── turf-teaser ──────────────────────────────────── -->
+<section class="section" id="teaser">
+  <div class="section-header">
+    <h2>turf-teaser</h2>
+    <span class="tag">turf-teaser-widget.js</span>
+    <span class="note">v1</span>
+  </div>
+  <div class="widget-grid cols-1">
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">Standaard</span>
+        <span class="attrs">&lt;turf-teaser&gt;</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-teaser></turf-teaser>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ─── turf-highlights ──────────────────────────────── -->
+<section class="section" id="highlights">
+  <div class="section-header">
+    <h2>turf-highlights</h2>
+    <span class="tag">turf-highlights-widget.js</span>
+  </div>
+  <div class="widget-grid cols-1">
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">Standaard</span>
+        <span class="attrs">&lt;turf-highlights&gt;</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-highlights></turf-highlights>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ─── turf-programma (v1) ─────────────────────────── -->
+<section class="section" id="programma-v1">
+  <div class="section-header">
+    <h2>turf-programma</h2>
+    <span class="tag">turf-widget.js</span>
+    <span class="note">v1 — legacy</span>
+  </div>
+  <div class="widget-grid cols-1">
+    <div class="widget-card">
+      <div class="widget-card-header">
+        <span class="label">Standaard</span>
+        <span class="attrs">&lt;turf-programma&gt;</span>
+      </div>
+      <div class="widget-card-body">
+        <turf-programma></turf-programma>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div style="height: 60px;"></div>
+
+<script src="turf-config.js"></script>
+<script src="turf-widget.js"></script>
+<script src="turf-widget-002.js"></script>
+<script src="turf-widget-002-filter.js"></script>
+<script src="turf-widget-003.js"></script>
+<script src="turf-teaser-widget.js"></script>
+<script src="turf-teaser-widget2.js"></script>
+<script src="turf-teaser-widget3.js"></script>
+<script src="turf-highlights-widget.js"></script>
+</body>
+</html>
