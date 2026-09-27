@@ -316,6 +316,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       ? allThemes.filter(t => this.attrThemas.has(t.slug))
       : allThemes
 
+    this.shadowRoot.querySelectorAll('.dropdown-panel').forEach(p => p.remove())
     const root = this.shadowRoot.querySelector('.root')
     root.innerHTML = `
       ${this.attrHeading ? `<h2 class="widget-heading">${this.attrHeading}</h2>` : ''}
@@ -567,6 +568,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       return true
     })
 
+    this.shadowRoot.querySelectorAll('.dropdown-panel').forEach(p => p.remove())
     const root = this.shadowRoot.querySelector('.root')
     root.innerHTML = `
       ${this.attrHeading ? `<h2 class="widget-heading">${this.attrHeading}</h2>` : ''}
@@ -1099,18 +1101,26 @@ class TurfProgrammaV2Filter extends HTMLElement {
 
   _positionPanel(btn, panel) {
     if (!panel) return
+    // Move panel to shadow root level to escape .root's overflow:hidden.
+    // position:fixed breaks on iOS Safari when Lenis/Webflow applies a CSS transform
+    // to an ancestor. position:absolute relative to :host avoids this entirely.
+    if (panel.parentNode !== this.shadowRoot) {
+      this.shadowRoot.appendChild(panel)
+    }
+    const hostRect = this.getBoundingClientRect()
     const r = btn.getBoundingClientRect()
     const panelH = Math.min(300, panel.scrollHeight || 300)
     const spaceBelow = window.innerHeight - r.bottom
     const spaceAbove = r.top
-    panel.style.left = r.left + 'px'
+    panel.style.position = 'absolute'
+    panel.style.left = (r.left - hostRect.left) + 'px'
     panel.style.minWidth = Math.max(r.width, 200) + 'px'
     if (spaceBelow >= panelH + 8 || spaceBelow >= spaceAbove) {
-      panel.style.top = (r.bottom + 8) + 'px'
+      panel.style.top = (r.bottom - hostRect.top + 8) + 'px'
       panel.style.bottom = 'auto'
     } else {
-      panel.style.bottom = (window.innerHeight - r.top + 8) + 'px'
       panel.style.top = 'auto'
+      panel.style.bottom = (hostRect.bottom - r.top + 8) + 'px'
     }
   }
 
@@ -1151,6 +1161,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
 
       :host {
         display: block;
+        position: relative;
         height: auto;
         --bg: transparent;
         --surface: rgba(255,255,255,0.08);
@@ -1314,9 +1325,9 @@ class TurfProgrammaV2Filter extends HTMLElement {
       .dropdown-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
       .dropdown-panel {
-        display: none; position: fixed;
+        display: none; position: absolute;
         background: #1a1a1a; border: 1px solid var(--border);
-        border-radius: 12px; min-width: 200px; z-index: 99999;
+        border-radius: 12px; min-width: 200px; z-index: 9999;
         padding: 6px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);
         max-height: 300px; overflow-y: scroll;
         overscroll-behavior: contain;
