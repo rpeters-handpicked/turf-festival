@@ -1153,7 +1153,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
         display: flex;
         flex-direction: column;
         border-radius: 20px;
-        overflow: clip;
+        overflow: hidden;
       }
 
       /* ── LOADING ── */
@@ -1389,8 +1389,9 @@ class TurfProgrammaV2Filter extends HTMLElement {
          TIMETABLE VIEW
       ──────────────────────────────────────── */
       .tt-outer {
-        overflow-x: auto; overflow-y: visible;
+        overflow-x: auto; overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
+        touch-action: pan-x;
         padding: 0 0 16px;
       }
       /* No left padding here — label carries its own so sticky left:0 matches start */
