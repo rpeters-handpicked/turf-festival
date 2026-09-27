@@ -1410,7 +1410,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       .tt-day-heading {
         font-family: var(--font-heading); font-size: 13px; font-weight: 700;
         color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase;
-        padding: 0 0 10px 0; border-bottom: 1px solid var(--border); margin-bottom: 0;
+        padding: 0 0 10px 20px; border-bottom: 1px solid var(--border); margin-bottom: 0;
       }
       .tt-midnight-label {
         position: absolute; top: 0;
