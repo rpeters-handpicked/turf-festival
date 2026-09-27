@@ -467,18 +467,38 @@ class TurfProgrammaV2Filter extends HTMLElement {
       hours.push({ label: `${h}:00`, left: ((m - gridStart) / 60) * SLOT_W })
     }
 
-    // Event blocks per location row
-    const rows = locs.map(loc => {
-      const evts = dayEvents.filter(e => e.location === loc)
-      const blocks = evts.map(e => {
-        const s = timeToMins(e.startTime)
-        const en = timeToMins(e.endTime) || (s ? s + 60 : null)
-        if (!s) return null
+    // Assign events to lanes within each location row (collision detection)
+    const assignLanes = (evts) => {
+      // Sort by start time
+      const sorted = [...evts]
+        .map(e => {
+          const s  = timeToMins(e.startTime)
+          const en = timeToMins(e.endTime) || (s ? s + 60 : null)
+          return { e, s, en }
+        })
+        .filter(b => b.s !== null)
+        .sort((a, b) => a.s - b.s)
+
+      const lanes = [] // each lane is array of {s, en} end-times
+      const blocks = sorted.map(({ e, s, en }) => {
+        // Find first lane with no overlap
+        let lane = lanes.findIndex(occupied =>
+          !occupied.some(slot => s < slot.en && en > slot.s)
+        )
+        if (lane === -1) { lanes.push([]); lane = lanes.length - 1 }
+        lanes[lane].push({ s, en })
+
         const left  = ((s - gridStart) / 60) * SLOT_W
         const width = Math.max(((en - s) / 60) * SLOT_W - 4, 20)
-        return { e, left, width }
-      }).filter(Boolean)
-      return { loc, blocks }
+        return { e, left, width, lane }
+      })
+      return { blocks, laneCount: lanes.length }
+    }
+
+    const rows = locs.map(loc => {
+      const evts = dayEvents.filter(e => e.location === loc)
+      const { blocks, laneCount } = assignLanes(evts)
+      return { loc, blocks, laneCount }
     })
 
     const themeColor = {
@@ -542,20 +562,26 @@ class TurfProgrammaV2Filter extends HTMLElement {
             </div>
           </div>
           <!-- Location rows -->
-          ${rows.map(({ loc, blocks }) => `
-          <div class="tt-row" style="height:${ROW_H}px;">
+          ${rows.map(({ loc, blocks, laneCount }) => {
+            const rowH = ROW_H * laneCount
+            const blockH = ROW_H - 8
+            return `
+          <div class="tt-row" style="height:${rowH}px;">
             <div class="tt-loc-label" style="width:${LABEL_W}px;">${loc}</div>
             <div class="tt-lane" style="width:${gridW}px; position:relative;">
               ${hours.map(h => `<div class="tt-grid-line" style="left:${h.left}px;"></div>`).join('')}
-              ${blocks.map(({ e, left, width }) => `
+              ${laneCount > 1 ? Array.from({length: laneCount - 1}, (_, i) =>
+                `<div class="tt-lane-divider" style="top:${(i + 1) * ROW_H}px;"></div>`
+              ).join('') : ''}
+              ${blocks.map(({ e, left, width, lane }) => `
               <div class="tt-block" data-id="${e._id}"
-                style="left:${left}px;width:${width}px;height:${ROW_H - 8}px;background:${themeColor[e.theme] || '#555'};"
+                style="left:${left}px;top:${lane * ROW_H + 4}px;width:${width}px;height:${blockH}px;background:${themeColor[e.theme] || '#555'};"
                 title="${e.title} ${e.startTime}${e.endTime ? '–' + e.endTime : ''}">
                 <div class="tt-block-time">${e.startTime}${e.endTime ? '–' + e.endTime : ''}</div>
                 <div class="tt-block-title">${e.title}</div>
               </div>`).join('')}
             </div>
-          </div>`).join('')}
+          </div>`}).join('')}
         </div>
       </div>
     `
@@ -1344,6 +1370,10 @@ class TurfProgrammaV2Filter extends HTMLElement {
       .tt-grid-line {
         position: absolute; top: 0; bottom: 0; width: 1px;
         background: var(--border); opacity: 0.4;
+      }
+      .tt-lane-divider {
+        position: absolute; left: 0; right: 0; height: 1px;
+        background: var(--border); opacity: 0.3;
       }
       .tt-block {
         position: absolute; top: 4px;
