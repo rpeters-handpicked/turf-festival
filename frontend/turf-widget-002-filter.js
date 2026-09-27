@@ -454,9 +454,35 @@ class TurfProgrammaV2Filter extends HTMLElement {
       return h * 60 + (m || 0)
     }
 
-    // Determine time range
-    const starts = dayEvents.map(e => timeToMins(e.startTime)).filter(Boolean)
-    const ends   = dayEvents.map(e => timeToMins(e.endTime)).filter(Boolean)
+    // Resolve effective minutes for overnight events.
+    // Times < 6 AM that belong to an evening event crossing midnight get +1440 (next day).
+    const NEXT_DAY_CUTOFF = 6 * 60  // anything before 06:00 is treated as "next morning"
+    const rawStarts = dayEvents.map(e => timeToMins(e.startTime)).filter(s => s !== null)
+    const hasEveningEvents = rawStarts.some(s => s >= 12 * 60)
+
+    const effectiveStart = (t) => {
+      const mins = timeToMins(t)
+      if (mins === null) return null
+      // A start time before 6 AM on a day that has afternoon/evening events = next morning
+      if (hasEveningEvents && mins < NEXT_DAY_CUTOFF) return mins + 1440
+      return mins
+    }
+    const effectiveEnd = (endT, startMins) => {
+      const mins = timeToMins(endT)
+      if (mins === null) return null
+      // End before start = crosses midnight
+      if (startMins !== null && mins < startMins) return mins + 1440
+      // End time before 6 AM and day has evening events = next morning
+      if (hasEveningEvents && mins < NEXT_DAY_CUTOFF) return mins + 1440
+      return mins
+    }
+
+    // Determine time range using overnight-aware effective times
+    const starts = dayEvents.map(e => effectiveStart(e.startTime)).filter(s => s !== null)
+    const ends   = dayEvents.map(e => {
+      const s = effectiveStart(e.startTime)
+      return effectiveEnd(e.endTime, s)
+    }).filter(e => e !== null)
     const dayStart = starts.length ? Math.min(...starts) : 10 * 60
     const dayEnd   = ends.length   ? Math.max(...ends)   : 23 * 60
     // Round to hour boundaries
@@ -468,11 +494,14 @@ class TurfProgrammaV2Filter extends HTMLElement {
     // Unique locations in order
     const locs = [...new Set(dayEvents.map(e => e.location).filter(Boolean))]
 
-    // Build hour labels
+    // Build hour labels — hours past midnight display as 00:00, 01:00 etc.
+    const midnightLeft = gridStart < 1440 && gridEnd > 1440
+      ? ((1440 - gridStart) / 60) * SLOT_W
+      : null
     const hours = []
     for (let m = gridStart; m < gridEnd; m += 60) {
-      const h = Math.floor(m / 60)
-      hours.push({ label: `${h}:00`, left: ((m - gridStart) / 60) * SLOT_W })
+      const h = Math.floor(m / 60) % 24
+      hours.push({ label: `${String(h).padStart(2,'0')}:00`, left: ((m - gridStart) / 60) * SLOT_W, pastMidnight: m >= 1440 })
     }
 
     // Assign events to lanes within each location row (collision detection)
@@ -480,8 +509,8 @@ class TurfProgrammaV2Filter extends HTMLElement {
       // Sort by start time
       const sorted = [...evts]
         .map(e => {
-          const s  = timeToMins(e.startTime)
-          const en = timeToMins(e.endTime) || (s ? s + 60 : null)
+          const s  = effectiveStart(e.startTime)
+          const en = effectiveEnd(e.endTime, s) || (s ? s + 60 : null)
           return { e, s, en }
         })
         .filter(b => b.s !== null)
@@ -569,7 +598,8 @@ class TurfProgrammaV2Filter extends HTMLElement {
           <div class="tt-row tt-header-row">
             <div class="tt-loc-label tt-corner" style="width:${LABEL_W}px;"></div>
             <div class="tt-axis" style="width:${gridW}px; position:relative; flex-shrink:0;">
-              ${hours.map(h => `<div class="tt-hour" style="left:${h.left}px">${h.label}</div>`).join('')}
+              ${midnightLeft !== null ? `<div class="tt-midnight-label" style="left:${midnightLeft}px;">00:00</div>` : ''}
+              ${hours.filter(h => !(midnightLeft !== null && h.label === '00:00')).map(h => `<div class="tt-hour${h.pastMidnight ? ' tt-hour-night' : ''}" style="left:${h.left}px">${h.label}</div>`).join('')}
             </div>
           </div>
           <!-- Location rows -->
@@ -580,7 +610,8 @@ class TurfProgrammaV2Filter extends HTMLElement {
           <div class="tt-row" style="height:${rowH}px;">
             <div class="tt-loc-label" style="width:${LABEL_W}px;">${loc}</div>
             <div class="tt-lane" style="width:${gridW}px; position:relative;">
-              ${hours.map(h => `<div class="tt-grid-line" style="left:${h.left}px;"></div>`).join('')}
+              ${hours.map(h => `<div class="tt-grid-line${h.pastMidnight ? ' tt-grid-line-night' : ''}" style="left:${h.left}px;"></div>`).join('')}
+              ${midnightLeft !== null ? `<div class="tt-midnight-line" style="left:${midnightLeft}px;height:${rowH}px;"></div>` : ''}
               ${laneCount > 1 ? Array.from({length: laneCount - 1}, (_, i) =>
                 `<div class="tt-lane-divider" style="top:${(i + 1) * ROW_H}px;"></div>`
               ).join('') : ''}
@@ -1369,6 +1400,18 @@ class TurfProgrammaV2Filter extends HTMLElement {
         font-family: var(--font-heading); font-size: 13px; font-weight: 600;
         color: var(--muted); letter-spacing: 0.5px;
         transform: translateX(-50%);
+      }
+      .tt-hour-night { color: rgba(249,115,22,0.7); }
+      .tt-midnight-label {
+        position: absolute; top: 0;
+        font-family: var(--font-heading); font-size: 13px; font-weight: 700;
+        color: rgba(249,115,22,1); letter-spacing: 0.5px;
+        transform: translateX(-50%);
+      }
+      .tt-midnight-line {
+        position: absolute; top: 0; width: 2px;
+        background: rgba(249,115,22,0.6);
+        pointer-events: none; z-index: 1;
       }
       .tt-row {
         display: flex; align-items: stretch;
