@@ -5,6 +5,7 @@ class TurfHighlightsList extends HTMLElement {
     this.events = []
     this.currentView = 'list'
     this.attrHeading = null
+    this.attrTags = null   // Set of tag strings or null (all)
   }
 
   get cfg() { return typeof TURF_CONFIG !== 'undefined' ? TURF_CONFIG : {} }
@@ -120,6 +121,9 @@ class TurfHighlightsList extends HTMLElement {
     const headingAttr = this.getAttribute('heading')
     if (headingAttr) this.attrHeading = headingAttr
 
+    const tagsAttr = this.getAttribute('tags')
+    if (tagsAttr) this.attrTags = new Set(tagsAttr.split(',').map(s => s.trim()).filter(Boolean))
+
     this.shadowRoot.innerHTML = `<style>${this.getStyles()}</style><div class="root"><div class="loading">${this.ui.loading}</div></div>`
 
     await this.loadEvents()
@@ -160,7 +164,8 @@ class TurfHighlightsList extends HTMLElement {
         "locatieNaam": locatie->naam,
         "locatieRef": locatie._ref,
         "sprekerNamen": sprekers[]->naam,
-        "afbeelding": afbeelding.asset->url
+        "afbeelding": afbeelding.asset->url,
+        tags
       }
     `)
 
@@ -178,6 +183,7 @@ class TurfHighlightsList extends HTMLElement {
         themeName: e.themaNaam || '',
         speakers: (e.sprekerNamen || []).filter(Boolean),
         image: e.afbeelding || '',
+        tags: e.tags || [],
         desc,
       }
     })
@@ -187,20 +193,23 @@ class TurfHighlightsList extends HTMLElement {
 
   renderList() {
     this.currentView = 'list'
+    const filtered = this.attrTags
+      ? this.events.filter(e => e.tags.some(t => this.attrTags.has(t)))
+      : this.events
     const root = this.shadowRoot.querySelector('.root')
     root.innerHTML = `
       ${this.attrHeading ? `<h2 class="widget-heading">${this.attrHeading}</h2>` : ''}
       <div class="event-list">
-        ${this.events.length === 0
+        ${filtered.length === 0
           ? `<div class="empty-state"><h3>Geen uitgelichte events</h3></div>`
-          : this.events.map(e => this.renderCard(e)).join('')
+          : filtered.map(e => this.renderCard(e)).join('')
         }
       </div>
     `
 
     root.querySelectorAll('.event-card[data-id]').forEach(card => {
       card.addEventListener('click', () => {
-        const ev = this.events.find(e => e._id === card.dataset.id)
+        const ev = filtered.find(e => e._id === card.dataset.id)
         const slug = ev ? this.slugify(ev.title) : card.dataset.id
         window.history.pushState(null, '', `#${slug}`)
         this.renderDetail(card.dataset.id)
