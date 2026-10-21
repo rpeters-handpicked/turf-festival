@@ -153,8 +153,13 @@ class TurfHighlightsList extends HTMLElement {
   }
 
   async loadEvents() {
+    // When tags are set, tags act as the curation — no need to restrict to prioriteit==1.
+    // When no tags, fall back to prioriteit==1 (editorial highlights).
+    const baseFilter = this.attrTags
+      ? `_type == "event" && gepubliceerd == true`
+      : `_type == "event" && gepubliceerd == true && coalesce(prioriteit, 0) == 1`
     const raw = await this.sanityFetch(`
-      *[_type == "event" && gepubliceerd == true && coalesce(prioriteit, 0) == 1] | order(dag asc, startTijd asc) {
+      *[${baseFilter}] | order(dag asc, startTijd asc) {
         _id,
         "titel": ${this.localeField('titel')},
         "ondertitel": ${this.localeField('ondertitel')},
