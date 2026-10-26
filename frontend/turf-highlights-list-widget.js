@@ -306,6 +306,13 @@ class TurfHighlightsList extends HTMLElement {
       ? `<div class="sidebar-card"><div class="sidebar-heading">${this.ui.tags}</div><div class="tags-list">${e.tags.map(t => `<span class="sidebar-tag">${t}</span>`).join('')}</div></div>`
       : ''
 
+    const ticketHtml = e.aanmeldLink
+      ? `<div class="sidebar-card sidebar-card--ticket">
+          <div class="sidebar-heading">${this.lang === 'en' ? 'Tickets' : 'Tickets'}</div>
+          <a href="${e.aanmeldLink}" target="_blank" rel="noopener" class="ticket-btn">${this.lang === 'en' ? 'Buy tickets' : 'Koop tickets'}</a>
+        </div>`
+      : ''
+
     const beschrijving = e.beschrijving
       ? e.beschrijving.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>')
       : ''
@@ -364,6 +371,7 @@ class TurfHighlightsList extends HTMLElement {
             <div class="detail-row"><span class="detail-key">${this.ui.locatieLabel}</span><span class="detail-val">${e.locatieNaam}</span></div>
             ${e.gratis ? `<div class="detail-row"><span class="detail-key">${this.ui.accessLabel}</span><span class="detail-val" style="color:var(--accent-lime)">${this.ui.freeAccess}</span></div>` : ''}
           </div>
+          ${ticketHtml}
           ${tagsHtml}
         </aside>
       </div>
@@ -684,6 +692,14 @@ class TurfHighlightsList extends HTMLElement {
         background: var(--surface); border: 1px solid var(--border);
         border-radius: var(--radius-card); padding: 20px;
       }
+      .ticket-btn {
+        display: block; width: 100%; padding: 12px 16px; text-align: center;
+        background: #fff; color: #000; border-radius: 8px;
+        font-family: var(--font-heading); font-size: 1rem; font-weight: 700;
+        letter-spacing: 1px; text-transform: uppercase; text-decoration: none;
+        transition: opacity 0.15s;
+      }
+      .ticket-btn:hover { opacity: 0.85; }
       .sidebar-heading {
         font-family: var(--font-heading); font-size: 1.125rem; font-weight: 700;
         letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
