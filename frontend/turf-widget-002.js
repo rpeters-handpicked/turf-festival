@@ -1293,7 +1293,7 @@ class TurfProgrammaV2 extends HTMLElement {
         .event-title { font-size: 26px; }
 
         .detail-page { grid-template-columns: 1fr; padding: 16px 12px; gap: 20px; }
-        .detail-sidebar { order: -1; }
+        .detail-sidebar { order: 1; }
         .hero-image img { height: 220px; }
         .back-bar { padding: 12px 16px; }
         .dropdown-panel { left: auto; right: 0; min-width: 220px; }

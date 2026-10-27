@@ -733,7 +733,7 @@ class TurfHighlightsList extends HTMLElement {
         .card-title { font-size: 32px; }
 
         .detail-page { grid-template-columns: 1fr; padding: 16px 12px; gap: 20px; }
-        .detail-sidebar { order: -1; }
+        .detail-sidebar { order: 1; }
         .hero-image img { height: 220px; }
         .back-bar { padding: 12px 16px; }
       }
