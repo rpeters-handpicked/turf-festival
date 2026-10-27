@@ -887,7 +887,7 @@ class TurfProgrammaV2 extends HTMLElement {
         background: rgba(0,0,0,0.8);
         border-bottom: 1px solid var(--border);
         flex-shrink: 0;
-        position: sticky; top: 100px; z-index: 100;
+        position: sticky; top: 75px; z-index: 100;
       }
 
       .nav-row {
