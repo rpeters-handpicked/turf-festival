@@ -182,6 +182,8 @@ class TurfProgrammaV2Filter extends HTMLElement {
     if (themaAttr)   this.attrThemas = new Set(themaAttr.split(',').map(s => s.trim()).filter(Boolean))
     if (trackAttr)   this.attrTracks = new Set(trackAttr.split(',').map(s => s.trim()).filter(Boolean))
     if (viewAttr)    { this.attrView = viewAttr === 'timetable' ? 'timetable' : 'list'; this.viewMode = this.attrView }
+    // On mobile (<600px) override timetable to list — timetable is desktop-first
+    if (this.viewMode === 'timetable' && window.innerWidth < 600) this.viewMode = 'list'
     if (headingAttr) this.attrHeading = headingAttr
     const programUrlAttr = this.getAttribute('programurl')
     if (programUrlAttr) this.attrProgramUrl = programUrlAttr
