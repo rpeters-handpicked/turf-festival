@@ -429,10 +429,10 @@ class TurfProgrammaV2Filter extends HTMLElement {
     }
   }
 
-  _buildDayGrid(dayEvents) {
-    const LABEL_W = 160
+  _buildDayGrid(dayEvents, mobile = false, widgetW = 360) {
+    const LABEL_W = mobile ? 0 : 160
     const SLOT_W  = 240
-    const ROW_H   = 72
+    const ROW_H   = mobile ? 90 : 72
 
     const timeToMins = (t) => {
       if (!t) return null
@@ -517,7 +517,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
     return `<div class="tt-outer">
       <div class="tt-scroll" style="width:${LABEL_W + gridW + 40}px;">
         <div class="tt-row tt-header-row">
-          <div class="tt-loc-label tt-corner" style="width:${LABEL_W}px;"></div>
+          ${LABEL_W ? `<div class="tt-loc-label tt-corner" style="width:${LABEL_W}px;"></div>` : ''}
           <div class="tt-axis" style="width:${gridW}px; position:relative; flex-shrink:0;">
             ${midnightLeft !== null ? `<div class="tt-midnight-label" style="left:${midnightLeft}px;">00:00</div>` : ''}
             ${hours.filter(h => !(midnightLeft !== null && h.label === '00:00')).map(h => `<div class="tt-hour${h.pastMidnight ? ' tt-hour-night' : ''}" style="left:${h.left}px">${h.label}</div>`).join('')}
@@ -527,21 +527,27 @@ class TurfProgrammaV2Filter extends HTMLElement {
           const rowH = ROW_H * laneCount
           const blockH = ROW_H - 8
           return `
+        ${mobile ? `<div class="tt-loc-header" style="position:sticky;left:0;width:${widgetW}px;">${loc}</div>` : ''}
         <div class="tt-row" style="height:${rowH}px;">
-          <div class="tt-loc-label" style="width:${LABEL_W}px;">${loc}</div>
+          ${!mobile ? `<div class="tt-loc-label" style="width:${LABEL_W}px;">${loc}</div>` : ''}
           <div class="tt-lane" style="width:${gridW}px; position:relative;">
             ${hours.map(h => `<div class="tt-grid-line${h.pastMidnight ? ' tt-grid-line-night' : ''}" style="left:${h.left}px;"></div>`).join('')}
             ${midnightLeft !== null ? `<div class="tt-midnight-line" style="left:${midnightLeft}px;height:${rowH}px;"></div>` : ''}
             ${laneCount > 1 ? Array.from({length: laneCount - 1}, (_, i) =>
               `<div class="tt-lane-divider" style="top:${(i + 1) * ROW_H}px;"></div>`
             ).join('') : ''}
-            ${blocks.map(({ e, left, width, lane }) => `
-            <div class="tt-block" data-id="${e._id}"
+            ${blocks.map(({ e, left, width, lane }) => {
+              const hasImg = mobile && e.image
+              return `
+            <div class="tt-block${hasImg ? ' tt-block-has-img' : ''}" data-id="${e._id}"
               style="left:${left}px;top:${lane * ROW_H + 4}px;width:${width}px;height:${blockH}px;background:${themeColor[e.theme] || '#555'};"
               title="${e.title} ${e.startTime}${e.endTime ? '–' + e.endTime : ''}">
-              <div class="tt-block-time">${e.startTime}${e.endTime ? '–' + e.endTime : ''}</div>
-              <div class="tt-block-title">${e.title}</div>
-            </div>`).join('')}
+              ${hasImg ? `<img class="tt-block-img" src="${e.image}?w=88&h=88&fit=crop" alt="" loading="lazy">` : ''}
+              <div class="tt-block-content">
+                <div class="tt-block-time">${e.startTime}${e.endTime ? '–' + e.endTime : ''}</div>
+                <div class="tt-block-title">${e.title}</div>
+              </div>
+            </div>`}).join('')}
           </div>
         </div>`}).join('')}
       </div>
@@ -619,19 +625,22 @@ class TurfProgrammaV2Filter extends HTMLElement {
         ${this.attrProgramUrl ? `<a class="view-strip-fullprog" href="${this.attrProgramUrl}">${this.ui.viewFullProgram} →</a>` : ''}
       </div>` : ''}
 
-      ${showAllDays
-        ? ['1','2','3'].map(dayNum => {
-            const dl = Object.values(this.dagLabels).find(d => d.num === dayNum)
-            const evts = getEventsForDay(dayNum)
-            if (!evts.length) return ''
-            return `
-              <div class="tt-day-section">
-                <div class="tt-day-heading">${dl ? dl.name + ' · ' + dl.date : ''}</div>
-                ${this._buildDayGrid(evts)}
-              </div>`
-          }).join('')
-        : this._buildDayGrid(getEventsForDay(filterDay))
-      }
+      ${(() => {
+        const widgetW = this.getBoundingClientRect().width || this.offsetWidth || this.parentElement?.offsetWidth || window.innerWidth || 360
+        const isMobile = widgetW < 600
+        return showAllDays
+          ? ['1','2','3'].map(dayNum => {
+              const dl = Object.values(this.dagLabels).find(d => d.num === dayNum)
+              const evts = getEventsForDay(dayNum)
+              if (!evts.length) return ''
+              return `
+                <div class="tt-day-section">
+                  <div class="tt-day-heading">${dl ? dl.name + ' · ' + dl.date : ''}</div>
+                  ${this._buildDayGrid(evts, isMobile, widgetW)}
+                </div>`
+            }).join('')
+          : this._buildDayGrid(getEventsForDay(filterDay), isMobile, widgetW)
+      })()}
     `
 
     // Day buttons
@@ -1513,6 +1522,17 @@ class TurfProgrammaV2Filter extends HTMLElement {
         font-size: 12px; font-weight: 600; line-height: 1.3;
         overflow: hidden; display: -webkit-box;
         -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      }
+      .tt-block-content { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-start; }
+      .tt-block.tt-block-has-img { flex-direction: row; align-items: center; padding: 4px 6px; gap: 6px; }
+      .tt-block-img { width: 44px; height: 44px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+      .tt-loc-header {
+        font-family: var(--font-heading); font-size: 11px; font-weight: 700;
+        color: rgba(255,255,255,0.85); letter-spacing: 1px; text-transform: uppercase;
+        padding: 8px 12px 6px 12px;
+        background: rgba(0,0,0,0.88);
+        border-top: 1px solid var(--border);
+        z-index: 2;
       }
 
       /* ────────────────────────────────────────
