@@ -1445,7 +1445,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       ──────────────────────────────────────── */
       .tt-outer {
         overflow-x: auto; overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
         touch-action: pan-x;
         padding: 0 0 16px;
       }
