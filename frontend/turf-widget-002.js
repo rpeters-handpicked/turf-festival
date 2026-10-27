@@ -1255,6 +1255,7 @@ class TurfProgrammaV2 extends HTMLElement {
          MOBILE (≤768px)
       ──────────────────────────────────────── */
       @media (max-width: 768px) {
+        .top-nav { top: 80px; }
         .nav-row { padding: 0 12px; }
 
         .nav-row-days { padding-top: 12px; padding-bottom: 8px; flex-wrap: wrap; overflow-x: visible; scrollbar-width: none; }
@@ -1269,7 +1270,7 @@ class TurfProgrammaV2 extends HTMLElement {
         .nav-row-filters {
           padding-top: 8px; padding-bottom: 10px;
           flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
-          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-x: contain;
         }
         .nav-row-filters::-webkit-scrollbar { display: none; }
 
