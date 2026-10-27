@@ -169,6 +169,8 @@ class TurfProgrammaV2Filter extends HTMLElement {
   }
 
   async connectedCallback() {
+    // Allow vertical page scroll to pass through this element on iOS Safari
+    this.style.touchAction = 'pan-y'
     // Read attributes before first render
     const dagMap = { do: 'dag1', thu: 'dag1', vr: 'dag2', fri: 'dag2', za: 'dag3', sat: 'dag3' }
     const navAttr   = this.getAttribute('nav')
@@ -1243,7 +1245,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
 
       .day-filters {
         display: flex; gap: 6px; flex-wrap: nowrap;
-        overflow-x: auto; -webkit-overflow-scrolling: touch;
+        overflow-x: auto; overscroll-behavior-x: contain;
         scrollbar-width: none; flex: 0 0 auto;
       }
       .day-filters::-webkit-scrollbar { display: none; }
@@ -1350,7 +1352,6 @@ class TurfProgrammaV2Filter extends HTMLElement {
         padding: 6px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);
         max-height: 300px; overflow-y: scroll;
         overscroll-behavior: contain;
-        -webkit-overflow-scrolling: touch;
       }
       .dropdown-panel.open { display: block; }
 
@@ -1446,9 +1447,9 @@ class TurfProgrammaV2Filter extends HTMLElement {
          TIMETABLE VIEW
       ──────────────────────────────────────── */
       .tt-outer {
-        overflow-x: auto; overflow-y: hidden;
+        overflow-x: auto;
         overscroll-behavior-x: contain;
-        touch-action: pan-x;
+        touch-action: pan-x pan-y;
         padding: 0 0 16px;
       }
       /* No left padding here — label carries its own so sticky left:0 matches start */
@@ -1752,7 +1753,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
         .nav-row-filters {
           padding-top: 8px; padding-bottom: 10px;
           flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
-          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-x: contain;
         }
         .nav-row-filters::-webkit-scrollbar { display: none; }
 
