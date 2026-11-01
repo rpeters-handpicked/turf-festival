@@ -541,7 +541,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
               `<div class="tt-lane-divider" style="top:${(i + 1) * ROW_H}px;"></div>`
             ).join('') : ''}
             ${blocks.map(({ e, left, width, lane }) => {
-              const hasImg = mobile && e.image
+              const hasImg = !!e.image
               return `
             <div class="tt-block${hasImg ? ' tt-block-has-img' : ''}" data-id="${e._id}"
               style="left:${left}px;top:${lane * ROW_H + 4}px;width:${width}px;height:${blockH}px;background:${themeColor[e.theme] || '#555'};"
