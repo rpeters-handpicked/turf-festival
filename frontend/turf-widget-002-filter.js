@@ -144,11 +144,11 @@ class TurfProgrammaV2Filter extends HTMLElement {
   }
 
   get themaLabels() {
-    return { talks: '⬡ TURF Talks', live: '◈ TURF Live', night: '◉ TURF by Night' }
+    return { talks: '⬡ TURF Talks', live: '◈ TURF Live', night: '◉ TURF by Night', popup: '◇ TURF Pop up' }
   }
 
   get tagClass() {
-    return { talks: 'tag-talks', live: 'tag-live', night: 'tag-night' }
+    return { talks: 'tag-talks', live: 'tag-live', night: 'tag-night', popup: 'tag-popup' }
   }
 
   slugify(str) {
@@ -315,6 +315,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       { slug: 'talks', label: 'TURF TALKS', dot: 'dot-talks' },
       { slug: 'live',  label: 'TURF LIVE',  dot: 'dot-live'  },
       { slug: 'night', label: 'TURF BY NIGHT', dot: 'dot-night' },
+      { slug: 'popup', label: 'TURF POP UP', dot: 'dot-popup' },
     ]
     const visibleThemes = this.attrThemas
       ? allThemes.filter(t => this.attrThemas.has(t.slug))
@@ -510,7 +511,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       return { blocks, laneCount: lanes.length }
     }
 
-    const themeColor = { talks: '#6366f1', live: '#ec4899', night: '#f97316' }
+    const themeColor = { talks: '#6366f1', live: '#ec4899', night: '#f97316', popup: '#10b981' }
 
     const rows = locs.map(loc => {
       const evts = dayEvents.filter(e => e.location === loc)
@@ -964,7 +965,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
     const dag = this.dagLabels[e.dag] || { short: e.dag, full: e.dag }
     const theme = e.themaSlug || 'talks'
     const timeStr = `${e.startTijd}${e.eindTijd ? ' – ' + e.eindTijd : ''}`
-    const themeLabel = { talks: 'TURF Talks', live: 'TURF Live', night: 'TURF by Night' }
+    const themeLabel = { talks: 'TURF Talks', live: 'TURF Live', night: 'TURF by Night', popup: 'TURF Pop up' }
 
     const sprekersHtml = e.sprekers && e.sprekers.length > 0
       ? `<div class="speakers-section">${e.sprekers.map(sp => `
@@ -1196,6 +1197,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
         --tag-talks: #e85d3a;
         --tag-live: #d94080;
         --tag-night: #9b3bf5;
+        --tag-popup: #10b981;
         --radius: 100px;
         --radius-card: 16px;
         --font-heading: 'Thunder', Impact, sans-serif;
@@ -1324,6 +1326,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       .dot-talks { background: var(--tag-talks); }
       .dot-live  { background: var(--tag-live); }
       .dot-night { background: var(--tag-night); }
+      .dot-popup { background: var(--tag-popup); }
 
       .filter-divider {
         color: var(--border); font-size: 30px; font-weight: 300;
@@ -1623,6 +1626,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       .tag-talks { background: rgba(232,93,58,0.2); color: var(--tag-talks); }
       .tag-live  { background: rgba(217,64,128,0.2); color: var(--tag-live); }
       .tag-night { background: rgba(155,59,245,0.2); color: var(--tag-night); }
+      .tag-popup { background: rgba(16,185,129,0.2); color: var(--tag-popup); }
       .tag-type  { background: rgba(255,255,255,0.08); color: var(--muted); }
       .tag-track { background: rgba(200,240,74,0.15); color: var(--accent-lime); }
 
