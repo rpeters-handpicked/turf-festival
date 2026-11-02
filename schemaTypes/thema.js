@@ -18,7 +18,7 @@ export default {
           { title: 'TURF Talks', value: 'talks' },
           { title: 'TURF Live', value: 'live' },
           { title: 'TURF by Night', value: 'night' },
-          { title: 'TURF Pop up', value: 'popups' }
+          { title: 'TURF Pop up', value: 'popup' }
         ]
       },
       validation: Rule => Rule.required()

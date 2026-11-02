@@ -144,11 +144,11 @@ class TurfProgrammaV2Filter extends HTMLElement {
   }
 
   get themaLabels() {
-    return { talks: '⬡ TURF Talks', live: '◈ TURF Live', night: '◉ TURF by Night', popups: '◇ TURF Pop up' }
+    return { talks: '⬡ TURF Talks', live: '◈ TURF Live', night: '◉ TURF by Night', popup: '◇ TURF Pop up' }
   }
 
   get tagClass() {
-    return { talks: 'tag-talks', live: 'tag-live', night: 'tag-night', popups: 'tag-popup' }
+    return { talks: 'tag-talks', live: 'tag-live', night: 'tag-night', popup: 'tag-popup' }
   }
 
   slugify(str) {
@@ -315,7 +315,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       { slug: 'talks', label: 'TURF TALKS', dot: 'dot-talks' },
       { slug: 'live',  label: 'TURF LIVE',  dot: 'dot-live'  },
       { slug: 'night', label: 'TURF BY NIGHT', dot: 'dot-night' },
-      { slug: 'popups', label: 'TURF POP UP', dot: 'dot-popup' },
+      { slug: 'popup', label: 'TURF POP UP', dot: 'dot-popup' },
     ]
     const visibleThemes = this.attrThemas
       ? allThemes.filter(t => this.attrThemas.has(t.slug))
@@ -511,7 +511,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       return { blocks, laneCount: lanes.length }
     }
 
-    const themeColor = { talks: '#6366f1', live: '#ec4899', night: '#f97316', popups: '#10b981' }
+    const themeColor = { talks: '#6366f1', live: '#ec4899', night: '#f97316', popup: '#10b981' }
 
     const rows = locs.map(loc => {
       const evts = dayEvents.filter(e => e.location === loc)
@@ -965,7 +965,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
     const dag = this.dagLabels[e.dag] || { short: e.dag, full: e.dag }
     const theme = e.themaSlug || 'talks'
     const timeStr = `${e.startTijd}${e.eindTijd ? ' – ' + e.eindTijd : ''}`
-    const themeLabel = { talks: 'TURF Talks', live: 'TURF Live', night: 'TURF by Night', popups: 'TURF Pop up' }
+    const themeLabel = { talks: 'TURF Talks', live: 'TURF Live', night: 'TURF by Night', popup: 'TURF Pop up' }
 
     const sprekersHtml = e.sprekers && e.sprekers.length > 0
       ? `<div class="speakers-section">${e.sprekers.map(sp => `
