@@ -511,7 +511,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       return { blocks, laneCount: lanes.length }
     }
 
-    const themeColor = { talks: '#6366f1', live: '#ec4899', night: '#f97316', popups: '#10b981' }
+    const themeColor = { talks: '#6366f1', live: '#ec4899', night: '#f97316', popups: '#FFB23C' }
 
     const rows = locs.map(loc => {
       const evts = dayEvents.filter(e => e.location === loc)
@@ -1197,7 +1197,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
         --tag-talks: #e85d3a;
         --tag-live: #d94080;
         --tag-night: #9b3bf5;
-        --tag-popup: #10b981;
+        --tag-popup: #FFB23C;
         --radius: 100px;
         --radius-card: 16px;
         --font-heading: 'Thunder', Impact, sans-serif;
@@ -1626,7 +1626,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
       .tag-talks { background: rgba(232,93,58,0.2); color: var(--tag-talks); }
       .tag-live  { background: rgba(217,64,128,0.2); color: var(--tag-live); }
       .tag-night { background: rgba(155,59,245,0.2); color: var(--tag-night); }
-      .tag-popup { background: rgba(16,185,129,0.2); color: var(--tag-popup); }
+      .tag-popup { background: rgba(255,178,60,0.2); color: var(--tag-popup); }
       .tag-type  { background: rgba(255,255,255,0.08); color: var(--muted); }
       .tag-track { background: rgba(200,240,74,0.15); color: var(--accent-lime); }
 
