@@ -477,7 +477,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
     const gridEnd   = Math.ceil(dayEnd   / 60) * 60
     const gridW     = ((gridEnd - gridStart) / 60) * SLOT_W
 
-    const locs = [...new Set(dayEvents.map(e => e.location).filter(Boolean))]
+    const locs = [...new Set(dayEvents.map(e => e.location).filter(Boolean))].sort()
 
     const midnightLeft = gridStart < 1440 && gridEnd > 1440
       ? ((1440 - gridStart) / 60) * SLOT_W
