@@ -118,13 +118,13 @@ export default async function handler(req, res) {
       // Minimaal 1500×1500 vereist door Appmiral
       if (event.afbeelding)   artist.image       = `${event.afbeelding}?w=1500&h=1500&fit=crop`
 
-      // Thema + track + eventtype als tags
-      const tags = []
+      // Thema + track + eventtype als tags; 'artist' altijd meesturen voor filteren in Appmiral
+      const tags = ['artist']
       if (event.themaSlug)  tags.push(event.themaSlug)
       if (event.trackSlug)  tags.push(event.trackSlug)
       if (event.type)       tags.push(event.type.toLowerCase().replace(/\s+/g, '-'))
       if (event.tags?.length) tags.push(...event.tags.map(t => t.toLowerCase().replace(/\s+/g, '-')))
-      if (tags.length) artist.tags = [...new Set(tags)]
+      artist.tags = [...new Set(tags)]
 
       return artist
     })
