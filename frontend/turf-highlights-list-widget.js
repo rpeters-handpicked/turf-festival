@@ -314,7 +314,10 @@ class TurfHighlightsList extends HTMLElement {
       : ''
 
     const beschrijving = e.beschrijving
-      ? e.beschrijving.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>')
+      ? e.beschrijving
+          .replace(/\n\n/g, '<br><br>')
+          .replace(/\n/g, '<br>')
+          .replace(/(https?:\/\/[^\s<>"]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
       : ''
 
     const mapsKey = this.cfg.googleMapsApiKey || 'AIzaSyBKtiBfiuLmG_td0BKfK6XABATDe8P1YPw'
@@ -664,6 +667,8 @@ class TurfHighlightsList extends HTMLElement {
         text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 8px;
       }
       .description { font-size: 1.125rem; line-height: 1.7; color: rgba(255,255,255,0.8); }
+      .description a { color: #fff; text-decoration: underline; }
+      .description a:hover { opacity: 0.75; }
 
       .map-container { border-radius: var(--radius-card); overflow: hidden; }
       .map-container iframe { width: 100%; height: 280px; border: none; display: block; }

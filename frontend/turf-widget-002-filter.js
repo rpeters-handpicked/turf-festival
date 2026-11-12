@@ -990,7 +990,10 @@ class TurfProgrammaV2Filter extends HTMLElement {
       : ''
 
     const beschrijving = e.beschrijving
-      ? e.beschrijving.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>')
+      ? e.beschrijving
+          .replace(/\n\n/g, '<br><br>')
+          .replace(/\n/g, '<br>')
+          .replace(/(https?:\/\/[^\s<>"]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
       : ''
 
     const detailLiveData = { _id: e._id, dag: e.dag, startTime: e.startTijd, endTime: e.eindTijd }
@@ -1708,6 +1711,8 @@ class TurfProgrammaV2Filter extends HTMLElement {
       .section { margin-bottom: 32px; }
       .section-title { font-family: var(--font-heading); font-size: 1.125rem; font-weight: 700; color: var(--text); margin-bottom: 14px; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
       .description { font-size: 1.125rem; line-height: 1.7; color: rgba(255,255,255,0.8); }
+      .description a { color: #fff; text-decoration: underline; }
+      .description a:hover { opacity: 0.75; }
 
       .map-container { border-radius: var(--radius-card); overflow: hidden; }
       .map-container iframe { width: 100%; height: 280px; border: none; display: block; }
