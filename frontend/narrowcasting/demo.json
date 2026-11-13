@@ -1,0 +1,17 @@
+{
+  "naam": "Demo-scherm",
+  "soort": "klein",
+  "orientatie": "landscape",
+  "rotatie": 0,
+  "locatieNaam": "Hotel Nassau",
+  "playlist": {
+    "naam": "Demo",
+    "items": [
+      {"_key": "a", "slide": {"naam": "What's next — locatie", "type": "whatsNextLocatie", "duur": 10, "achtergrond": 1}},
+      {"_key": "b", "slide": {"naam": "Programma — locatie", "type": "programmaLocatie", "duur": 10, "achtergrond": 2}},
+      {"_key": "c", "slide": {"naam": "What's next — heel TURF", "type": "whatsNextOverall", "duur": 10, "achtergrond": 3}},
+      {"_key": "d", "slide": {"naam": "Programma — hele dag", "type": "programmaDag", "duur": 10, "achtergrond": 1}},
+      {"_key": "e", "van": "23:00", "tot": "02:00", "slide": {"naam": "Alleen 's nachts (test tijdvenster)", "type": "whatsNextOverall", "duur": 6, "achtergrond": 2, "titel": "Tonight at TURF"}}
+    ]
+  }
+}

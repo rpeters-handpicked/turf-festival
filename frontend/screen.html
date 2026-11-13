@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>TURF scherm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="narrowcasting/player.css">
+</head>
+<body>
+  <!--
+    TURF narrowcasting player
+    /screen.html?id=<scherm-id>            scherm uit Sanity
+    /screen.html?demo=1                    demo-playlist (narrowcasting/demo.json), geen Sanity-scherm nodig
+      &orient=portrait|landscape           (demo) oriëntatie
+      &loc=<deel van locatienaam>          (demo) locatie van het scherm
+      &rot=90|270                          (demo) beeld draaien
+    &now=2026-11-26T20:00                  simuleer een tijdstip (klok loopt vanaf daar door)
+    &debug=1                               toon statusbalk
+  -->
+  <div id="viewport"><div id="stage"></div></div>
+  <div id="debug" hidden></div>
+  <script type="module" src="narrowcasting/player.js"></script>
+</body>
+</html>
