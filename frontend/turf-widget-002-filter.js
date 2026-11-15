@@ -163,6 +163,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
 
   resolveHash(hash) {
     if (!hash) return null
+    if (hash.startsWith('spreker-')) return { type: 'spreker', id: hash.slice(8) }
     if (/^[0-9a-f]{8}-[0-9a-f]{4}/.test(hash)) return hash
     const match = this.events.find(e => this.slugify(e.title) === hash)
     return match ? match._id : null
@@ -205,16 +206,24 @@ class TurfProgrammaV2Filter extends HTMLElement {
     if (locationParam) this.activeLocations.add(locationParam)
 
     const hash = window.location.hash.slice(1)
-    const hashId = this.resolveHash(hash)
-    if (hashId) {
-      await this.renderDetail(hashId)
+    const hashResolved = this.resolveHash(hash)
+    if (hashResolved && typeof hashResolved === 'object' && hashResolved.type === 'spreker') {
+      await this.renderSprekerDetail(hashResolved.id)
+    } else if (hashResolved) {
+      await this.renderDetail(hashResolved)
     } else {
       this._renderCurrentView()
     }
 
     window.addEventListener('hashchange', () => {
-      const id = this.resolveHash(window.location.hash.slice(1))
-      if (id) { this.renderDetail(id) } else { this._renderCurrentView() }
+      const resolved = this.resolveHash(window.location.hash.slice(1))
+      if (resolved && typeof resolved === 'object' && resolved.type === 'spreker') {
+        this.renderSprekerDetail(resolved.id)
+      } else if (resolved) {
+        this.renderDetail(resolved)
+      } else {
+        this._renderCurrentView()
+      }
     })
   }
 
@@ -948,7 +957,7 @@ class TurfProgrammaV2Filter extends HTMLElement {
         "locatieNaam": locatie->naam,
         "locatieAdres": locatie->adres,
         "locatieRef": locatie._ref,
-        "sprekers": sprekers[]->{ naam, "rol": ${this.localeField('rol')}, organisatie, "foto": foto.asset->url },
+        "sprekers": sprekers[]->{ _id, naam, "rol": ${this.localeField('rol')}, organisatie, "bio": ${this.localeField('bio')}, website, instagram, "foto": foto.asset->url },
         "afbeelding": afbeelding.asset->url,
         "afbeeldingRatio": afbeelding.asset->metadata.dimensions.aspectRatio
       }`,
@@ -969,13 +978,14 @@ class TurfProgrammaV2Filter extends HTMLElement {
 
     const sprekersHtml = e.sprekers && e.sprekers.length > 0
       ? `<div class="speakers-section">${e.sprekers.map(sp => `
-        <div class="speaker-card">
+        <button class="speaker-card speaker-card--btn" data-spreker-id="${sp._id}">
           <div class="speaker-avatar">${sp.foto ? `<img src="${sp.foto}?w=160&h=160&fit=crop" alt="${sp.naam}">` : '🎙️'}</div>
-          <div>
+          <div class="speaker-info">
             <div class="speaker-name">${sp.naam}</div>
             <div class="speaker-role">${[sp.rol, sp.organisatie].filter(Boolean).join(' · ')}</div>
           </div>
-        </div>`).join('')}</div>`
+          <svg class="speaker-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>`).join('')}</div>`
       : ''
 
     const tagsHtml = e.tags && e.tags.length > 0
@@ -1064,6 +1074,14 @@ class TurfProgrammaV2Filter extends HTMLElement {
       this._renderCurrentView()
     })
 
+    root.querySelectorAll('.speaker-card--btn[data-spreker-id]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const sprekerId = btn.dataset.sprekerId
+        window.history.pushState(null, '', `#spreker-${sprekerId}`)
+        this.renderSprekerDetail(sprekerId, eventId)
+      })
+    })
+
     root.querySelectorAll('.sidebar-tag[data-tag]').forEach(tag => {
       tag.addEventListener('click', () => {
         window.history.pushState(null, '', window.location.pathname + window.location.search)
@@ -1118,6 +1136,71 @@ class TurfProgrammaV2Filter extends HTMLElement {
         relatedList.innerHTML = `<p style="color:var(--muted);font-size:20px;">${this.ui.noOtherEvents}</p>`
       }
     }
+
+    root.scrollTop = 0
+  }
+
+  async renderSprekerDetail(sprekerId, fromEventId = null) {
+    const root = this.shadowRoot.querySelector('.root')
+    if (!root) return
+    root.innerHTML = `<div class="loading">${this.ui.loading}</div>`
+
+    const sp = await this.sanityFetch(
+      `*[_type == "spreker" && _id == $id][0] {
+        _id, naam,
+        "rol": ${this.localeField('rol')},
+        organisatie,
+        "bio": ${this.localeField('bio')},
+        website, instagram,
+        "foto": foto.asset->url
+      }`,
+      { id: sprekerId }
+    )
+
+    if (!sp) { this._renderCurrentView(); return }
+
+    const fotoHtml = sp.foto
+      ? `<div class="spreker-foto"><img src="${sp.foto}?w=320&h=320&fit=crop" alt="${sp.naam}"></div>`
+      : `<div class="spreker-foto spreker-foto--placeholder">🎙️</div>`
+
+    const bioHtml = sp.bio
+      ? `<div class="section"><h2 class="section-title">${this.lang === 'en' ? 'About' : 'Over'}</h2><p class="description">${sp.bio.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>').replace(/(https?:\/\/[^\s<>"]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')}</p></div>`
+      : ''
+
+    const linksHtml = [
+      sp.website ? `<a href="${sp.website}" target="_blank" rel="noopener noreferrer" class="spreker-link spreker-link--web"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>${sp.website.replace(/^https?:\/\/(www\.)?/, '')}</a>` : '',
+      sp.instagram ? `<a href="https://instagram.com/${sp.instagram.replace(/^@/, '')}" target="_blank" rel="noopener noreferrer" class="spreker-link spreker-link--ig"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>@${sp.instagram.replace(/^@/, '')}</a>` : ''
+    ].filter(Boolean).join('')
+
+    root.innerHTML = `
+      <div class="back-bar">
+        <button class="back-btn" id="sprekerBackBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
+          ${fromEventId ? (this.lang === 'en' ? 'Back to event' : 'Terug naar event') : this.ui.backBtn}
+        </button>
+      </div>
+      <div class="spreker-detail">
+        ${fotoHtml}
+        <div class="spreker-body">
+          <h1 class="spreker-naam">${sp.naam}</h1>
+          ${sp.rol || sp.organisatie ? `<div class="spreker-rol">${[sp.rol, sp.organisatie].filter(Boolean).join(' · ')}</div>` : ''}
+          ${linksHtml ? `<div class="spreker-links">${linksHtml}</div>` : ''}
+          ${bioHtml}
+        </div>
+      </div>
+    `
+
+    root.querySelector('#sprekerBackBtn')?.addEventListener('click', () => {
+      if (fromEventId) {
+        const ev = this.events.find(e => e._id === fromEventId)
+        const slug = ev ? this.slugify(ev.title) : fromEventId
+        window.history.pushState(null, '', `#${slug}`)
+        this.renderDetail(fromEventId)
+      } else {
+        window.history.pushState(null, '', window.location.pathname + window.location.search)
+        this._renderCurrentView()
+      }
+    })
 
     root.scrollTop = 0
   }
@@ -1703,10 +1786,28 @@ class TurfProgrammaV2Filter extends HTMLElement {
 
       .speakers-section { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
       .speaker-card { display: flex; gap: 12px; align-items: center; }
+      .speaker-card--btn { background: none; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; cursor: pointer; color: var(--text); text-align: left; width: 100%; transition: background 0.15s, border-color 0.15s; }
+      .speaker-card--btn:hover { background: var(--surface2); border-color: var(--accent); }
+      .speaker-info { flex: 1; min-width: 0; }
+      .speaker-chevron { flex-shrink: 0; color: var(--muted); }
       .speaker-avatar { width: 48px; height: 48px; border-radius: 50%; overflow: hidden; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 1.125rem; flex-shrink: 0; }
       .speaker-avatar img { width: 100%; height: 100%; object-fit: cover; }
       .speaker-name { font-weight: 600; font-size: 1.125rem; margin-bottom: 2px; }
       .speaker-role { font-size: 1.125rem; color: var(--muted); }
+
+      .spreker-detail { max-width: 720px; margin: 0 auto; padding: 24px 20px; display: flex; flex-direction: column; gap: 24px; }
+      .spreker-foto { width: 160px; height: 160px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+      .spreker-foto img { width: 100%; height: 100%; object-fit: cover; }
+      .spreker-foto--placeholder { background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+      .spreker-naam { font-family: var(--font-heading); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.05; margin-bottom: 8px; }
+      .spreker-rol { font-size: 1.125rem; color: var(--muted); margin-bottom: 12px; }
+      .spreker-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; margin-bottom: 4px; }
+      .spreker-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.95rem; color: var(--text); text-decoration: none; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 5px 14px; transition: border-color 0.15s, background 0.15s; }
+      .spreker-link:hover { border-color: var(--accent); background: var(--surface2); }
+      @media (max-width: 768px) {
+        .spreker-detail { padding: 16px 12px; }
+        .spreker-foto { width: 120px; height: 120px; }
+      }
 
       .section { margin-bottom: 32px; }
       .section-title { font-family: var(--font-heading); font-size: 1.125rem; font-weight: 700; color: var(--text); margin-bottom: 14px; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
