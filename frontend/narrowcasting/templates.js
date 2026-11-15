@@ -110,6 +110,68 @@ function whatsNextLocatie(slide, ctx) {
   }
 }
 
+// ── Introductie spreker/event — deze locatie ───────────────────────────────
+function sprekerIntro(slide, ctx) {
+  if (!ctx.locaties.length) return null
+  const vooraf = (Number(slide.minutenVooraf) || 15) * 60000
+  const naloop = 5 * 60000
+  const event = ctx.events.find(
+    e => atScreen(e, ctx) && ctx.now >= e.start.getTime() - vooraf && ctx.now < e.start.getTime() + naloop,
+  )
+  if (!event) return null
+
+  const started = ctx.now >= event.start
+  const portrait = ctx.orient === 'portrait'
+  const metFoto = event.sprekers.filter(s => s.foto).slice(0, portrait ? 2 : 3)
+  const cards = metFoto.length
+    ? metFoto
+    : event.afbeelding
+      ? [{foto: event.afbeelding, naam: '', rol: ''}]
+      : []
+  const [pw, ph] = portrait ? [Math.round(936 / cards.length) || 936, 820] : [Math.round(900 / (cards.length || 1)), 700]
+  const zonderFoto = event.sprekers.filter(s => !metFoto.includes(s)).map(s => s.naam)
+
+  const body = `
+    <div class="intro ${cards.length ? '' : 'no-photo'}">
+      ${
+        cards.length
+          ? `<div class="intro-cards">${cards
+              .map(
+                s => `
+              <figure class="intro-card">
+                <img src="${img(s.foto, pw, ph)}" alt="">
+                ${
+                  s.naam
+                    ? `<figcaption><strong>${esc(s.naam)}</strong>${
+                        s.rol || s.organisatie ? `<span>${esc([s.rol, s.organisatie].filter(Boolean).join(' · '))}</span>` : ''
+                      }</figcaption>`
+                    : ''
+                }
+              </figure>`,
+              )
+              .join('')}</div>`
+          : ''
+      }
+      <div class="intro-text">
+        <div class="next-time">
+          ${esc(event.startTijd)}${event.eindTijd ? `<span class="next-end">– ${esc(event.eindTijd)}</span>` : ''}
+          ${started ? '<span class="pill pill-live"><i></i>Nu live</span>' : `<span class="pill">${esc(countdown(event, ctx) || 'zo meteen')}</span>`}
+        </div>
+        <h2 class="next-title ${event.titel.length > 48 ? 'is-long' : ''}">${esc(event.titel)}</h2>
+        ${zonderFoto.length ? `<p class="next-speakers">${esc((metFoto.length ? 'Met ' : '') + zonderFoto.join(', '))}</p>` : ''}
+        <p class="next-meta">${themaDot(event)}${esc([event.type, locLabel(event)].filter(Boolean).join(' · '))}</p>
+      </div>
+    </div>`
+
+  return {
+    el: frame(slide, ctx, {
+      kicker: screenLocName(ctx),
+      title: slide.titel || (started ? 'Nu' : 'Zo meteen'),
+      body,
+    }),
+  }
+}
+
 // ── Programmaregels (gedeeld) ──────────────────────────────────────────────
 function row(e, ctx, {showLoc}) {
   const status = isLive(e, ctx) ? 'is-live' : e.end <= ctx.now ? 'is-past' : ''
@@ -224,9 +286,13 @@ function programmaDag(slide, ctx) {
 }
 
 // ── Video ──────────────────────────────────────────────────────────────────
+// Video's die de browser niet kan tonen (bijv. geen H.264) slaan we de rest van de sessie over,
+// zodat een scherm niet minutenlang zwart blijft.
+const brokenVideos = new Set()
+
 function video(slide, ctx) {
   const src = ctx.orient === 'portrait' ? slide.videoPortrait || slide.video : slide.video || slide.videoPortrait
-  if (!src) return null
+  if (!src || brokenVideos.has(src)) return null
   const el = html(`<section class="media"><video muted playsinline preload="auto" src="${esc(src)}"></video></section>`)
   const v = el.querySelector('video')
   return {
@@ -234,8 +300,15 @@ function video(slide, ctx) {
     // Video's spelen helemaal af; dit is alleen het vangnet als 'ended' nooit komt.
     maxDuration: 600,
     start(next) {
+      const giveUp = reason => {
+        brokenVideos.add(src)
+        console.warn(`[narrowcasting] video "${slide.naam}" overgeslagen: ${reason}`)
+        next()
+      }
       v.addEventListener('ended', next, {once: true})
-      v.addEventListener('error', next, {once: true})
+      v.addEventListener('error', () => giveUp('kan niet worden geladen'), {once: true})
+      // Geluid zonder beeld: de browser kent de videocodec niet.
+      v.addEventListener('loadedmetadata', () => !v.videoWidth && giveUp('geen beeld — exporteer als MP4 met H.264'), {once: true})
       v.play().catch(() => setTimeout(next, 3000))
     },
     destroy() {
@@ -268,11 +341,33 @@ export function fallbackSlide(ctx, state) {
   }
 }
 
+// ── Melding: vervangt de playlist zolang hij actief is ─────────────────────
+export function meldingSlide(melding, ctx) {
+  const urgent = melding.stijl === 'urgent'
+  return {
+    el: html(`
+      <section class="tpl melding ${urgent ? 'is-urgent' : ''}" ${
+        urgent ? '' : `style="background-image:url('${ASSETS}/bg-2-${ctx.orient}.jpg')"`
+      }>
+        <header class="tpl-head">
+          <img class="tpl-logo" src="${ASSETS}/turf-logo.svg" alt="TURF">
+          <div class="tpl-clock">${hhmm(ctx.now)}</div>
+        </header>
+        <div class="melding-body">
+          <h1 class="${(melding.titel || '').length > 16 ? 'is-long' : ''}">${esc(melding.titel)}</h1>
+          ${melding.tekst ? `<p>${esc(melding.tekst).replace(/\n/g, '<br>')}</p>` : ''}
+        </div>
+      </section>`),
+    duration: 15,
+  }
+}
+
 export const TEMPLATES = {
   whatsNextLocatie,
   whatsNextOverall,
   programmaLocatie,
   programmaDag,
+  sprekerIntro,
   video,
   afbeelding,
 }

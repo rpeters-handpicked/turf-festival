@@ -7,6 +7,7 @@
   "playlist": {
     "naam": "Demo",
     "items": [
+      {"_key": "i", "slide": {"naam": "Introductie spreker", "type": "sprekerIntro", "duur": 10, "achtergrond": 3, "minutenVooraf": 15}},
       {"_key": "a", "slide": {"naam": "What's next — locatie", "type": "whatsNextLocatie", "duur": 10, "achtergrond": 1}},
       {"_key": "b", "slide": {"naam": "Programma — locatie", "type": "programmaLocatie", "duur": 10, "achtergrond": 2}},
       {"_key": "c", "slide": {"naam": "What's next — heel TURF", "type": "whatsNextOverall", "duur": 10, "achtergrond": 3}},

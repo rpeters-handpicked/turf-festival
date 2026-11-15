@@ -3,7 +3,7 @@
  * Laadt de scherm-configuratie + het programma uit Sanity en speelt de playlist af.
  * Geen build-stap: gewone ES-modules, gehost als statische bestanden.
  */
-import {TEMPLATES, fallbackSlide} from './templates.js'
+import {TEMPLATES, fallbackSlide, meldingSlide} from './templates.js'
 import {FESTIVAL, pad, toMinutes, currentDag, displayDag, isScheduled} from './schedule.js'
 
 const CONFIG = {
@@ -12,6 +12,7 @@ const CONFIG = {
   apiVersion: 'v2024-01-01',
   defaultDuration: 12,
   pollMs: 5 * 60 * 1000,
+  meldingCheckMs: 15 * 1000,
   fadeMs: 700,
 }
 
@@ -47,7 +48,7 @@ const SCREEN_QUERY = `*[_type == "scherm" && slug.current == $id][0]{
     "items": items[]{
       _key, duur, dagen, van, tot,
       "slide": slide->{
-        _id, naam, type, duur, achtergrond, titel,
+        _id, naam, type, duur, achtergrond, titel, minutenVooraf,
         "video": video.asset->url,
         "videoPortrait": videoPortrait.asset->url,
         "afbeelding": afbeelding.asset->url,
@@ -65,6 +66,11 @@ const EVENTS_QUERY = `*[_type == "event" && gepubliceerd == true]{
   "locatie": locatie->{_id, naam},
   "sprekers": sprekers[]->{naam, organisatie, "rol": coalesce(rol.nl, rol), "foto": foto.asset->url},
   "afbeelding": afbeelding.asset->url
+}`
+
+const MELDINGEN_QUERY = `*[_type == "melding" && actief == true] | order(_updatedAt desc){
+  _id, _rev, titel, tekst, stijl, tot,
+  "schermen": schermen[]->slug.current
 }`
 
 const LOCATIES_QUERY = `*[_type == "locatie"]{_id, naam}`
@@ -100,7 +106,7 @@ function normalizeEvent(e) {
 }
 
 // ── State ──────────────────────────────────────────────────────────────────
-const state = {screen: null, events: [], loadedAt: null, online: true, error: null}
+const state = {screen: null, events: [], meldingen: [], loadedAt: null, online: true, error: null}
 const CACHE_KEY = `turf-nc:${DEMO ? 'demo' : SCREEN_ID}`
 
 async function loadDemoScreen() {
@@ -119,17 +125,18 @@ async function loadDemoScreen() {
 
 async function loadData({fresh = false} = {}) {
   try {
-    const [screen, events] = await Promise.all([
+    const [screen, events, meldingen] = await Promise.all([
       DEMO ? loadDemoScreen() : query(SCREEN_QUERY, {id: SCREEN_ID}, {cdn: !fresh}),
       query(EVENTS_QUERY, {}, {cdn: !fresh}),
+      query(MELDINGEN_QUERY, {}, {cdn: !fresh}),
     ])
     if (!screen) throw new Error(`Scherm "${SCREEN_ID}" bestaat niet (of is niet gepubliceerd)`)
-    applyData(screen, events)
+    applyData(screen, events, meldingen)
     state.online = true
     state.error = null
     state.loadedAt = new Date()
     try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({screen, events}))
+      localStorage.setItem(CACHE_KEY, JSON.stringify({screen, events, meldingen}))
     } catch {}
   } catch (err) {
     state.online = false
@@ -138,22 +145,43 @@ async function loadData({fresh = false} = {}) {
       // Eerste keer laden mislukt: val terug op de laatst bekende content.
       try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')
-        if (cached) applyData(cached.screen, cached.events)
+        if (cached) applyData(cached.screen, cached.events, cached.meldingen)
       } catch {}
     }
     console.warn('[narrowcasting] laden mislukt:', err)
   }
 }
 
-function applyData(screen, events) {
+function applyData(screen, events, meldingen) {
   state.screen = screen
+  state.meldingen = meldingen || []
   state.events = (events || []).map(normalizeEvent).filter(Boolean).sort((a, b) => a.start - b.start)
   layoutStage()
+  // Een melding die aan- of uitgaat moet direct zichtbaar zijn, niet pas bij de volgende slide.
+  if (current && meldingKey(activeMelding()) !== current.meldingKey) advance()
 }
+
+/** De melding die nu op dit scherm hoort te staan (de laatst gewijzigde wint). */
+function activeMelding() {
+  const t = now()
+  // ?melding=Kop|Tekst toont een testmelding zonder iets in Sanity te zetten.
+  if (params.get('melding')) {
+    const [titel, tekst] = params.get('melding').split('|')
+    return {_id: 'test', _rev: '1', titel, tekst, stijl: params.get('stijl') || 'info'}
+  }
+  return (
+    state.meldingen.find(m => {
+      if (m.tot && new Date(m.tot) <= t) return false
+      const schermen = (m.schermen || []).filter(Boolean)
+      return !schermen.length || schermen.includes(SCREEN_ID)
+    }) || null
+  )
+}
+const meldingKey = m => (m ? `${m._id}:${m._rev}` : null)
 
 /** Luistert naar wijzigingen in Sanity en ververst direct. */
 function listen() {
-  const groq = '*[_type in ["scherm","playlist","slide","event","spreker","locatie","thema"]]'
+  const groq = '*[_type in ["scherm","playlist","slide","melding","event","spreker","locatie","thema"]]'
   const qs = new URLSearchParams({query: groq, includeResult: 'false', visibility: 'query'})
   let timer = null
   try {
@@ -231,9 +259,15 @@ function pickNext() {
 
 function advance() {
   clearTimeout(timer)
-  const picked = pickNext()
   const ctx = buildContext()
-  const rendered = picked?.rendered || fallbackSlide(ctx, state)
+  const melding = activeMelding()
+  if (melding && current?.meldingKey === meldingKey(melding)) {
+    // Dezelfde melding staat er al: laten staan en straks opnieuw kijken (bijv. of 'tot' verstreken is).
+    timer = setTimeout(advance, CONFIG.meldingCheckMs)
+    return
+  }
+  const picked = melding ? null : pickNext()
+  const rendered = melding ? meldingSlide(melding, ctx) : picked?.rendered || fallbackSlide(ctx, state)
   const duration = Math.max(
     3,
     rendered.duration || picked?.item.duur || picked?.item.slide.duur || CONFIG.defaultDuration,
@@ -247,7 +281,13 @@ function advance() {
   el.classList.add('is-visible')
 
   const previous = current
-  current = {el, rendered, name: picked?.item.slide.naam || '(fallback)', until: Date.now() + duration * 1000}
+  current = {
+    el,
+    rendered,
+    meldingKey: meldingKey(melding),
+    name: melding ? `MELDING: ${melding.titel}` : picked?.item.slide.naam || '(fallback)',
+    until: rendered.maxDuration ? null : Date.now() + duration * 1000,
+  }
   if (previous) {
     previous.el.classList.remove('is-visible')
     setTimeout(() => {
@@ -273,12 +313,12 @@ function renderDebug() {
   if (!DEBUG) return
   el.hidden = false
   const t = now()
-  const left = current ? Math.max(0, Math.round((current.until - Date.now()) / 1000)) : 0
+  const left = current?.until ? `${Math.max(0, Math.round((current.until - Date.now()) / 1000))}s` : 'tot einde video'
   el.textContent = [
     state.screen?.naam || '—',
     `${pad(t.getDate())}-${pad(t.getMonth() + 1)} ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}${simStart ? ' (sim)' : ''}`,
     `dag: ${currentDag(t) || 'geen'}`,
-    `slide: ${current?.name || '—'} (${left}s)`,
+    `slide: ${current?.name || '—'} (${left})`,
     `events: ${state.events.length}`,
     state.online ? 'online' : `OFFLINE: ${state.error}`,
   ].join('  ·  ')

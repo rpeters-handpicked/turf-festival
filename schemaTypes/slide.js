@@ -3,11 +3,12 @@ export const SLIDE_TYPES = [
   {title: "What's next — heel TURF", value: 'whatsNextOverall'},
   {title: 'Programma — deze locatie', value: 'programmaLocatie'},
   {title: 'Programma — hele dag', value: 'programmaDag'},
+  {title: 'Introductie spreker/event — deze locatie', value: 'sprekerIntro'},
   {title: 'Video', value: 'video'},
   {title: 'Afbeelding', value: 'afbeelding'},
 ]
 
-const DYNAMISCH = ['whatsNextLocatie', 'whatsNextOverall', 'programmaLocatie', 'programmaDag']
+const DYNAMISCH = ['whatsNextLocatie', 'whatsNextOverall', 'programmaLocatie', 'programmaDag', 'sprekerIntro']
 const isType = (...types) => ({parent}) => !types.includes(parent?.type)
 
 export default {
@@ -35,6 +36,15 @@ export default {
       initialValue: 12,
       hidden: isType(...DYNAMISCH, 'afbeelding'),
       validation: Rule => Rule.min(3).max(600),
+    },
+    {
+      name: 'minutenVooraf',
+      title: 'Tonen vanaf … minuten voor aanvang',
+      type: 'number',
+      description: 'De slide verschijnt automatisch zoveel minuten voor het volgende event op deze locatie, tot 5 minuten na de start.',
+      initialValue: 15,
+      hidden: isType('sprekerIntro'),
+      validation: Rule => Rule.min(1).max(120),
     },
     {
       name: 'achtergrond',

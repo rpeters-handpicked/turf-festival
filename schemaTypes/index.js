@@ -8,5 +8,6 @@ import event from './event'
 import scherm from './scherm'
 import playlist from './playlist'
 import slide from './slide'
+import melding from './melding'
 
-export const schemaTypes = [localeString, localeText, locatie, thema, track, spreker, event, scherm, playlist, slide]
+export const schemaTypes = [localeString, localeText, locatie, thema, track, spreker, event, scherm, playlist, slide, melding]
