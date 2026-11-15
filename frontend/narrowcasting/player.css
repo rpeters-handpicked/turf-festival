@@ -264,3 +264,7 @@ html, body {
 .portrait .melding-body h1 { font-size: 220px; }
 .portrait .melding-body h1.is-long { font-size: 160px; }
 .portrait .melding-body p { font-size: 56px; }
+
+/* ── Eigen ontwerp (slide-editor) ── */
+.ontwerp { background-color: #000; overflow: hidden; }
+.ontwerp-canvas { position: absolute; top: 50%; left: 50%; transform-origin: center center; }

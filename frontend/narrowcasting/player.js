@@ -49,6 +49,7 @@ const SCREEN_QUERY = `*[_type == "scherm" && slug.current == $id][0]{
       _key, duur, dagen, van, tot,
       "slide": slide->{
         _id, naam, type, duur, achtergrond, titel, minutenVooraf,
+        ontwerpLandscape, ontwerpPortrait,
         "video": video.asset->url,
         "videoPortrait": videoPortrait.asset->url,
         "afbeelding": afbeelding.asset->url,

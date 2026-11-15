@@ -9,5 +9,6 @@ import scherm from './scherm'
 import playlist from './playlist'
 import slide from './slide'
 import melding from './melding'
+import {slideOntwerp, ontwerpElement} from './slideOntwerp'
 
-export const schemaTypes = [localeString, localeText, locatie, thema, track, spreker, event, scherm, playlist, slide, melding]
+export const schemaTypes = [localeString, localeText, locatie, thema, track, spreker, event, scherm, playlist, slide, melding, slideOntwerp, ontwerpElement]

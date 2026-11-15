@@ -5,6 +5,8 @@
  * `null` betekent: nu niets te tonen, de player slaat de slide over.
  */
 
+import {CANVAS, backgroundStyle, describeElement} from './ontwerp.js'
+
 const ASSETS = 'narrowcasting/assets'
 const DAG_LABELS = {dag1: 'Donderdag 26 november', dag2: 'Vrijdag 27 november', dag3: 'Zaterdag 28 november'}
 
@@ -285,6 +287,56 @@ function programmaDag(slide, ctx) {
   })
 }
 
+// ── Eigen ontwerp (slide-editor) ───────────────────────────────────────────
+function ontwerp(slide, ctx) {
+  const hasContent = o => !!o && (o.elementen?.length > 0 || (o.achtergrond && o.achtergrond !== 'verloop1'))
+  const own = ctx.orient === 'portrait' ? slide.ontwerpPortrait : slide.ontwerpLandscape
+  const other = ctx.orient === 'portrait' ? slide.ontwerpLandscape : slide.ontwerpPortrait
+  const layout = hasContent(own) ? own : hasContent(other) ? other : null
+  if (!layout) return null
+  // Geen ontwerp voor deze oriëntatie: toon het andere, passend verkleind en gecentreerd.
+  const srcOrient = layout === own ? ctx.orient : ctx.orient === 'portrait' ? 'landscape' : 'portrait'
+  const src = CANVAS[srcOrient]
+  const dst = CANVAS[ctx.orient]
+  const scale = Math.min(dst.w / src.w, dst.h / src.h)
+
+  const next = ctx.events.find(e => isToday(e, ctx) && atScreen(e, ctx) && isUpcoming(e, ctx))
+  const tokens = {
+    tijd: hhmm(ctx.now),
+    dag: DAG_LABELS[ctx.dag] || '',
+    locatie: screenLocName(ctx),
+    volgende_tijd: next?.startTijd || '',
+    volgende_titel: next?.titel || '',
+    volgende_sprekers: next ? sprekerNames(next) : '',
+  }
+
+  const el = html('<section class="ontwerp"><div class="ontwerp-canvas"></div></section>')
+  Object.assign(el.style, backgroundStyle(layout, ctx.orient, ASSETS))
+  const canvas = el.firstElementChild
+  Object.assign(canvas.style, {
+    width: `${src.w}px`,
+    height: `${src.h}px`,
+    transform: `translate(-50%, -50%) scale(${scale})`,
+  })
+  for (const item of layout.elementen || []) {
+    const {box, inner} = describeElement(item, {assets: ASSETS, tokens})
+    const wrap = document.createElement('div')
+    Object.assign(wrap.style, box)
+    const node = document.createElement(inner.tag)
+    Object.assign(node.style, inner.style)
+    if (inner.tag === 'img') {
+      if (!inner.src) continue
+      node.src = inner.src
+      node.alt = ''
+    } else if (inner.text != null) {
+      node.textContent = inner.text
+    }
+    wrap.appendChild(node)
+    canvas.appendChild(wrap)
+  }
+  return {el}
+}
+
 // ── Video ──────────────────────────────────────────────────────────────────
 // Video's die de browser niet kan tonen (bijv. geen H.264) slaan we de rest van de sessie over,
 // zodat een scherm niet minutenlang zwart blijft.
@@ -368,6 +420,7 @@ export const TEMPLATES = {
   programmaLocatie,
   programmaDag,
   sprekerIntro,
+  ontwerp,
   video,
   afbeelding,
 }

@@ -1,9 +1,12 @@
+import OntwerpEditor from '../tools/narrowcasting/OntwerpEditor'
+
 export const SLIDE_TYPES = [
   {title: "What's next — deze locatie", value: 'whatsNextLocatie'},
   {title: "What's next — heel TURF", value: 'whatsNextOverall'},
   {title: 'Programma — deze locatie', value: 'programmaLocatie'},
   {title: 'Programma — hele dag', value: 'programmaDag'},
   {title: 'Introductie spreker/event — deze locatie', value: 'sprekerIntro'},
+  {title: 'Eigen ontwerp (editor)', value: 'ontwerp'},
   {title: 'Video', value: 'video'},
   {title: 'Afbeelding', value: 'afbeelding'},
 ]
@@ -34,7 +37,7 @@ export default {
       title: 'Standaardduur (seconden)',
       type: 'number',
       initialValue: 12,
-      hidden: isType(...DYNAMISCH, 'afbeelding'),
+      hidden: isType(...DYNAMISCH, 'afbeelding', 'ontwerp'),
       validation: Rule => Rule.min(3).max(600),
     },
     {
@@ -68,6 +71,23 @@ export default {
       type: 'string',
       description: 'Vervangt de standaardkop, bijv. "Straks op TURF".',
       hidden: isType(...DYNAMISCH),
+    },
+    {
+      name: 'ontwerpLandscape',
+      title: 'Ontwerp — liggend (1920×1080)',
+      type: 'slideOntwerp',
+      options: {orient: 'landscape'},
+      components: {input: OntwerpEditor},
+      hidden: isType('ontwerp'),
+    },
+    {
+      name: 'ontwerpPortrait',
+      title: 'Ontwerp — staand (1080×1920)',
+      description: 'Leeg = het liggende ontwerp wordt verkleind getoond op staande schermen.',
+      type: 'slideOntwerp',
+      options: {orient: 'portrait'},
+      components: {input: OntwerpEditor},
+      hidden: isType('ontwerp'),
     },
     {
       name: 'video',
