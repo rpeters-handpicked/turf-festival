@@ -8,6 +8,8 @@
 import {CANVAS, backgroundStyle, describeElement} from './ontwerp.js'
 
 const ASSETS = 'narrowcasting/assets'
+// Absoluut: een url() in een CSS-variabele wordt anders t.o.v. player.css opgezocht.
+const BG = (nr, orient) => `url('${new URL(`${ASSETS}/bg-${nr}-${orient}.jpg`, document.baseURI).href}')`
 const DAG_LABELS = {dag1: 'Donderdag 26 november', dag2: 'Vrijdag 27 november', dag3: 'Zaterdag 28 november'}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -30,9 +32,9 @@ function html(markup) {
 function frame(slide, ctx, {kicker, title, body, footer = ''}) {
   const bg = [1, 2, 3].includes(slide.achtergrond) ? slide.achtergrond : 1
   return html(`
-    <section class="tpl" style="background-image:url('${ASSETS}/bg-${bg}-${ctx.orient}.jpg')">
+    <section class="tpl" style="--bg:${BG(bg, ctx.orient)}">
       <header class="tpl-head">
-        <img class="tpl-logo" src="${ASSETS}/turf-logo.svg" alt="TURF">
+        <div class="tpl-logo" data-turf-logo data-align="left"></div>
         <div class="tpl-clock">${hhmm(ctx.now)}</div>
       </header>
       <div class="tpl-title">
@@ -139,8 +141,8 @@ function sprekerIntro(slide, ctx) {
         cards.length
           ? `<div class="intro-cards">${cards
               .map(
-                s => `
-              <figure class="intro-card">
+                (s, n) => `
+              <figure class="intro-card" style="--i:${n}">
                 <img src="${img(s.foto, pw, ph)}" alt="">
                 ${
                   s.naam
@@ -175,13 +177,13 @@ function sprekerIntro(slide, ctx) {
 }
 
 // ── Programmaregels (gedeeld) ──────────────────────────────────────────────
-function row(e, ctx, {showLoc}) {
+function row(e, ctx, {showLoc}, i = 0) {
   const status = isLive(e, ctx) ? 'is-live' : e.end <= ctx.now ? 'is-past' : ''
   // Staand is er geen ruimte voor een locatiekolom: de locatie schuift naar de tweede regel.
   const locInSub = showLoc && ctx.orient === 'portrait'
   const sub = [locInSub ? locLabel(e) : '', sprekerNames(e), showLoc ? '' : e.zaal].filter(Boolean).join(' · ')
   return `
-    <li class="row ${status}">
+    <li class="row ${status}" style="--i:${i}">
       <div class="row-time">${esc(e.startTijd)}${status === 'is-live' && showLoc ? '<i class="live-dot"></i>' : ''}</div>
       <div class="row-main">
         <div class="row-title">${themaDot(e)}<span>${esc(e.titel)}</span></div>
@@ -206,7 +208,7 @@ function pagedList(events, ctx, {perPage, columns = 1, showLoc, maxPages = 4, se
     .map(
       (page, i) => `
       <ul class="rows cols-${columns} ${i === 0 ? 'is-active' : ''}" style="--per-col:${Math.ceil(perPage / columns)}">
-        ${page.map(e => row(e, ctx, {showLoc})).join('')}
+        ${page.map((e, n) => row(e, ctx, {showLoc}, n)).join('')}
       </ul>`,
     )
     .join('')
@@ -324,6 +326,14 @@ function ontwerp(slide, ctx) {
     Object.assign(wrap.style, box)
     const node = document.createElement(inner.tag)
     Object.assign(node.style, inner.style)
+    if (inner.tag === 'lottie') {
+      const logo = document.createElement('div')
+      Object.assign(logo.style, inner.style)
+      logo.setAttribute('data-turf-logo', '')
+      wrap.appendChild(logo)
+      canvas.appendChild(wrap)
+      continue
+    }
     if (inner.tag === 'img') {
       if (!inner.src) continue
       node.src = inner.src
@@ -385,8 +395,8 @@ export function fallbackSlide(ctx, state) {
   const note = !state.screen ? state.error || 'Geen verbinding' : ''
   return {
     el: html(`
-      <section class="tpl fallback" style="background-image:url('${ASSETS}/bg-1-${ctx.orient}.jpg')">
-        <img class="fallback-logo" src="${ASSETS}/turf-logo.svg" alt="TURF">
+      <section class="tpl fallback" style="--bg:${BG(1, ctx.orient)}">
+        <div class="fallback-logo" data-turf-logo></div>
         ${note ? `<p class="fallback-note">${esc(note)}</p>` : ''}
       </section>`),
     duration: 15,
@@ -399,10 +409,10 @@ export function meldingSlide(melding, ctx) {
   return {
     el: html(`
       <section class="tpl melding ${urgent ? 'is-urgent' : ''}" ${
-        urgent ? '' : `style="background-image:url('${ASSETS}/bg-2-${ctx.orient}.jpg')"`
+        urgent ? '' : `style="--bg:${BG(2, ctx.orient)}"`
       }>
         <header class="tpl-head">
-          <img class="tpl-logo" src="${ASSETS}/turf-logo.svg" alt="TURF">
+          <div class="tpl-logo" data-turf-logo data-align="left"></div>
           <div class="tpl-clock">${hhmm(ctx.now)}</div>
         </header>
         <div class="melding-body">

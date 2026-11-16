@@ -14,6 +14,8 @@ import {
   newElement,
   newKey,
 } from '../../frontend/narrowcasting/ontwerp.js'
+import {mountLogo} from '../../frontend/narrowcasting/logo.js'
+import lottie from 'lottie-web'
 
 // Fonts, logo en verlopen komen van de player zelf, zodat de editor exact hetzelfde toont.
 const LOCAL = typeof location !== 'undefined' && location.hostname === 'localhost'
@@ -32,7 +34,7 @@ const FONT_CSS = [
   .join('\n')
   .concat("\n@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap');")
 
-const SOORT_LABEL = {tekst: 'Tekst', afbeelding: 'Afbeelding', vorm: 'Vorm', logo: 'TURF-logo'}
+const SOORT_LABEL = {tekst: 'Tekst', afbeelding: 'Afbeelding', vorm: 'Vorm', logo: 'TURF-logo', logoAnimatie: 'Logo-animatie'}
 const HANDLES = ['nw', 'ne', 'sw', 'se']
 const MIN_SIZE = 24
 const SNAP = 12
@@ -106,6 +108,13 @@ function ColorField({label, value, onChange}) {
   )
 }
 
+// ── Geanimeerd TURF-logo (dezelfde Lottie als op de schermen) ──────────────
+function LottieLogo({style}) {
+  const ref = useRef(null)
+  useEffect(() => mountLogo(ref.current, lottie, ASSETS), [])
+  return <div ref={ref} data-turf-logo="" style={style} />
+}
+
 // ── Eén element op het canvas ──────────────────────────────────────────────
 function CanvasElement({el, selected, scale, onPointerDown}) {
   const {box, inner} = describeElement(el, {assets: ASSETS})
@@ -123,6 +132,8 @@ function CanvasElement({el, selected, scale, onPointerDown}) {
             Geen afbeelding
           </div>
         )
+      ) : inner.tag === 'lottie' ? (
+        <LottieLogo style={{...inner.style, pointerEvents: 'none'}} />
       ) : (
         <div style={inner.style}>{inner.text}</div>
       )}
@@ -266,7 +277,7 @@ function Eigenschappen({el, update, onUploadImage, actions}) {
         </>
       )}
 
-      {el.soort === 'logo' && (
+      {(el.soort === 'logo' || el.soort === 'logoAnimatie') && (
         <Field label="Kleur">
           <Select fontSize={1} value={el.kleur || 'wit'} onChange={e => update({kleur: e.currentTarget.value})}>
             <option value="wit">Wit</option>
@@ -382,7 +393,7 @@ export default function OntwerpEditor(props) {
         w = Math.max(MIN_SIZE, Math.round(start.el.w + (east ? dx : -dx)))
         h = Math.max(MIN_SIZE, Math.round(start.el.h + (south ? dy : -dy)))
         // Logo's en afbeeldingen houden hun verhouding, tenzij je Shift indrukt; bij tekst en vormen andersom.
-        const keepRatio = (start.el.soort === 'logo' || start.el.soort === 'afbeelding') !== ev.shiftKey
+        const keepRatio = ['logo', 'logoAnimatie', 'afbeelding'].includes(start.el.soort) !== ev.shiftKey
         if (keepRatio) h = Math.max(MIN_SIZE, Math.round(w / ratio))
         if (!east) x = start.el.x + start.el.w - w
         if (!south) y = start.el.y + start.el.h - h
@@ -471,6 +482,7 @@ export default function OntwerpEditor(props) {
       <Button mode="ghost" fontSize={1} text={uploading ? 'Uploaden…' : '+ Afbeelding'} disabled={readOnly || uploading} onClick={addImage} />
       <Button mode="ghost" fontSize={1} text="+ Vlak" disabled={readOnly} onClick={() => add(newElement('vorm', orient))} />
       <Button mode="ghost" fontSize={1} text="+ TURF-logo" disabled={readOnly} onClick={() => add(newElement('logo', orient))} />
+      <Button mode="ghost" fontSize={1} text="+ Logo-animatie" disabled={readOnly} onClick={() => add(newElement('logoAnimatie', orient))} />
       <Box flex={1} />
       {otherValue?.elementen?.length > 0 && elementen.length === 0 && (
         <Button
