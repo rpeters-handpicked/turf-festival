@@ -6,7 +6,9 @@
  * wat op het scherm komt. Pure functies: geen DOM, geen React.
  */
 
-export const SANITY = {projectId: 'x545nfex', dataset: 'production'}
+import {LOGO_ANIM} from './logo.js'
+
+export const SANITY ={projectId: 'x545nfex', dataset: 'production'}
 
 export const CANVAS = {
   landscape: {w: 1920, h: 1080},
@@ -182,6 +184,14 @@ export function describeElement(el, {assets, tokens} = {}) {
     }
   }
 
+  if (el.soort === 'logoAnimatie') {
+    // Een lege container; de player en de editor starten er de Lottie in (logo.js).
+    return {
+      box,
+      inner: {tag: 'lottie', style: {...fill, color: el.kleur === 'donker' ? '#000000' : '#ffffff'}},
+    }
+  }
+
   // logo
   return {
     box,
@@ -207,6 +217,10 @@ export function newElement(soort, orient, extra = {}) {
   }
   if (soort === 'vorm') return {...base, ...center(600, 400), vorm: 'rechthoek', kleur: '#0d2023', dekking: 85, radius: 36, ...extra}
   if (soort === 'afbeelding') return {...base, ...center(700, 800), passing: 'cover', kader: true, radius: 0, ...extra}
+  if (soort === 'logoAnimatie') {
+    const w = Math.round(W * 0.6)
+    return {...base, ...center(w, Math.round(w * LOGO_ANIM.ratio)), kleur: 'wit', ...extra}
+  }
   return {...base, ...center(Math.round(W * 0.4), Math.round(W * 0.4 * 0.151)), kleur: 'wit', ...extra}
 }
 

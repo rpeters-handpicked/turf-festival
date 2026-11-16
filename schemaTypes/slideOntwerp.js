@@ -6,7 +6,7 @@ export const ontwerpElement = {
   title: 'Element',
   type: 'object',
   fields: [
-    {name: 'soort', type: 'string', options: {list: ['tekst', 'afbeelding', 'vorm', 'logo']}},
+    {name: 'soort', type: 'string', options: {list: ['tekst', 'afbeelding', 'vorm', 'logo', 'logoAnimatie']}},
     {name: 'x', type: 'number'},
     {name: 'y', type: 'number'},
     {name: 'w', type: 'number'},

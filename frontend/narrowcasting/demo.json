@@ -29,11 +29,11 @@
               },
               {
                 "_key": "2",
-                "soort": "logo",
+                "soort": "logoAnimatie",
                 "x": 96,
                 "y": 80,
-                "w": 420,
-                "h": 64,
+                "w": 610,
+                "h": 60,
                 "kleur": "wit"
               },
               {

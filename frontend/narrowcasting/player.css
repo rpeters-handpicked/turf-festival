@@ -54,12 +54,18 @@ html, body {
 .tpl {
   display: flex; flex-direction: column;
   padding: 64px 96px 64px;
-  background-size: cover; background-position: center;
+  isolation: isolate;
 }
 .portrait .tpl { padding: 80px 72px 72px; }
+/* Achtergrond in een eigen laag, zodat hij langzaam kan bewegen (zie Animaties). */
+.tpl::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background-image: var(--bg); background-size: cover; background-position: center;
+}
 
 .tpl-head { display: flex; justify-content: space-between; align-items: center; flex: none; }
-.tpl-logo { height: 54px; width: auto; display: block; }
+/* Geanimeerd logo (Lottie, 242 × 24) */
+.tpl-logo { height: 60px; aspect-ratio: 242 / 24; color: var(--white); }
 .tpl-clock {
   font-family: var(--heading); font-weight: 700; font-size: 76px; line-height: 0.8;
   letter-spacing: 1px; padding-top: 10px;
@@ -211,8 +217,8 @@ html, body {
 
 /* ── Fallback ── */
 .fallback { align-items: center; justify-content: center; gap: 40px; }
-.fallback-logo { width: 46%; height: auto; }
-.portrait .fallback-logo { width: 76%; }
+.fallback-logo { width: 62%; aspect-ratio: 242 / 24; color: var(--white); }
+.portrait .fallback-logo { width: 86%; }
 .fallback-note { font-size: 28px; color: var(--muted); }
 
 /* ── Debug ── */
@@ -268,3 +274,54 @@ html, body {
 /* ── Eigen ontwerp (slide-editor) ── */
 .ontwerp { background-color: #000; overflow: hidden; }
 .ontwerp-canvas { position: absolute; top: 50%; left: 50%; transform-origin: center center; }
+
+/* ── Animaties (standaardslides) ──────────────────────────────────────────
+   Alles speelt af zodra een slide zichtbaar wordt (.slide.is-visible) en staat
+   daarna stil op de eindstand. Volgorde: kop → titel → panelen/rijen → details.
+   Rustig gehouden: korte afstanden, geen bounce, alles binnen ±1,3 s klaar. */
+.tpl { --ease: cubic-bezier(0.2, 0.7, 0.2, 1); }
+
+@keyframes nc-fade { from { opacity: 0; } }
+@keyframes nc-rise { from { opacity: 0; transform: translateY(32px); } }
+@keyframes nc-reveal { from { opacity: 0; transform: translateY(45%); clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 -20% 0); } }
+@keyframes nc-pop { from { opacity: 0; transform: scale(0.85); } }
+@keyframes nc-photo { from { opacity: 0; transform: scale(1.12); } }
+@keyframes nc-drift { from { transform: scale(1.02) translate(0, 0); } to { transform: scale(1.09) translate(-1.5%, -1%); } }
+
+/* Achtergrond: heel langzaam in- en uitzoomen (houdt het scherm levend, voorkomt inbranden). */
+.slide.is-visible.tpl:not(.is-urgent)::before { animation: nc-drift 40s ease-in-out infinite alternate; }
+
+/* Kop en titel */
+.slide.is-visible .tpl-head { animation: nc-fade 600ms ease both; }
+.slide.is-visible .kicker { animation: nc-rise 700ms var(--ease) 120ms both; }
+.slide.is-visible .tpl-title h1,
+.slide.is-visible .melding-body h1 { animation: nc-reveal 900ms var(--ease) 220ms both; }
+.slide.is-visible .melding-body p { animation: nc-rise 800ms var(--ease) 600ms both; }
+
+/* What's next en spreker-intro: paneel, dan de regels erin */
+.slide.is-visible .next-text,
+.slide.is-visible .intro-text { animation: nc-rise 800ms var(--ease) 380ms both; }
+.slide.is-visible .next-photo,
+.slide.is-visible .intro-card { animation: nc-rise 800ms var(--ease) calc(320ms + var(--i, 0) * 110ms) both; }
+.slide.is-visible .next-photo img,
+.slide.is-visible .intro-card img { animation: nc-photo 2.4s var(--ease) calc(320ms + var(--i, 0) * 110ms) both; }
+.slide.is-visible .next-text > *,
+.slide.is-visible .intro-text > * { animation: nc-rise 700ms var(--ease) both; }
+.slide.is-visible :is(.next-text, .intro-text) > :nth-child(1) { animation-delay: 520ms; }
+.slide.is-visible :is(.next-text, .intro-text) > :nth-child(2) { animation-delay: 620ms; }
+.slide.is-visible :is(.next-text, .intro-text) > :nth-child(3) { animation-delay: 720ms; }
+.slide.is-visible :is(.next-text, .intro-text) > :nth-child(4) { animation-delay: 820ms; }
+.slide.is-visible .next-time .pill { animation: nc-pop 500ms var(--ease) 1000ms both; }
+.slide.is-visible .intro-card figcaption { animation: nc-rise 700ms var(--ease) calc(700ms + var(--i, 0) * 110ms) both; }
+.slide.is-visible .tpl-foot { animation: nc-rise 700ms var(--ease) 950ms both; }
+
+/* Programmalijsten: rijen schuiven één voor één in, ook bij elke nieuwe pagina */
+.slide.is-visible .rows.is-active .row { animation: nc-rise 650ms var(--ease) calc(380ms + var(--i, 0) * 65ms) both; }
+.slide.is-visible .pager { animation: nc-fade 600ms ease 900ms both; }
+
+/* Fallback */
+.slide.is-visible .fallback-logo { animation: nc-fade 1200ms ease both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .slide *, .slide::before { animation: none !important; }
+}

@@ -4,6 +4,7 @@
  * Geen build-stap: gewone ES-modules, gehost als statische bestanden.
  */
 import {TEMPLATES, fallbackSlide, meldingSlide} from './templates.js'
+import {mountLogos} from './logo.js'
 import {FESTIVAL, pad, toMinutes, currentDag, displayDag, isScheduled} from './schedule.js'
 
 const CONFIG = {
@@ -277,6 +278,7 @@ function advance() {
   const el = rendered.el
   el.classList.add('slide')
   stage.appendChild(el)
+  const unmountLogos = mountLogos(el, window.lottie, 'narrowcasting/assets')
   // Forceer een reflow zodat de fade-in altijd afspeelt.
   void el.offsetWidth
   el.classList.add('is-visible')
@@ -285,6 +287,7 @@ function advance() {
   current = {
     el,
     rendered,
+    unmountLogos,
     meldingKey: meldingKey(melding),
     name: melding ? `MELDING: ${melding.titel}` : picked?.item.slide.naam || '(fallback)',
     until: rendered.maxDuration ? null : Date.now() + duration * 1000,
@@ -293,6 +296,7 @@ function advance() {
     previous.el.classList.remove('is-visible')
     setTimeout(() => {
       previous.rendered.destroy?.()
+      previous.unmountLogos?.()
       previous.el.remove()
     }, CONFIG.fadeMs + 50)
   }
