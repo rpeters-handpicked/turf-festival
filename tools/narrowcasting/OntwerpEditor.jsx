@@ -15,7 +15,6 @@ import {
   newKey,
 } from '../../frontend/narrowcasting/ontwerp.js'
 import {mountLogo} from '../../frontend/narrowcasting/logo.js'
-import lottie from 'lottie-web'
 
 // Fonts, logo en verlopen komen van de player zelf, zodat de editor exact hetzelfde toont.
 const LOCAL = typeof location !== 'undefined' && location.hostname === 'localhost'
@@ -111,7 +110,19 @@ function ColorField({label, value, onChange}) {
 // ── Geanimeerd TURF-logo (dezelfde Lottie als op de schermen) ──────────────
 function LottieLogo({style}) {
   const ref = useRef(null)
-  useEffect(() => mountLogo(ref.current, lottie, ASSETS), [])
+  useEffect(() => {
+    // Pas hier laden: lottie-web spreekt bij het importeren al een canvas aan, wat buiten
+    // de browser (bijv. bij `sanity deploy`) misgaat.
+    let stop = () => {}
+    let cancelled = false
+    import('lottie-web').then(({default: lottie}) => {
+      if (!cancelled) stop = mountLogo(ref.current, lottie, ASSETS)
+    })
+    return () => {
+      cancelled = true
+      stop()
+    }
+  }, [])
   return <div ref={ref} data-turf-logo="" style={style} />
 }
 
