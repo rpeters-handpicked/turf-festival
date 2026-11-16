@@ -8,6 +8,15 @@
     "naam": "Demo",
     "items": [
       {
+        "_key": "wm",
+        "slide": {
+          "naam": "Walking map",
+          "type": "walkingMap",
+          "duur": 15,
+          "achtergrond": 3
+        }
+      },
+      {
         "_key": "o",
         "slide": {
           "naam": "Eigen ontwerp (demo)",

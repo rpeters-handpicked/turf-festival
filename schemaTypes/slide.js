@@ -6,12 +6,13 @@ export const SLIDE_TYPES = [
   {title: 'Programma — deze locatie', value: 'programmaLocatie'},
   {title: 'Programma — hele dag', value: 'programmaDag'},
   {title: 'Introductie spreker/event — deze locatie', value: 'sprekerIntro'},
+  {title: 'Walking map', value: 'walkingMap'},
   {title: 'Eigen ontwerp (editor)', value: 'ontwerp'},
   {title: 'Video', value: 'video'},
   {title: 'Afbeelding', value: 'afbeelding'},
 ]
 
-const DYNAMISCH = ['whatsNextLocatie', 'whatsNextOverall', 'programmaLocatie', 'programmaDag', 'sprekerIntro']
+const DYNAMISCH = ['whatsNextLocatie', 'whatsNextOverall', 'programmaLocatie', 'programmaDag', 'sprekerIntro', 'walkingMap']
 const isType = (...types) => ({parent}) => !types.includes(parent?.type)
 
 export default {

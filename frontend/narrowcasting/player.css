@@ -325,3 +325,64 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   .slide *, .slide::before { animation: none !important; }
 }
+
+/* ── Walking map ── */
+.wm-grid {
+  flex: 1; min-height: 0; margin-top: 40px;
+  display: grid; grid-template-columns: minmax(0, 1fr) 1040px; grid-template-rows: minmax(0, 1fr); gap: 56px;
+}
+.wm-side { display: flex; flex-direction: column; min-width: 0; }
+.walkmap .tpl-title { margin-top: 0; }
+.walkmap .tpl-title h1 { white-space: normal; font-size: 150px; }
+.wm-list { list-style: none; margin-top: 32px; display: flex; flex-direction: column; gap: 12px; }
+.wm-list li {
+  display: flex; align-items: center; gap: 22px;
+  background: var(--panel); border-radius: 22px; padding: 12px 26px 12px 12px;
+}
+.wm-list li.is-here { box-shadow: inset 0 0 0 4px var(--c); }
+.wm-num {
+  flex: none; width: 56px; height: 56px; border-radius: 14px; background: var(--c); color: var(--ink);
+  display: grid; place-items: center; padding-top: 6px;
+  font-family: var(--heading); font-weight: 800; font-size: 44px; line-height: 1;
+}
+.wm-text { flex: 1; min-width: 0; }
+.wm-text strong {
+  display: block; font-family: var(--heading); font-weight: 700; text-transform: uppercase;
+  font-size: 50px; line-height: 0.9; padding-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wm-text span { display: block; font-size: 24px; font-weight: 500; color: var(--muted); margin-top: 2px; }
+.wm-list em { flex: none; font-style: normal; font-weight: 700; font-size: 26px; letter-spacing: 1px; text-transform: uppercase; }
+.wm-foot { margin-top: auto; padding-top: 24px; }
+
+.wm-map { position: relative; min-height: 0; border-radius: 36px; overflow: hidden; background: var(--ink); }
+.wm-map svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.wm-credit { position: absolute; right: 18px; bottom: 12px; font-size: 16px; color: rgba(255, 255, 255, 0.45); }
+.wm-route { fill: none; stroke: #fff; stroke-linecap: round; stroke-linejoin: round; }
+.wm-marker rect { fill: var(--c); }
+.wm-marker .wm-nr { fill: var(--ink); text-anchor: middle; font-family: var(--heading); font-weight: 800; }
+.wm-marker .wm-label, .wm-marker .wm-here {
+  fill: #fff; font-family: var(--heading); font-weight: 700; text-transform: uppercase;
+  stroke: var(--ink); paint-order: stroke; stroke-linejoin: round;
+}
+.wm-marker .wm-here { font-family: var(--body); font-weight: 700; letter-spacing: 1px; fill: var(--c); }
+.wm-pulse { fill: none; stroke: var(--c); transform-box: fill-box; transform-origin: center; animation: wm-pulse 2.4s ease-out infinite; }
+@keyframes wm-pulse { from { transform: scale(0.6); opacity: 0.9; } to { transform: scale(1.6); opacity: 0; } }
+
+.portrait .wm-grid { grid-template-columns: 1fr; grid-template-rows: auto 940px minmax(0, 1fr); gap: 36px; margin-top: 56px; }
+.portrait .wm-side { display: contents; }
+.portrait .walkmap .tpl-title { grid-row: 1; }
+.portrait .walkmap .tpl-title h1 { font-size: 150px; }
+.portrait .wm-map { grid-row: 2; }
+.portrait .wm-list { grid-row: 3; margin-top: 0; gap: 10px; }
+.portrait .wm-text strong { font-size: 44px; }
+.portrait .wm-text { display: flex; align-items: baseline; gap: 18px; }
+.portrait .wm-text span { margin-top: 0; white-space: nowrap; }
+.portrait .wm-foot { display: none; }
+
+/* Animaties walking map: kaart komt rustig op, dan markeringen, routes en lijst */
+@keyframes nc-map { from { opacity: 0; transform: scale(1.04); } }
+.slide.is-visible .wm-map svg { animation: nc-map 1400ms var(--ease) 200ms both; }
+.slide.is-visible .wm-marker { animation: nc-fade 500ms ease calc(900ms + var(--i, 0) * 120ms) both; }
+.slide.is-visible .wm-route { animation: nc-fade 900ms ease calc(1300ms + var(--i, 0) * 150ms) both; }
+.slide.is-visible .wm-list li { animation: nc-rise 650ms var(--ease) calc(450ms + var(--i, 0) * 80ms) both; }
+.slide.is-visible .wm-foot { animation: nc-fade 600ms ease 1000ms both; }
