@@ -1,0 +1,141 @@
+{
+  "naam": "Demo-scherm",
+  "soort": "klein",
+  "orientatie": "landscape",
+  "rotatie": 0,
+  "locatieNaam": "Hotel Nassau",
+  "playlist": {
+    "naam": "Demo",
+    "items": [
+      {
+        "_key": "o",
+        "slide": {
+          "naam": "Eigen ontwerp (demo)",
+          "type": "ontwerp",
+          "duur": 10,
+          "ontwerpLandscape": {
+            "achtergrond": "verloop2",
+            "elementen": [
+              {
+                "_key": "1",
+                "soort": "vorm",
+                "vorm": "kader",
+                "x": 1140,
+                "y": 150,
+                "w": 660,
+                "h": 780,
+                "kleur": "#0d2023",
+                "dekking": 85
+              },
+              {
+                "_key": "2",
+                "soort": "logo",
+                "x": 96,
+                "y": 80,
+                "w": 420,
+                "h": 64,
+                "kleur": "wit"
+              },
+              {
+                "_key": "3",
+                "soort": "tekst",
+                "x": 96,
+                "y": 300,
+                "w": 1000,
+                "h": 400,
+                "tekst": "Welkom\nop TURF",
+                "font": "thunder",
+                "grootte": 260,
+                "gewicht": 800,
+                "kleur": "#ffffff",
+                "hoofdletters": true
+              },
+              {
+                "_key": "4",
+                "soort": "tekst",
+                "x": 96,
+                "y": 800,
+                "w": 1000,
+                "h": 120,
+                "tekst": "Het is {tijd} · {locatie}\nStraks: {volgende_tijd} {volgende_titel}",
+                "font": "barlow",
+                "grootte": 44,
+                "gewicht": 600,
+                "kleur": "#ffffff"
+              },
+              {
+                "_key": "5",
+                "soort": "vorm",
+                "vorm": "pill",
+                "x": 1220,
+                "y": 500,
+                "w": 500,
+                "h": 90,
+                "kleur": "#c8f04a",
+                "dekking": 100
+              }
+            ]
+          }
+        }
+      },
+      {
+        "_key": "i",
+        "slide": {
+          "naam": "Introductie spreker",
+          "type": "sprekerIntro",
+          "duur": 10,
+          "achtergrond": 3,
+          "minutenVooraf": 15
+        }
+      },
+      {
+        "_key": "a",
+        "slide": {
+          "naam": "What's next — locatie",
+          "type": "whatsNextLocatie",
+          "duur": 10,
+          "achtergrond": 1
+        }
+      },
+      {
+        "_key": "b",
+        "slide": {
+          "naam": "Programma — locatie",
+          "type": "programmaLocatie",
+          "duur": 10,
+          "achtergrond": 2
+        }
+      },
+      {
+        "_key": "c",
+        "slide": {
+          "naam": "What's next — heel TURF",
+          "type": "whatsNextOverall",
+          "duur": 10,
+          "achtergrond": 3
+        }
+      },
+      {
+        "_key": "d",
+        "slide": {
+          "naam": "Programma — hele dag",
+          "type": "programmaDag",
+          "duur": 10,
+          "achtergrond": 1
+        }
+      },
+      {
+        "_key": "e",
+        "van": "23:00",
+        "tot": "02:00",
+        "slide": {
+          "naam": "Alleen 's nachts (test tijdvenster)",
+          "type": "whatsNextOverall",
+          "duur": 6,
+          "achtergrond": 2,
+          "titel": "Tonight at TURF"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "frontend",
+        "-p",
+        "3000",
+        "-C"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "studio",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "sanity",
+        "dev",
+        "--port",
+        "3333"
+      ],
+      "port": 3333
+    }
+  ]
+}
