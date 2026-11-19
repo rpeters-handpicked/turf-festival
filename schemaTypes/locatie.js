@@ -15,6 +15,12 @@ export default {
       type: 'string'
     },
     {
+      name: 'geo',
+      title: 'Locatie op kaart',
+      type: 'geopoint',
+      description: 'Positie van de pin op de locatiekaart'
+    },
+    {
       name: 'capaciteit',
       title: 'Capaciteit',
       type: 'number'
