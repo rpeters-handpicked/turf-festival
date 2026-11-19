@@ -48,11 +48,8 @@ class TurfLocaties extends HTMLElement {
       colImg: en ? 'Image' : 'Afbeelding',
       colName: en ? 'Name / address' : 'Naam / adres',
       colType: 'Type',
-      colCap: en ? 'Capacity' : 'Capaciteit',
       colDesc: en ? 'Description' : 'Beschrijving',
       colDays: en ? 'Events per day' : 'Events per dag',
-      pers: en ? 'ppl' : 'pers.',
-      cap: 'Cap.',
       noEvents: en ? 'No events' : 'Geen events',
       event: 'event',
       events: 'events',
@@ -100,7 +97,7 @@ class TurfLocaties extends HTMLElement {
   async loadData() {
     const query = `{
       "locs": *[_type == "locatie"] | order(naam asc) {
-        _id, naam, adres, capaciteit, type, geo,
+        _id, naam, adres, type, geo,
         "beschrijving": ${this.localeField('beschrijving')},
         "img": afbeelding.asset->url
       },
@@ -140,7 +137,6 @@ class TurfLocaties extends HTMLElement {
         naam: this.groupName(locs),
         adres: locs[0].adres,
         type: locs[0].type,
-        capaciteit: locs.length === 1 ? locs[0].capaciteit : null,
         lat: locs[0].geo.lat, lng: locs[0].geo.lng,
       }
     })
@@ -261,7 +257,7 @@ class TurfLocaties extends HTMLElement {
       <div class="results-count"><span class="count-num">${locs.length}</span> ${locs.length === 1 ? ui.location : ui.locations}</div>
       ${locs.length ? `
       <div class="loc-head" aria-hidden="true">
-        <span>${ui.colImg}</span><span>${ui.colName}</span><span>${ui.colType}</span><span>${ui.colCap}</span><span>${ui.colDesc}</span><span>${ui.colDays}</span>
+        <span>${ui.colImg}</span><span>${ui.colName}</span><span>${ui.colType}</span><span>${ui.colDesc}</span><span>${ui.colDays}</span>
       </div>
       <ul class="loc-list">
         ${locs.map(l => `
@@ -275,7 +271,6 @@ class TurfLocaties extends HTMLElement {
                 <span class="loc-addr">${this.esc(l.adres)}</span>
               </span>
               <span class="loc-type">${l.type ? `<span class="tag">${this.typeLabels[l.type] || l.type}</span>` : ''}</span>
-              <span class="loc-cap">${l.capaciteit ? `${l.capaciteit.toLocaleString('nl-NL')} <small>${ui.pers}</small>` : '—'}</span>
               <span class="loc-desc">${this.esc(l.beschrijving || '')}</span>
               <span class="loc-days">
                 ${this.days.map(d => `
@@ -409,7 +404,7 @@ class TurfLocaties extends HTMLElement {
     const ui = this.ui
     const n = this.countFor(grp)
     const dayLabel = this.activeDay === 'all' ? '' : ` — ${this.countFor(grp)} ${ui.on} ${this.days.find(d => d.key === this.activeDay).long}`
-    const meta = [grp.type ? `<span class="popup-type">${this.typeLabels[grp.type] || grp.type}</span>` : '', grp.capaciteit ? `${ui.cap} ${grp.capaciteit.toLocaleString('nl-NL')}` : ''].filter(Boolean).join(' · ')
+    const meta = grp.type ? `<span class="popup-type">${this.typeLabels[grp.type] || grp.type}</span>` : ''
     return `
       <div class="popup" role="dialog" aria-label="${this.esc(grp.naam)}">
         <button class="popup-close" aria-label="${ui.close}">
@@ -588,7 +583,7 @@ class TurfLocaties extends HTMLElement {
 
       .loc-head, .loc-row {
         display: grid; align-items: center; gap: 16px;
-        grid-template-columns: 88px minmax(160px, 1.3fr) 100px 90px minmax(160px, 2fr) 156px;
+        grid-template-columns: 88px minmax(160px, 1.3fr) 100px minmax(160px, 2fr) 156px;
       }
       .loc-head {
         padding: 8px 16px; border-bottom: 1px solid var(--border); margin-bottom: 10px;
@@ -618,8 +613,6 @@ class TurfLocaties extends HTMLElement {
         padding: 3px 10px; border-radius: 100px; text-transform: uppercase;
         background: rgba(255,255,255,0.1); color: #fff;
       }
-      .loc-cap { font-family: var(--font-heading); font-size: 26px; font-weight: 600; white-space: nowrap; }
-      .loc-cap small { font-family: var(--font-body); font-size: 13px; color: var(--muted); font-weight: 500; }
       .loc-desc {
         font-size: 15px; line-height: 1.4; color: rgba(255,255,255,0.7);
         display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
@@ -754,13 +747,12 @@ class TurfLocaties extends HTMLElement {
         .loc-head { display: none; }
         .loc-row {
           grid-template-columns: 72px 1fr auto;
-          grid-template-areas: "img name cap" "img type days" "desc desc desc";
+          grid-template-areas: "img name days" "img type days" "desc desc desc";
           gap: 6px 14px;
         }
         .loc-img { width: 72px; height: 72px; grid-area: img; }
         .loc-name-wrap { grid-area: name; }
         .loc-type { grid-area: type; }
-        .loc-cap { grid-area: cap; text-align: right; font-size: 22px; }
         .loc-desc { grid-area: desc; -webkit-line-clamp: 2; }
         .loc-days { grid-area: days; justify-content: flex-end; }
       }
@@ -782,14 +774,13 @@ class TurfLocaties extends HTMLElement {
         .search-wrap { flex: 1 1 100%; }
         .list-wrap { padding: 12px; }
         .loc-row {
-          grid-template-columns: 64px 1fr auto;
-          grid-template-areas: "img name name" "img type type" "desc desc desc" "days days cap";
+          grid-template-columns: 64px 1fr;
+          grid-template-areas: "img name" "img type" "desc desc" "days days";
           padding: 12px;
         }
         .loc-img { width: 64px; height: 64px; }
         .loc-name { font-size: 26px; }
         .loc-days { justify-content: flex-start; }
-        .loc-cap { align-self: center; }
         .map-summary { padding: 10px 12px 0; font-size: 17px; }
       }
     `
