@@ -85,11 +85,61 @@ export default {
         },
       ],
     },
+    {
+      name: 'geluid',
+      title: 'Geluid',
+      type: 'object',
+      description:
+        'Muziek die doorloopt onder alle slides van deze playlist, los van de slidewissels. Video\'s in slides spelen altijd zonder geluid.',
+      options: {collapsible: true, collapsed: false},
+      fields: [
+        {
+          name: 'nummers',
+          title: 'Audiobestanden',
+          type: 'array',
+          description: 'MP3 of M4A (AAC). Worden na elkaar afgespeeld en daarna herhaald. Leeg = geen geluid.',
+          of: [
+            {
+              type: 'file',
+              options: {accept: 'audio/mpeg,audio/mp4,audio/aac,audio/x-m4a,.mp3,.m4a'},
+            },
+          ],
+        },
+        {
+          name: 'volume',
+          title: 'Volume (%)',
+          type: 'number',
+          initialValue: 60,
+          validation: Rule => Rule.min(0).max(100),
+        },
+        {
+          name: 'shuffle',
+          title: 'Willekeurige volgorde',
+          type: 'boolean',
+          initialValue: false,
+        },
+        {
+          name: 'van',
+          title: 'Geluid vanaf',
+          type: 'string',
+          description: 'Formaat 10:00. Leeg = altijd. Buiten dit venster is het scherm stil.',
+          validation: tijdRegel,
+        },
+        {
+          name: 'tot',
+          title: 'Geluid tot',
+          type: 'string',
+          description: 'Formaat 23:00. Tijden na middernacht (tot 06:00) horen bij de festivaldag ervoor.',
+          validation: tijdRegel,
+        },
+      ],
+    },
   ],
   preview: {
-    select: {title: 'naam', items: 'items'},
-    prepare({title, items}) {
-      return {title, subtitle: `${items?.length || 0} slides`}
+    select: {title: 'naam', items: 'items', nummers: 'geluid.nummers'},
+    prepare({title, items, nummers}) {
+      const geluid = nummers?.length ? ` · ♪ ${nummers.length}` : ''
+      return {title, subtitle: `${items?.length || 0} slides${geluid}`}
     },
   },
 }
