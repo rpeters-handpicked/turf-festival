@@ -342,7 +342,8 @@ class TurfLocaties extends HTMLElement {
     window.__turfMapsLoading = new Promise((resolve, reject) => {
       window.__turfMapsReady = resolve
       const s = document.createElement('script')
-      s.src = `https://maps.googleapis.com/maps/api/js?key=${this.cfg.googleMapsApiKey}&loading=async&callback=__turfMapsReady`
+      const key = this.cfg.googleMapsApiKey || 'AIzaSyBKtiBfiuLmG_td0BKfK6XABATDe8P1YPw'
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&callback=__turfMapsReady`
       s.async = true
       s.onerror = reject
       document.head.appendChild(s)

@@ -145,7 +145,7 @@ class TurfProgrammaV2 extends HTMLElement {
 
     const urlParams = new URLSearchParams(window.location.search)
     const locationParam = urlParams.get('location')
-    if (locationParam) this.activeLocations.add(locationParam)
+    if (locationParam) locationParam.split(',').map(s => s.trim()).filter(Boolean).forEach(l => this.activeLocations.add(l))
 
     const hash = window.location.hash.slice(1)
     const hashResolved = this.resolveHash(hash)
