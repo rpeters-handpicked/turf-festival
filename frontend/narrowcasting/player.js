@@ -5,6 +5,7 @@
  */
 import {TEMPLATES, fallbackSlide, meldingSlide} from './templates.js'
 import {mountLogos} from './logo.js'
+import {createAudioPlayer} from './audio.js'
 import {FESTIVAL, pad, toMinutes, currentDag, displayDag, isScheduled} from './schedule.js'
 
 const CONFIG = {
@@ -46,6 +47,7 @@ const SCREEN_QUERY = `*[_type == "scherm" && slug.current == $id][0]{
   "locaties": locaties[]->{_id, naam},
   "playlist": playlist->{
     naam,
+    "geluid": geluid{volume, shuffle, van, tot, "nummers": nummers[].asset->url},
     "items": items[]{
       _key, duur, dagen, van, tot,
       "slide": slide->{
@@ -107,6 +109,8 @@ function normalizeEvent(e) {
   }
 }
 
+const audioPlayer = createAudioPlayer({now})
+
 // ── State ──────────────────────────────────────────────────────────────────
 const state = {screen: null, events: [], meldingen: [], loadedAt: null, online: true, error: null}
 const CACHE_KEY = `turf-nc:${DEMO ? 'demo' : SCREEN_ID}`
@@ -159,6 +163,7 @@ function applyData(screen, events, meldingen) {
   state.meldingen = meldingen || []
   state.events = (events || []).map(normalizeEvent).filter(Boolean).sort((a, b) => a.start - b.start)
   layoutStage()
+  audioPlayer.update(screen?.playlist?.geluid)
   // Een melding die aan- of uitgaat moet direct zichtbaar zijn, niet pas bij de volgende slide.
   if (current && meldingKey(activeMelding()) !== current.meldingKey) advance()
 }
@@ -325,6 +330,7 @@ function renderDebug() {
     `dag: ${currentDag(t) || 'geen'}`,
     `slide: ${current?.name || '—'} (${left})`,
     `events: ${state.events.length}`,
+    audioPlayer.status(),
     state.online ? 'online' : `OFFLINE: ${state.error}`,
   ].join('  ·  ')
 }
