@@ -294,7 +294,7 @@ function programmaDag(slide, ctx) {
 // Stratenkaart en looproutes komen uit scripts/build-walking-map.mjs (OpenStreetMap).
 const MAP_COLORS = ['#f0641e', '#f2b63f', '#d94080', '#c8f04a']
 // Afmeting van het kaartpaneel in px (zie .wm-map in player.css).
-const MAP_PANEL = {landscape: [1040, 832], portrait: [936, 940]}
+const MAP_PANEL = {landscape: [960, 804], portrait: [888, 860]}
 
 function walkingMap(slide, ctx) {
   const M = WALKING_MAP
@@ -325,24 +325,24 @@ function walkingMap(slide, ctx) {
     ? venues
         .filter(v => v !== here)
         .map((v, i) => `<path class="wm-route" style="--i:${i}" d="${M.routes[`${here.key}>${v.key}`].d}"
-            stroke-width="${u(9)}" stroke-dasharray="0 ${u(18)}"/>`)
+            stroke-width="${u(7)}" stroke-dasharray="0 ${u(15)}"/>`)
         .join('')
     : ''
 
   const marker = (v, i) => {
     const [x, y] = v.xy
     const isHere = v === here
-    const size = u(isHere ? 64 : 50)
+    const size = u(isHere ? 50 : 40)
     const right = v.label !== 'links'
-    const tx = x + (right ? 1 : -1) * (size / 2 + u(16))
+    const tx = x + (right ? 1 : -1) * (size / 2 + u(14))
     return `
       <g class="wm-marker ${isHere ? 'is-here' : ''}" style="--i:${i};--c:${v.kleur}">
-        ${isHere ? `<circle class="wm-pulse" cx="${x}" cy="${y}" r="${u(46)}" stroke-width="${u(4)}"/>` : ''}
-        <rect x="${x - size / 2}" y="${y - size / 2}" width="${size}" height="${size}" rx="${u(12)}"/>
-        <text class="wm-nr" x="${x}" y="${y + u(13)}" font-size="${u(isHere ? 44 : 36)}">${v.nr}</text>
-        <text class="wm-label" x="${tx}" y="${y + u(15)}" font-size="${u(46)}" text-anchor="${right ? 'start' : 'end'}"
-          stroke-width="${u(10)}">${esc(v.naam)}</text>
-        ${isHere ? `<text class="wm-here" x="${tx}" y="${y + u(52)}" font-size="${u(26)}" text-anchor="${right ? 'start' : 'end'}" stroke-width="${u(8)}">U bent hier</text>` : ''}
+        ${isHere ? `<circle class="wm-pulse" cx="${x}" cy="${y}" r="${u(36)}" stroke-width="${u(3)}"/>` : ''}
+        <rect x="${x - size / 2}" y="${y - size / 2}" width="${size}" height="${size}" rx="${u(10)}"/>
+        <text class="wm-nr" x="${x}" y="${y + u(10)}" font-size="${u(isHere ? 34 : 28)}">${v.nr}</text>
+        <text class="wm-label" x="${tx}" y="${y + u(12)}" font-size="${u(36)}" text-anchor="${right ? 'start' : 'end'}"
+          stroke-width="${u(8)}">${esc(v.naam)}</text>
+        ${isHere ? `<text class="wm-here" x="${tx}" y="${y + u(42)}" font-size="${u(21)}" text-anchor="${right ? 'start' : 'end'}" stroke-width="${u(6)}">U bent hier</text>` : ''}
       </g>`
   }
 
