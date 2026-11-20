@@ -77,6 +77,9 @@ const MELDINGEN_QUERY = `*[_type == "melding" && actief == true] | order(_update
   "schermen": schermen[]->slug.current
 }`
 
+// Sponsoren voor de sponsorslide; geüpload logo gaat vóór de link uit Webflow.
+const SPONSORS_QUERY = `*[_type == "sponsor" && actief != false && defined(coalesce(logo.asset, logoUrl))]
+  | order(prio asc, naam asc){naam, prio, "logo": coalesce(logo.asset->url, logoUrl)}`
 const LOCATIES_QUERY = `*[_type == "locatie"]{_id, naam}`
 
 const text = v => (typeof v === 'string' ? v.trim() : '')
@@ -112,7 +115,7 @@ function normalizeEvent(e) {
 const audioPlayer = createAudioPlayer({now})
 
 // ── State ──────────────────────────────────────────────────────────────────
-const state = {screen: null, events: [], meldingen: [], loadedAt: null, online: true, error: null}
+const state = {screen: null, events: [], meldingen: [], sponsors: null, loadedAt: null, online: true, error: null}
 const CACHE_KEY = `turf-nc:${DEMO ? 'demo' : SCREEN_ID}`
 
 async function loadDemoScreen() {
@@ -131,18 +134,19 @@ async function loadDemoScreen() {
 
 async function loadData({fresh = false} = {}) {
   try {
-    const [screen, events, meldingen] = await Promise.all([
+    const [screen, events, meldingen, sponsors] = await Promise.all([
       DEMO ? loadDemoScreen() : query(SCREEN_QUERY, {id: SCREEN_ID}, {cdn: !fresh}),
       query(EVENTS_QUERY, {}, {cdn: !fresh}),
       query(MELDINGEN_QUERY, {}, {cdn: !fresh}),
+      query(SPONSORS_QUERY, {}, {cdn: !fresh}),
     ])
     if (!screen) throw new Error(`Scherm "${SCREEN_ID}" bestaat niet (of is niet gepubliceerd)`)
-    applyData(screen, events, meldingen)
+    applyData(screen, events, meldingen, sponsors)
     state.online = true
     state.error = null
     state.loadedAt = new Date()
     try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({screen, events, meldingen}))
+      localStorage.setItem(CACHE_KEY, JSON.stringify({screen, events, meldingen, sponsors}))
     } catch {}
   } catch (err) {
     state.online = false
@@ -151,15 +155,16 @@ async function loadData({fresh = false} = {}) {
       // Eerste keer laden mislukt: val terug op de laatst bekende content.
       try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')
-        if (cached) applyData(cached.screen, cached.events, cached.meldingen)
+        if (cached) applyData(cached.screen, cached.events, cached.meldingen, cached.sponsors)
       } catch {}
     }
     console.warn('[narrowcasting] laden mislukt:', err)
   }
 }
 
-function applyData(screen, events, meldingen) {
+function applyData(screen, events, meldingen, sponsors) {
   state.screen = screen
+  state.sponsors = sponsors || []
   state.meldingen = meldingen || []
   state.events = (events || []).map(normalizeEvent).filter(Boolean).sort((a, b) => a.start - b.start)
   layoutStage()
@@ -188,7 +193,7 @@ const meldingKey = m => (m ? `${m._id}:${m._rev}` : null)
 
 /** Luistert naar wijzigingen in Sanity en ververst direct. */
 function listen() {
-  const groq = '*[_type in ["scherm","playlist","slide","melding","event","spreker","locatie","thema"]]'
+  const groq = '*[_type in ["scherm","playlist","slide","melding","event","spreker","locatie","thema","sponsor"]]'
   const qs = new URLSearchParams({query: groq, includeResult: 'false', visibility: 'query'})
   let timer = null
   try {
@@ -237,6 +242,7 @@ function buildContext() {
     events: state.events,
     locaties: state.screen?.locaties?.filter(Boolean) || [],
     soort: state.screen?.soort || 'klein',
+    sponsors: state.sponsors || [],
   }
 }
 
