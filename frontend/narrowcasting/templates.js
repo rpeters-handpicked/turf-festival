@@ -290,6 +290,63 @@ function programmaDag(slide, ctx) {
   })
 }
 
+// ── Sponsoren ──────────────────────────────────────────────────────────────
+// Logo's komen uit Sanity (type 'sponsor'), eenmalig geïmporteerd uit Webflow.
+// Per prio een eigen formaat: prio 1 groot, prio 3 klein. Elke prio begint op een nieuwe pagina.
+const SPONSOR_LAYOUT = {
+  landscape: {1: {cols: 4, max: 8}, 2: {cols: 6, max: 12}, 3: {cols: 6, max: 18}},
+  portrait: {1: {cols: 2, max: 8}, 2: {cols: 3, max: 12}, 3: {cols: 3, max: 18}},
+}
+
+function sponsoren(slide, ctx) {
+  const lijst = (ctx.sponsors || []).filter(s => s?.logo)
+  if (!lijst.length) return null
+  const layout = SPONSOR_LAYOUT[ctx.orient]
+  const pages = []
+  for (const prio of [1, 2, 3]) {
+    const groep = lijst.filter(s => Math.min(3, Math.max(1, s.prio || 3)) === prio)
+    const {cols, max} = layout[prio]
+    // Evenwichtig verdelen: liever 2 × 7 dan 12 + 2.
+    const perPage = Math.ceil(groep.length / Math.ceil(groep.length / max))
+    for (const items of chunk(groep, perPage)) pages.push({prio, cols, items})
+  }
+  const secondsPerPage = 8
+  const markup = pages
+    .map(
+      (p, i) => `
+      <div class="sp-page sp-prio-${p.prio} ${i === 0 ? 'is-active' : ''}" style="--cols:${p.cols}">
+        ${p.items.map((s, n) => `<div class="sp-logo" style="--i:${n}"><img src="${esc(s.logo)}" alt="${esc(s.naam)}"></div>`).join('')}
+      </div>`,
+    )
+    .join('')
+  const pager =
+    pages.length > 1
+      ? `<div class="pager">${pages.map((_, i) => `<i class="${i === 0 ? 'is-active' : ''}"></i>`).join('')}</div>`
+      : ''
+  const el = frame(slide, ctx, {
+    kicker: 'Partners & makers',
+    title: slide.titel || 'Met dank aan',
+    body: `<div class="pages sp-pages">${markup}</div>${pager}`,
+  })
+  let interval = null
+  return {
+    el,
+    duration: pages.length > 1 ? pages.length * secondsPerPage : null,
+    start() {
+      if (pages.length < 2) return
+      let i = 0
+      const all = el.querySelectorAll('.sp-page')
+      const dots = el.querySelectorAll('.pager i')
+      interval = setInterval(() => {
+        i = Math.min(i + 1, pages.length - 1)
+        all.forEach((p, n) => p.classList.toggle('is-active', n === i))
+        dots.forEach((d, n) => d.classList.toggle('is-active', n === i))
+      }, secondsPerPage * 1000)
+    },
+    destroy: () => clearInterval(interval),
+  }
+}
+
 // ── Walking map ────────────────────────────────────────────────────────────
 // Stratenkaart en looproutes komen uit scripts/build-walking-map.mjs (OpenStreetMap).
 const MAP_COLORS = ['#f0641e', '#f2b63f', '#d94080', '#c8f04a']
@@ -533,6 +590,7 @@ export const TEMPLATES = {
   programmaDag,
   sprekerIntro,
   walkingMap,
+  sponsoren,
   ontwerp,
   video,
   afbeelding,

@@ -386,3 +386,25 @@ html, body {
 .slide.is-visible .wm-route { animation: nc-fade 900ms ease calc(1300ms + var(--i, 0) * 150ms) both; }
 .slide.is-visible .wm-list li { animation: nc-rise 650ms var(--ease) calc(450ms + var(--i, 0) * 80ms) both; }
 .slide.is-visible .wm-foot { animation: nc-fade 600ms ease 1000ms both; }
+
+/* ── Sponsoren ── */
+.sp-page {
+  --gap: 24px;
+  position: absolute; inset: 0;
+  display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: var(--gap);
+  opacity: 0; transition: opacity 500ms ease;
+}
+.sp-page.is-active { opacity: 1; }
+.sp-logo {
+  flex: none; width: calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
+  height: var(--h, 120px); display: flex;
+  background: var(--panel); border-radius: 20px; padding: var(--pad, 26px 36px);
+}
+.sp-logo img { display: block; width: 100%; height: 100%; min-width: 0; object-fit: contain; }
+.sp-prio-1 { --h: 200px; --pad: 40px 52px; --gap: 28px; }
+.sp-prio-2 { --h: 150px; --pad: 32px 40px; }
+.sp-prio-3 { --h: 116px; --pad: 26px 30px; --gap: 20px; }
+.portrait .sp-prio-1 { --h: 240px; }
+.portrait .sp-prio-2 { --h: 170px; }
+.portrait .sp-prio-3 { --h: 132px; }
+.slide.is-visible .sp-page.is-active .sp-logo { animation: nc-rise 650ms var(--ease) calc(380ms + var(--i, 0) * 45ms) both; }
