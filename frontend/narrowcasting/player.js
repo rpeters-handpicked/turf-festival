@@ -22,6 +22,20 @@ const params = new URLSearchParams(location.search)
 const SCREEN_ID = params.get('id')
 const DEMO = params.has('demo')
 const DEBUG = params.has('debug')
+// ── QR-balk (instelbaar per playlist) ──────────────────────────────────────
+// Alleen op de vaste slides; eigen ontwerpen, video's en afbeeldingen blijven schoon.
+const QR_VASTE = new Set(['whatsNextLocatie', 'whatsNextOverall', 'programmaLocatie', 'programmaDag', 'sprekerIntro', 'walkingMap', 'sponsoren'])
+const WA_ICON = `<svg class="qr-wa" viewBox="0 0 48 48" aria-hidden="true"><path fill="#fff" d="M24 6.5C14.3 6.5 6.5 14.3 6.5 24c0 3.2.9 6.2 2.4 8.8L6.5 41.5l9-2.3c2.5 1.4 5.4 2.2 8.5 2.2 9.7 0 17.5-7.8 17.5-17.4S33.7 6.5 24 6.5z"/><g transform="translate(13.2 13.2) scale(0.9)"><path fill="#25d366" d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></g></svg>`
+
+function qrBalk(cfg) {
+  const el = document.createElement('aside')
+  el.className = 'qr-balk'
+  el.innerHTML = `<div class="qr-links">${WA_ICON}<div class="qr-tekst"><strong></strong><em></em></div></div><img alt="">`
+  el.querySelector('strong').textContent = cfg.titel || ''
+  el.querySelector('em').textContent = cfg.tekst || ''
+  el.querySelector('img').src = `${cfg.qr}?w=400`
+  return el
+}
 
 // ── Klok (met optionele simulatie) ─────────────────────────────────────────
 const simStart = params.get('now') ? new Date(params.get('now')).getTime() : null
@@ -48,6 +62,7 @@ const SCREEN_QUERY = `*[_type == "scherm" && slug.current == $id][0]{
   "playlist": playlist->{
     naam,
     "geluid": geluid{volume, shuffle, van, tot, "nummers": nummers[].asset->url},
+    "qrBalk": qrBalk{aan, titel, tekst, dagen, van, tot, "qr": qr.asset->url},
     "items": items[]{
       _key, duur, dagen, van, tot,
       "slide": slide->{
@@ -288,6 +303,8 @@ function advance() {
 
   const el = rendered.el
   el.classList.add('slide')
+  const balk = state.screen?.playlist?.qrBalk
+  if (balk?.aan && balk.qr && QR_VASTE.has(picked?.item.slide.type) && isScheduled(balk, now())) el.appendChild(qrBalk(balk))
   stage.appendChild(el)
   const unmountLogos = mountLogos(el, window.lottie, 'narrowcasting/assets')
   // Forceer een reflow zodat de fade-in altijd afspeelt.

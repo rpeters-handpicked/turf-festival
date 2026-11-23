@@ -145,6 +145,15 @@
           "titel": "Tonight at TURF"
         }
       }
-    ]
+    ],
+    "qrBalk": {
+      "aan": true,
+      "titel": "Volg Tech Thursday live",
+      "tekst": "Scan de code voor updates via WhatsApp",
+      "dagen": [
+        "dag1"
+      ],
+      "qr": "https://cdn.sanity.io/images/x545nfex/production/2fe2c1755fb543d558bbdf66938363e633c5b51b-1800x1800.png"
+    }
   }
 }

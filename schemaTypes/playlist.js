@@ -134,6 +134,53 @@ export default {
         },
       ],
     },
+    {
+      name: 'qrBalk',
+      title: 'QR-balk onderaan de vaste slides',
+      type: 'object',
+      description:
+        'Strook met WhatsApp-icoon, tekst en QR-code onderaan programma, What\'s next, sprekers, walking map en sponsoren. Niet op eigen ontwerpen, video\'s en afbeeldingen.',
+      options: {collapsible: true, collapsed: true},
+      fields: [
+        {name: 'aan', title: 'Tonen', type: 'boolean', initialValue: false},
+        {
+          name: 'titel',
+          title: 'Titel',
+          type: 'string',
+          initialValue: 'Volg Tech Thursday live',
+          validation: Rule => Rule.max(40),
+        },
+        {
+          name: 'tekst',
+          title: 'Tekst eronder',
+          type: 'string',
+          initialValue: 'Scan de code voor updates via WhatsApp',
+          validation: Rule => Rule.max(70),
+        },
+        {
+          name: 'qr',
+          title: 'QR-code',
+          type: 'image',
+          description: 'Vierkante QR-code, liefst donker op wit.',
+        },
+        {
+          name: 'dagen',
+          title: 'Alleen op deze dagen',
+          type: 'array',
+          description: 'Leeg = alle dagen',
+          of: [{type: 'string'}],
+          options: {
+            list: [
+              {title: 'Donderdag 26 november', value: 'dag1'},
+              {title: 'Vrijdag 27 november', value: 'dag2'},
+              {title: 'Zaterdag 28 november', value: 'dag3'},
+            ],
+          },
+        },
+        {name: 'van', title: 'Tonen vanaf', type: 'string', description: 'Formaat 10:00. Leeg = hele dag.', validation: tijdRegel},
+        {name: 'tot', title: 'Tonen tot', type: 'string', description: 'Formaat 23:00', validation: tijdRegel},
+      ],
+    },
   ],
   preview: {
     select: {title: 'naam', items: 'items', nummers: 'geluid.nummers'},

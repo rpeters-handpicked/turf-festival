@@ -408,3 +408,26 @@ html, body {
 .portrait .sp-prio-2 { --h: 170px; }
 .portrait .sp-prio-3 { --h: 132px; }
 .slide.is-visible .sp-page.is-active .sp-logo { animation: nc-rise 650ms var(--ease) calc(380ms + var(--i, 0) * 45ms) both; }
+
+/* ── QR-balk onderaan de vaste slides (instelbaar per playlist) ── */
+.qr-balk {
+  position: absolute; z-index: 5; left: 0; right: 0; bottom: 0; height: 156px; padding: 0 144px;
+  display: flex; align-items: center; justify-content: space-between; gap: 32px;
+  background: rgba(13, 32, 35, 0.92); color: var(--white);
+}
+.slide.is-visible .qr-balk { animation: nc-rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) 1100ms both; }
+.qr-links { display: flex; align-items: center; gap: 28px; min-width: 0; }
+.qr-tekst { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.qr-balk strong {
+  font-family: var(--heading); font-weight: 800; text-transform: uppercase; font-size: 52px; line-height: 0.95;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.qr-balk em { font-style: normal; font-size: 24px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qr-balk img { display: block; flex: none; width: 128px; height: 128px; background: #fff; border-radius: 10px; object-fit: contain; }
+.qr-wa { width: 96px; height: 96px; flex: none; background: #25d366; border-radius: 24px; padding: 10px; }
+.portrait .qr-balk { height: 180px; padding: 0 96px; }
+.portrait .qr-balk img { width: 148px; height: 148px; }
+.portrait .qr-balk strong { font-size: 48px; }
+.portrait .qr-wa { width: 88px; height: 88px; }
+.tpl:has(> .qr-balk) { padding-bottom: 204px; }
+.portrait .tpl:has(> .qr-balk) { padding-bottom: 236px; }
