@@ -6,6 +6,8 @@ export const SLIDE_TYPES = [
   {title: 'Programma — deze locatie', value: 'programmaLocatie'},
   {title: 'Programma — hele dag', value: 'programmaDag'},
   {title: 'Introductie spreker/event — deze locatie', value: 'sprekerIntro'},
+  {title: 'Closing keynote (één event, alle schermen)', value: 'closingKeynote'},
+  {title: 'Avondprogramma (gekozen events)', value: 'avondprogramma'},
   {title: 'Walking map', value: 'walkingMap'},
   {title: 'Sponsoren', value: 'sponsoren'},
   {title: 'Eigen ontwerp (editor)', value: 'ontwerp'},
@@ -13,7 +15,10 @@ export const SLIDE_TYPES = [
   {title: 'Afbeelding', value: 'afbeelding'},
 ]
 
-const DYNAMISCH = ['whatsNextLocatie', 'whatsNextOverall', 'programmaLocatie', 'programmaDag', 'sprekerIntro', 'walkingMap', 'sponsoren']
+const DYNAMISCH = [
+  'whatsNextLocatie', 'whatsNextOverall', 'programmaLocatie', 'programmaDag', 'sprekerIntro',
+  'closingKeynote', 'avondprogramma', 'walkingMap', 'sponsoren',
+]
 const isType = (...types) => ({parent}) => !types.includes(parent?.type)
 
 export default {
@@ -46,10 +51,35 @@ export default {
       name: 'minutenVooraf',
       title: 'Tonen vanaf … minuten voor aanvang',
       type: 'number',
-      description: 'De slide verschijnt automatisch zoveel minuten voor het volgende event op deze locatie, tot 5 minuten na de start.',
+      description:
+        'Introductie spreker: verschijnt zoveel minuten voor het volgende event op deze locatie, tot 5 minuten na de start. Closing keynote: verschijnt zoveel minuten voor de start en blijft tot het einde.',
       initialValue: 15,
-      hidden: isType('sprekerIntro'),
+      hidden: isType('sprekerIntro', 'closingKeynote'),
       validation: Rule => Rule.min(1).max(120),
+    },
+    {
+      name: 'event',
+      title: 'Event',
+      type: 'reference',
+      to: [{type: 'event'}],
+      description: 'Titel, tijden, locatie en sprekers komen uit dit event.',
+      hidden: isType('closingKeynote'),
+    },
+    {
+      name: 'events',
+      title: 'Events',
+      type: 'array',
+      of: [{type: 'reference', to: [{type: 'event'}]}],
+      description: 'Worden op starttijd gesorteerd (max. 6). Afgelopen events verdwijnen vanzelf.',
+      hidden: isType('avondprogramma'),
+      validation: Rule => Rule.max(6),
+    },
+    {
+      name: 'kicker',
+      title: 'Bovenregel',
+      type: 'string',
+      description: 'Kleine regel boven de kop. Leeg = "Tech Thursday · gratis toegankelijk".',
+      hidden: isType('avondprogramma'),
     },
     {
       name: 'achtergrond',

@@ -115,17 +115,8 @@ function whatsNextLocatie(slide, ctx) {
   }
 }
 
-// ── Introductie spreker/event — deze locatie ───────────────────────────────
-function sprekerIntro(slide, ctx) {
-  if (!ctx.locaties.length) return null
-  const vooraf = (Number(slide.minutenVooraf) || 15) * 60000
-  const naloop = 5 * 60000
-  const event = ctx.events.find(
-    e => atScreen(e, ctx) && ctx.now >= e.start.getTime() - vooraf && ctx.now < e.start.getTime() + naloop,
-  )
-  if (!event) return null
-
-  const started = ctx.now >= event.start
+/** Sprekerskaarten + tekstpaneel; gedeeld door spreker-intro en closing keynote. */
+function introBody(event, ctx, started) {
   const portrait = ctx.orient === 'portrait'
   const metFoto = event.sprekers.filter(s => s.foto).slice(0, portrait ? 2 : 3)
   const cards = metFoto.length
@@ -168,11 +159,83 @@ function sprekerIntro(slide, ctx) {
       </div>
     </div>`
 
+  return body
+}
+
+// ── Introductie spreker/event — deze locatie ───────────────────────────────
+function sprekerIntro(slide, ctx) {
+  if (!ctx.locaties.length) return null
+  const vooraf = (Number(slide.minutenVooraf) || 15) * 60000
+  const naloop = 5 * 60000
+  const event = ctx.events.find(
+    e => atScreen(e, ctx) && ctx.now >= e.start.getTime() - vooraf && ctx.now < e.start.getTime() + naloop,
+  )
+  if (!event) return null
+
+  const started = ctx.now >= event.start
+  const body = introBody(event, ctx, started)
+
   return {
     el: frame(slide, ctx, {
       kicker: screenLocName(ctx),
       title: slide.titel || (started ? 'Nu' : 'Zo meteen'),
       body,
+    }),
+  }
+}
+
+// ── Closing keynote ────────────────────────────────────────────────────────
+// Eén gekozen event, op alle schermen: vanaf `minutenVooraf` voor de start tot het einde.
+function closingKeynote(slide, ctx) {
+  const event = ctx.events.find(e => e.id === slide.event)
+  if (!event) return null
+  const vooraf = (Number(slide.minutenVooraf) || 30) * 60000
+  if (ctx.now < event.start.getTime() - vooraf || ctx.now >= event.end) return null
+  const started = ctx.now >= event.start
+  const plek = event.locatie?.naam?.trim() || ''
+  return {
+    el: frame(slide, ctx, {
+      kicker: [started ? 'Nu live' : 'Straks', plek].filter(Boolean).join(' · '),
+      title: slide.titel || 'Closing keynote',
+      body: introBody(event, ctx, started),
+    }),
+  }
+}
+
+// ── Avondprogramma ─────────────────────────────────────────────────────────
+// Een gekozen set events (bijv. het gratis avondprogramma), als kaarten met beeld.
+function avondprogramma(slide, ctx) {
+  const portrait = ctx.orient === 'portrait'
+  const events = (slide.events || [])
+    .map(id => ctx.events.find(e => e.id === id))
+    .filter(e => e && e.end > ctx.now)
+    .sort((x, y) => x.start - y.start)
+    .slice(0, 6)
+  if (!events.length) return null
+  const [iw, ih] = portrait ? [360, 360] : [300, 300]
+  const cards = events
+    .map((e, n) => {
+      const beeld = e.afbeelding || e.sprekers.find(s => s.foto)?.foto
+      const live = isLive(e, ctx)
+      return `
+      <article class="av-card" style="--i:${n};--thema:${safeColor(e.thema?.kleur)}">
+        <div class="av-img">${beeld ? `<img src="${img(beeld, iw, ih)}" alt="">` : `<span>${esc(e.startTijd)}</span>`}</div>
+        <div class="av-text">
+          <div class="av-time">${esc(e.startTijd)}${e.eindTijd ? ` – ${esc(e.eindTijd)}` : ''}${
+            live ? ' <span class="pill pill-live"><i></i>Nu live</span>' : ''
+          }</div>
+          <h2 class="av-title">${esc(e.titel)}</h2>
+          ${e.ondertitel ? `<p class="av-sub">${esc(e.ondertitel)}</p>` : ''}
+          <p class="av-meta">${themaDot(e)}${esc([locLabel(e), e.type].filter(Boolean).join(' · '))}</p>
+        </div>
+      </article>`
+    })
+    .join('')
+  return {
+    el: frame(slide, ctx, {
+      kicker: slide.kicker || 'Tech Thursday · gratis toegankelijk',
+      title: slide.titel || 'Avondprogramma',
+      body: `<div class="av-grid av-n${events.length}">${cards}</div>`,
     }),
   }
 }
@@ -589,6 +652,8 @@ export const TEMPLATES = {
   programmaLocatie,
   programmaDag,
   sprekerIntro,
+  closingKeynote,
+  avondprogramma,
   walkingMap,
   sponsoren,
   ontwerp,
