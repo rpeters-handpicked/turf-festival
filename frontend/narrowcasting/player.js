@@ -79,7 +79,7 @@ const SCREEN_QUERY = `*[_type == "scherm" && slug.current == $id][0]{
 }`
 
 const EVENTS_QUERY = `*[_type == "event" && gepubliceerd == true]{
-  _id, dag, startTijd, eindTijd, type, zaal,
+  _id, dag, startTijd, eindTijd, type, zaal, negeerNarrowcasting,
   "titel": coalesce(titel.nl, titel),
   "ondertitel": coalesce(ondertitel.nl, ondertitel),
   "thema": thema->{naam, slug, kleur},
@@ -125,6 +125,7 @@ function normalizeEvent(e) {
     locatie: e.locatie || null,
     sprekers: (e.sprekers || []).filter(Boolean).map(s => ({...s, rol: text(s.rol)})),
     afbeelding: e.afbeelding || null,
+    negeer: e.negeerNarrowcasting === true,
   }
 }
 
@@ -255,7 +256,9 @@ function buildContext() {
     dag: displayDag(t),
     isFestivalDag: !!currentDag(t),
     dagDate: FESTIVAL.dates[displayDag(t)],
-    events: state.events,
+    // Automatische slides zien geen genegeerde events; handmatig gekozen events (alleEvents) wel.
+    events: state.events.filter(e => !e.negeer),
+    alleEvents: state.events,
     locaties: state.screen?.locaties?.filter(Boolean) || [],
     soort: state.screen?.soort || 'klein',
     sponsors: state.sponsors || [],

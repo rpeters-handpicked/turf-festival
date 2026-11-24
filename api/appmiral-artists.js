@@ -55,7 +55,7 @@ export default async function handler(req, res) {
   }
 
   const query = `
-    *[_type == "event" && gepubliceerd == true] | order(dag asc, startTijd asc) {
+    *[_type == "event" && gepubliceerd == true && negeerAppmiral != true] | order(dag asc, startTijd asc) {
       _id,
       titel,
       beschrijving,

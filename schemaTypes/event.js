@@ -156,6 +156,20 @@ export default {
       title: 'Gepubliceerd',
       type: 'boolean',
       initialValue: false
+    },
+    {
+      name: 'negeerNarrowcasting',
+      title: 'Negeren in narrowcasting',
+      type: 'boolean',
+      description: 'Niet tonen in de automatische schermlijsten (Nu/Straks, programma, spreker-intro). Slides waarin je dit event zelf kiest tonen het wel.',
+      initialValue: false
+    },
+    {
+      name: 'negeerAppmiral',
+      title: 'Negeren in Appmiral-export',
+      type: 'boolean',
+      description: 'Niet meesturen naar de TURF-app (Appmiral).',
+      initialValue: false
     }
   ],
 

@@ -187,7 +187,7 @@ function sprekerIntro(slide, ctx) {
 // ── Closing keynote ────────────────────────────────────────────────────────
 // Eén gekozen event, op alle schermen: vanaf `minutenVooraf` voor de start tot het einde.
 function closingKeynote(slide, ctx) {
-  const event = ctx.events.find(e => e.id === slide.event)
+  const event = ctx.alleEvents.find(e => e.id === slide.event)
   if (!event) return null
   const vooraf = (Number(slide.minutenVooraf) || 30) * 60000
   if (ctx.now < event.start.getTime() - vooraf || ctx.now >= event.end) return null
@@ -207,7 +207,7 @@ function closingKeynote(slide, ctx) {
 function avondprogramma(slide, ctx) {
   const portrait = ctx.orient === 'portrait'
   const events = (slide.events || [])
-    .map(id => ctx.events.find(e => e.id === id))
+    .map(id => ctx.alleEvents.find(e => e.id === id))
     .filter(e => e && e.end > ctx.now)
     .sort((x, y) => x.start - y.start)
     .slice(0, 6)
