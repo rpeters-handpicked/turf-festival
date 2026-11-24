@@ -188,7 +188,8 @@ function sprekerIntro(slide, ctx) {
 // Eén gekozen event, op alle schermen: vanaf `minutenVooraf` voor de start tot het einde.
 function closingKeynote(slide, ctx) {
   const event = ctx.alleEvents.find(e => e.id === slide.event)
-  if (!event) return null
+  // Op de locatie van de keynote zelf niet: daar kondigt What's next/Introductie spreker hem al aan.
+  if (!event || atScreen(event, ctx)) return null
   const vooraf = (Number(slide.minutenVooraf) || 30) * 60000
   if (ctx.now < event.start.getTime() - vooraf || ctx.now >= event.end) return null
   const started = ctx.now >= event.start
