@@ -52,7 +52,7 @@ export default {
       title: 'Tonen vanaf … minuten voor aanvang',
       type: 'number',
       description:
-        'Introductie spreker: verschijnt zoveel minuten voor het volgende event op deze locatie, tot 5 minuten na de start. Closing keynote: verschijnt zoveel minuten voor de start en blijft tot het einde.',
+        'Introductie spreker: verschijnt zoveel minuten voor het volgende event op deze locatie, tot 5 minuten na de start. Closing keynote: verschijnt zoveel minuten voor de start en blijft tot het einde, behalve op schermen van de locatie van de keynote zelf.',
       initialValue: 15,
       hidden: isType('sprekerIntro', 'closingKeynote'),
       validation: Rule => Rule.min(1).max(120),
