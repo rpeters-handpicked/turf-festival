@@ -435,7 +435,9 @@ export default function NarrowcastingTool() {
 
   return (
     <Card height="fill" overflow="auto" tone="transparent">
-      <Container width={5} padding={[3, 4, 5]}>
+      {/* Padding op een aparte Box: op Container zelf telt hij óp bij width: 100% en schuift de rechterkant buiten beeld. */}
+      <Box padding={[3, 4, 5]}>
+      <Container width={5}>
         <Stack space={5}>
           <Flex align="center" justify="space-between" gap={3} wrap="wrap">
             <Heading size={3}>Narrowcasting</Heading>
@@ -470,6 +472,7 @@ export default function NarrowcastingTool() {
           )}
         </Stack>
       </Container>
+      </Box>
     </Card>
   )
 }
