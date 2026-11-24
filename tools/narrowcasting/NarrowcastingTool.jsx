@@ -155,7 +155,8 @@ function Meldingen({meldingen, client}) {
 // ── Schermen ───────────────────────────────────────────────────────────────
 function SchermCard({scherm, simNow, showPreview}) {
   const toast = useToast()
-  const url = scherm.slug ? playerUrl(scherm.slug) : null
+  // Met een preview-tijdstip openen/kopiëren we de URL mét &now=, zodat je hem op volle grootte kunt bekijken.
+  const url = scherm.slug ? playerUrl(scherm.slug, simNow) : null
   const portrait = scherm.orientatie === 'portrait'
 
   return (
@@ -165,7 +166,7 @@ function SchermCard({scherm, simNow, showPreview}) {
           <Flex justify="center" style={{background: '#000', borderRadius: 6, overflow: 'hidden'}}>
             <iframe
               title={`Preview ${scherm.naam}`}
-              src={playerUrl(scherm.slug, simNow)}
+              src={url}
               style={{border: 0, display: 'block', aspectRatio: portrait ? '9 / 16' : '16 / 9', width: portrait ? '45%' : '100%'}}
             />
           </Flex>
@@ -192,17 +193,23 @@ function SchermCard({scherm, simNow, showPreview}) {
         </Text>
         <Flex gap={2} wrap="wrap">
           <Button as={IntentLink} intent="edit" params={{id: scherm._id, type: 'scherm'}} icon={EditIcon} text="Bewerk" mode="ghost" fontSize={1} />
-          {url && <Button as="a" href={url} target="_blank" rel="noreferrer" icon={LaunchIcon} text="Open" mode="ghost" fontSize={1} />}
+          {url && <Button as="a" href={url} target="_blank" rel="noreferrer" icon={LaunchIcon} text={simNow ? 'Open preview' : 'Open'} mode="ghost" fontSize={1} />}
           {url && (
             <Button
               icon={CopyIcon}
-              text="Kopieer URL"
+              text={simNow ? 'Kopieer preview-URL' : 'Kopieer URL'}
               mode="ghost"
               fontSize={1}
               onClick={() =>
                 navigator.clipboard
                   .writeText(url)
-                  .then(() => toast.push({status: 'success', title: 'URL gekopieerd'}))
+                  .then(() =>
+                    toast.push(
+                      simNow
+                        ? {status: 'warning', title: 'Preview-URL gekopieerd', description: 'Deze URL draait op het gekozen preview-tijdstip. Niet gebruiken op een echt scherm.'}
+                        : {status: 'success', title: 'URL gekopieerd'},
+                    ),
+                  )
                   .catch(() => toast.push({status: 'error', title: 'Kopiëren mislukt', description: url}))
               }
             />
