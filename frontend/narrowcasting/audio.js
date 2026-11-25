@@ -9,7 +9,7 @@ import {isScheduled} from './schedule.js'
 
 const FADE_MS = 1500
 
-export function createAudioPlayer({now}) {
+export function createAudioPlayer({now, onBlocked = () => {}}) {
   const audio = new Audio()
   audio.preload = 'auto'
   let config = null // {nummers, volume, shuffle, van, tot}
@@ -64,12 +64,12 @@ export function createAudioPlayer({now}) {
     audio
       .play()
       .then(() => {
-        blocked = false
+        setBlocked(false)
         fadeTo(targetVolume())
       })
       .catch(err => {
         if (err.name === 'NotAllowedError') {
-          blocked = true
+          setBlocked(true)
           console.warn('[narrowcasting] geluid geblokkeerd door de browser; klik op het scherm om te starten')
         } else {
           console.warn('[narrowcasting] nummer overgeslagen:', err.message)
@@ -78,7 +78,14 @@ export function createAudioPlayer({now}) {
       })
   }
 
+  function setBlocked(v) {
+    if (v === blocked) return
+    blocked = v
+    onBlocked(v)
+  }
+
   function stop() {
+    setBlocked(false)
     if (audio.paused) return
     fadeTo(0, () => audio.pause())
   }

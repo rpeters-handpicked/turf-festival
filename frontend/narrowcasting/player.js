@@ -129,7 +129,15 @@ function normalizeEvent(e) {
   }
 }
 
-const audioPlayer = createAudioPlayer({now})
+// Zichtbare hint als de browser het achtergrondgeluid tegenhoudt (autoplay-beleid); verdwijnt na één klik.
+const geluidHint = Object.assign(document.createElement('div'), {
+  id: 'geluid-hint',
+  hidden: true,
+  innerHTML:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Geluid staat uit — klik of tik op het scherm</span>',
+})
+document.body.appendChild(geluidHint)
+const audioPlayer = createAudioPlayer({now, onBlocked: b => (geluidHint.hidden = !b)})
 
 // ── State ──────────────────────────────────────────────────────────────────
 const state = {screen: null, events: [], meldingen: [], sponsors: null, loadedAt: null, online: true, error: null}
