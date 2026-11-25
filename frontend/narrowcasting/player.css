@@ -525,3 +525,16 @@ html, body {
 .zaal.no-photo .zaal-tijd .next-end { font-size: 50px; }
 .zaal.no-photo .zaal-titel { font-size: 68px; -webkit-line-clamp: 4; }
 .zaal.no-photo .zaal-titel.is-long { font-size: 54px; }
+
+/* ── Hint: geluid geblokkeerd door de browser ── */
+#geluid-hint {
+  position: fixed; z-index: 50; top: 1.4vmin; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 0.8em;
+  padding: 0.7em 1.3em; border-radius: 100px;
+  background: rgba(13, 32, 35, 0.92); color: #fff; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  font: 600 clamp(14px, 1.5vmin, 28px)/1.2 var(--body, system-ui, sans-serif);
+  cursor: pointer; animation: pulse-hint 2.4s ease-in-out infinite;
+}
+#geluid-hint[hidden] { display: none; }
+#geluid-hint svg { width: 1.4em; height: 1.4em; flex: none; }
+@keyframes pulse-hint { 50% { opacity: 0.75; } }
