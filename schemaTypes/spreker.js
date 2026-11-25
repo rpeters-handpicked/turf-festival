@@ -16,6 +16,19 @@ export default {
       description: 'Bijv. DJ / Activist · Rotterdam',
     },
     {
+      name: 'type',
+      title: 'Type',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Spreker', value: 'spreker' },
+          { title: 'Artiest', value: 'artiest' },
+        ],
+        layout: 'radio',
+      },
+      description: 'Wordt gebruikt voor Appmiral export',
+    },
+    {
       name: 'organisatie',
       title: 'Organisatie',
       type: 'string'

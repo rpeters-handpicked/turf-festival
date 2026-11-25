@@ -20,11 +20,11 @@
     "@sanity/client": "^7.16.0",
     "@sanity/icons": "^3.8.0",
     "@sanity/ui": "^3.5.5",
-    "@sanity/vision": "^5.12.0",
+    "@sanity/vision": "^5.31.1",
     "lottie-web": "^5.12.2",
     "react": "^19.1",
     "react-dom": "^19.1",
-    "sanity": "^5.12.0",
+    "sanity": "^5.31.1",
     "styled-components": "^6.1.18"
   },
   "devDependencies": {
