@@ -185,7 +185,8 @@ function applyData(screen, events, meldingen, sponsors) {
   state.meldingen = meldingen || []
   state.events = (events || []).map(normalizeEvent).filter(Boolean).sort((a, b) => a.start - b.start)
   layoutStage()
-  audioPlayer.update(screen?.playlist?.geluid)
+  // ?geluid=uit: previews in de Studio spelen geen achtergrondgeluid af (anders klinkt het dubbel).
+  audioPlayer.update(params.get('geluid') === 'uit' ? null : screen?.playlist?.geluid)
   // Een melding die aan- of uitgaat moet direct zichtbaar zijn, niet pas bij de volgende slide.
   if (current && meldingKey(activeMelding()) !== current.meldingKey) advance()
 }
