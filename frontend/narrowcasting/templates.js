@@ -175,7 +175,8 @@ function whatsNextZalen(slide, ctx) {
 }
 
 /** Sprekerskaarten + tekstpaneel; gedeeld door spreker-intro en closing keynote. */
-function introBody(event, ctx, started) {
+function introBody(event, ctx, started, {wordly = false} = {}) {
+  wordly = wordly && !!event.wordlyQr
   const portrait = ctx.orient === 'portrait'
   const metFoto = event.sprekers.filter(s => s.foto).slice(0, portrait ? 2 : 3)
   const cards = metFoto.length
@@ -187,7 +188,7 @@ function introBody(event, ctx, started) {
   const zonderFoto = event.sprekers.filter(s => !metFoto.includes(s)).map(s => s.naam)
 
   const body = `
-    <div class="intro ${cards.length ? '' : 'no-photo'}">
+    <div class="intro ${cards.length ? '' : 'no-photo'} ${wordly ? 'has-wordly' : ''}">
       ${
         cards.length
           ? `<div class="intro-cards">${cards
@@ -215,6 +216,17 @@ function introBody(event, ctx, started) {
         <h2 class="next-title ${event.titel.length > 48 ? 'is-long' : ''}">${esc(event.titel)}</h2>
         ${zonderFoto.length ? `<p class="next-speakers">${esc((metFoto.length ? 'Met ' : '') + zonderFoto.join(', '))}</p>` : ''}
         <p class="next-meta">${themaDot(event)}${esc([event.type, locLabel(event)].filter(Boolean).join(' · '))}</p>
+        ${
+          wordly
+            ? `<div class="wordly">
+            <img class="wordly-qr" src="${esc(event.wordlyQr)}?w=400" alt="">
+            <div class="wordly-tekst">
+              <strong>Live translation</strong>
+              <span>Scan the code to follow this session in your own language with Wordly</span>
+            </div>
+          </div>`
+            : ''
+        }
       </div>
     </div>`
 
@@ -232,7 +244,8 @@ function sprekerIntro(slide, ctx) {
   if (!event) return null
 
   const started = ctx.now >= event.start
-  const body = introBody(event, ctx, started)
+  // Wordly-QR (live vertaling) alleen hier, op de locatie zelf; niet bij de closing keynote op andere locaties.
+  const body = introBody(event, ctx, started, {wordly: true})
 
   return {
     el: frame(slide, ctx, {
@@ -240,6 +253,7 @@ function sprekerIntro(slide, ctx) {
       title: slide.titel || (started ? 'Nu' : 'Zo meteen'),
       body,
     }),
+    eigenQr: !!event.wordlyQr,
   }
 }
 

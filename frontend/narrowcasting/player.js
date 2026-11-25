@@ -85,7 +85,8 @@ const EVENTS_QUERY = `*[_type == "event" && gepubliceerd == true]{
   "thema": thema->{naam, slug, kleur},
   "locatie": locatie->{_id, naam},
   "sprekers": sprekers[]->{naam, organisatie, "rol": coalesce(rol.nl, rol), "foto": foto.asset->url},
-  "afbeelding": afbeelding.asset->url
+  "afbeelding": afbeelding.asset->url,
+  "wordlyQr": wordlyQr.asset->url
 }`
 
 const MELDINGEN_QUERY = `*[_type == "melding" && actief == true] | order(_updatedAt desc){
@@ -125,6 +126,7 @@ function normalizeEvent(e) {
     locatie: e.locatie || null,
     sprekers: (e.sprekers || []).filter(Boolean).map(s => ({...s, rol: text(s.rol)})),
     afbeelding: e.afbeelding || null,
+    wordlyQr: e.wordlyQr || null,
     negeer: e.negeerNarrowcasting === true,
   }
 }
@@ -317,7 +319,9 @@ function advance() {
   const el = rendered.el
   el.classList.add('slide')
   const balk = state.screen?.playlist?.qrBalk
-  if (balk?.aan && balk.qr && QR_VASTE.has(picked?.item.slide.type) && isScheduled(balk, now())) el.appendChild(qrBalk(balk))
+  // Een slide met een eigen QR-code (bijv. Wordly) krijgt geen WhatsApp-balk: twee codes tegelijk verwart.
+  if (balk?.aan && balk.qr && !rendered.eigenQr && QR_VASTE.has(picked?.item.slide.type) && isScheduled(balk, now()))
+    el.appendChild(qrBalk(balk))
   stage.appendChild(el)
   const unmountLogos = mountLogos(el, window.lottie, 'narrowcasting/assets')
   // Forceer een reflow zodat de fade-in altijd afspeelt.
