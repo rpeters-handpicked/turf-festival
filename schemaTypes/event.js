@@ -149,6 +149,12 @@ export default {
       title: 'Aanmeldlink',
       type: 'url'
     },
+    {
+      name: 'wordlyQr',
+      title: 'Wordly QR-code (live vertaling)',
+      type: 'image',
+      description: 'Upload de QR-code van Wordly voor deze sessie. Wordt dan getoond op de Next up-slide (introductie spreker). Bij voorkeur alleen de vierkante code, zonder tekst eronder.',
+    },
 
     // ── Status ──
     {
