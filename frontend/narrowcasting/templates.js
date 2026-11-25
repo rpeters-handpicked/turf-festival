@@ -69,6 +69,7 @@ function themaDot(e) {
 // ── What's next — deze locatie ─────────────────────────────────────────────
 function whatsNextLocatie(slide, ctx) {
   if (!ctx.locaties.length) return null
+  if (ctx.locaties.length > 1) return whatsNextZalen(slide, ctx)
   const here = ctx.events.filter(e => isToday(e, ctx) && atScreen(e, ctx))
   const live = here.find(e => isLive(e, ctx))
   const next = here.find(e => isUpcoming(e, ctx))
@@ -111,6 +112,64 @@ function whatsNextLocatie(slide, ctx) {
       title: slide.titel || (isNext ? 'Straks op deze locatie' : 'Nu op deze locatie'),
       body,
       footer,
+    }),
+  }
+}
+
+/**
+ * What's next voor een scherm met meerdere locaties (bijv. De Avenue Main Stage + Up Stage):
+ * één kolom (staand: één rij) per zaal, met daarin het eerstvolgende of lopende event.
+ */
+function whatsNextZalen(slide, ctx) {
+  const portrait = ctx.orient === 'portrait'
+  const namen = ctx.locaties.map(l => l.naam.trim())
+  // Gemeenschappelijk begin ("De Avenue") wordt de bovenregel, de rest ("Main Stage") het zaallabel.
+  const woorden = namen.map(n => n.split(/\s+/))
+  let k = 0
+  while (woorden.every(w => k < w.length - 1 && w[k] === woorden[0][k])) k++
+  const gedeeld = woorden[0].slice(0, k).join(' ')
+
+  const zalen = ctx.locaties.map((loc, i) => {
+    const hier = ctx.events.filter(e => isToday(e, ctx) && e.locatie?._id === loc._id)
+    const live = hier.find(e => isLive(e, ctx))
+    const next = hier.find(e => isUpcoming(e, ctx))
+    const label = (k ? woorden[i].slice(k).join(' ') : namen[i]).replace(/^\((.*)\)$/, '$1')
+    return {label, live, next, main: next || live}
+  })
+  if (!zalen.some(z => z.main)) return null
+
+  const [pw, ph] = portrait ? [420, 420] : [800, 420]
+  const kolom = (z, i) => {
+    const {main, live, next} = z
+    if (!main) {
+      return `<article class="zaal is-leeg" style="--i:${i}">
+        <div class="zaal-tekst"><div class="zaal-naam">${esc(z.label)}</div>
+        <p class="zaal-leeg">Vandaag geen sessies meer</p></div></article>`
+    }
+    const isNext = main === next
+    const foto = main.sprekers.find(s => s.foto)?.foto || main.afbeelding
+    const soon = isNext ? countdown(main, ctx) : ''
+    return `<article class="zaal ${foto ? '' : 'no-photo'}" style="--i:${i}">
+      ${foto ? `<div class="zaal-foto"><img src="${img(foto, pw, ph)}" alt=""></div>` : ''}
+      <div class="zaal-tekst">
+        <div class="zaal-naam">${esc(z.label)}</div>
+        <div class="zaal-tijd">
+          ${esc(main.startTijd)}${main.eindTijd ? `<span class="next-end">– ${esc(main.eindTijd)}</span>` : ''}
+          ${soon ? `<span class="pill">${esc(soon)}</span>` : ''}
+          ${!isNext ? '<span class="pill pill-live"><i></i>Nu live</span>' : ''}
+        </div>
+        <h2 class="zaal-titel ${main.titel.length > 48 ? 'is-long' : ''}">${esc(main.titel)}</h2>
+        ${sprekerNames(main) ? `<p class="zaal-sprekers">${esc(sprekerNames(main))}</p>` : ''}
+        ${isNext && live ? `<p class="zaal-nu"><span class="pill pill-live"><i></i>Nu</span>${esc(live.titel)}</p>` : ''}
+      </div>
+    </article>`
+  }
+
+  return {
+    el: frame(slide, ctx, {
+      kicker: gedeeld || namen.join(' + '),
+      title: slide.titel || "What's next",
+      body: `<div class="zalen zalen-${zalen.length}">${zalen.map(kolom).join('')}</div>`,
     }),
   }
 }
