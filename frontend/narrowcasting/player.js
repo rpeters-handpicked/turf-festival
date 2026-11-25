@@ -15,6 +15,7 @@ const CONFIG = {
   defaultDuration: 12,
   pollMs: 5 * 60 * 1000,
   meldingCheckMs: 15 * 1000,
+  versieCheckMs: 2 * 60 * 1000,
   fadeMs: 700,
 }
 
@@ -235,6 +236,52 @@ function listen() {
   }
 }
 
+// ── Automatisch bijwerken na een nieuwe deploy ─────────────────────────────
+// Vergelijkt periodiek de ETags van de eigen bestanden (html/js/css). Verandert er één,
+// dan herlaadt het scherm zichzelf bij de eerstvolgende slidewissel.
+let herlaadKlaar = false
+let versieBasis = null
+
+function eigenBestanden() {
+  const urls = new Set([location.pathname])
+  for (const r of performance.getEntriesByType('resource')) {
+    const u = new URL(r.name)
+    if (u.origin === location.origin && /\.(js|css|html)$/.test(u.pathname)) urls.add(u.pathname)
+  }
+  return [...urls]
+}
+
+async function versieKenmerk(bestanden) {
+  const delen = await Promise.all(
+    bestanden.map(async pad => {
+      const res = await fetch(pad, {method: 'HEAD', cache: 'no-store'})
+      if (!res.ok) throw new Error(`${pad}: ${res.status}`)
+      return `${pad}=${res.headers.get('etag') || res.headers.get('last-modified') || ''}`
+    }),
+  )
+  return delen.join('|')
+}
+
+function bewaakVersie() {
+  let bestanden = null
+  const check = async () => {
+    if (herlaadKlaar) return
+    try {
+      bestanden ||= eigenBestanden()
+      const kenmerk = await versieKenmerk(bestanden)
+      if (versieBasis === null) versieBasis = kenmerk
+      else if (kenmerk !== versieBasis) {
+        herlaadKlaar = true
+        console.info('[narrowcasting] nieuwe versie gevonden, herladen bij volgende slide')
+      }
+    } catch (err) {
+      // Offline of tijdelijk onbereikbaar: niet herladen, later opnieuw proberen.
+    }
+  }
+  check()
+  setInterval(check, CONFIG.versieCheckMs)
+}
+
 // ── Stage: vast canvas, geschaald naar het scherm ──────────────────────────
 const viewport = document.getElementById('viewport')
 const stage = document.getElementById('stage')
@@ -302,6 +349,10 @@ function pickNext() {
 
 function advance() {
   clearTimeout(timer)
+  if (herlaadKlaar && navigator.onLine) {
+    location.reload()
+    return
+  }
   const ctx = buildContext()
   const melding = activeMelding()
   if (melding && current?.meldingKey === meldingKey(melding)) {
@@ -390,6 +441,7 @@ async function boot() {
   await loadData()
   advance()
   if (!DEMO) listen()
+  bewaakVersie()
   setInterval(() => loadData(), CONFIG.pollMs)
   setInterval(renderDebug, 1000)
 }
