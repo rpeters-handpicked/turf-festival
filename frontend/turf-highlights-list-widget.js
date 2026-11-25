@@ -319,7 +319,7 @@ class TurfHighlightsList extends HTMLElement {
     const ticketHtml = e.aanmeldLink
       ? `<div class="sidebar-card sidebar-card--ticket">
           <div class="sidebar-heading">${this.lang === 'en' ? 'Tickets' : 'Tickets'}</div>
-          <a href="${e.aanmeldLink}" target="_blank" rel="noopener" class="ticket-btn">${this.lang === 'en' ? 'Buy tickets' : 'Koop tickets'}</a>
+          <a href="${e.aanmeldLink}" target="_blank" rel="noopener" class="ticket-btn">${e.gratis ? (this.lang === 'en' ? 'Reserve your spot' : 'Reserveer jouw plek') : (this.lang === 'en' ? 'Buy tickets' : 'Koop tickets')}</a>
         </div>`
       : ''
 
