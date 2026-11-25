@@ -155,6 +155,9 @@ function Meldingen({meldingen, client}) {
 // ── Schermen ───────────────────────────────────────────────────────────────
 function SchermCard({scherm, simNow, showPreview}) {
   const toast = useToast()
+  // Previews zijn standaard stil; per scherm kun je het achtergrondgeluid aanzetten.
+  const [geluid, setGeluid] = useState(false)
+  const geluidId = `nc-geluid-${scherm._id}`
   // Met een preview-tijdstip openen/kopiëren we de URL mét &now=, zodat je hem op volle grootte kunt bekijken.
   const url = scherm.slug ? playerUrl(scherm.slug, simNow) : null
   const portrait = scherm.orientatie === 'portrait'
@@ -166,7 +169,7 @@ function SchermCard({scherm, simNow, showPreview}) {
           <Flex justify="center" style={{background: '#000', borderRadius: 6, overflow: 'hidden'}}>
             <iframe
               title={`Preview ${scherm.naam}`}
-              src={url}
+              src={geluid ? url : `${url}&geluid=uit`}
               style={{border: 0, display: 'block', aspectRatio: portrait ? '9 / 16' : '16 / 9', width: portrait ? '45%' : '100%'}}
             />
           </Flex>
@@ -191,6 +194,14 @@ function SchermCard({scherm, simNow, showPreview}) {
             <span style={{color: 'var(--card-badge-critical-fg-color, #c00)'}}>geen — scherm toont alleen het logo</span>
           )}
         </Text>
+        {showPreview && url && (
+          <Flex align="center" gap={2}>
+            <Switch id={geluidId} checked={geluid} onChange={() => setGeluid(v => !v)} />
+            <Text size={1}>
+              <label htmlFor={geluidId}>Geluid in preview</label>
+            </Text>
+          </Flex>
+        )}
         <Flex gap={2} wrap="wrap">
           <Button as={IntentLink} intent="edit" params={{id: scherm._id, type: 'scherm'}} icon={EditIcon} text="Bewerk" mode="ghost" fontSize={1} />
           {url && <Button as="a" href={url} target="_blank" rel="noreferrer" icon={LaunchIcon} text={simNow ? 'Open preview' : 'Open'} mode="ghost" fontSize={1} />}
