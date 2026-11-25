@@ -44,6 +44,7 @@ const QUERY = `{
   "playlists": *[_type == "playlist"] | order(naam asc){
     _id, naam,
     "items": items[]{_key, duur, dagen, van, tot, "slide": slide->{_id, naam, type, duur}},
+    "geluid": geluid{volume, shuffle, van, tot, "nummers": nummers[].asset->originalFilename},
     "schermen": *[_type == "scherm" && references(^._id)].naam
   },
   "meldingen": *[_type == "melding"] | order(_updatedAt desc){
@@ -323,6 +324,72 @@ function itemWindow(item) {
   return {van, tot}
 }
 
+/** Eén tijdlijnbalk; leeg venster = 'hele dag'. */
+function TijdBalk({item, actief, leegTekst, nowMin, kleur = 'var(--card-focus-ring-color, #2276fc)', label}) {
+  const {van, tot} = itemWindow(item)
+  return (
+    <div style={{position: 'relative', height: 30, borderRadius: 4, background: 'var(--card-border-color)', overflow: 'hidden'}}>
+      {HOURS.map(h => (
+        <i key={h} style={{position: 'absolute', left: pct(h), top: 0, bottom: 0, width: 1, background: 'var(--card-bg-color)', opacity: 0.6}} />
+      ))}
+      {actief ? (
+        <div
+          title={`${item.van || 'begin'} – ${item.tot || 'einde'}`}
+          style={{
+            position: 'absolute', top: 3, bottom: 3, left: pct(van), width: `calc(${pct(tot)} - ${pct(van)})`,
+            borderRadius: 3, background: kleur,
+            color: '#fff', fontSize: 11, lineHeight: '24px', padding: '0 8px', whiteSpace: 'nowrap', overflow: 'hidden',
+          }}
+        >
+          {label ? `${label} · ` : ''}
+          {item.van || item.tot ? `${item.van || '…'} – ${item.tot || '…'}` : 'hele dag'}
+        </div>
+      ) : (
+        <span style={{position: 'absolute', left: 10, top: 0, lineHeight: '30px', fontSize: 11, color: 'var(--card-muted-fg-color)'}}>
+          {leegTekst}
+        </span>
+      )}
+      {nowMin != null && nowMin >= AXIS_START && nowMin <= AXIS_END && (
+        <i style={{position: 'absolute', left: pct(nowMin), top: 0, bottom: 0, width: 2, background: '#e5484d'}} />
+      )}
+    </div>
+  )
+}
+
+/** Achtergrondmuziek van de playlist als eigen rij bovenaan de planning. */
+function MuziekRij({geluid, nowMin}) {
+  const nummers = (geluid?.nummers || []).filter(Boolean)
+  const heeft = nummers.length > 0
+  const volume = geluid?.volume ?? 60
+  const details = heeft
+    ? [
+        `${nummers.length} ${nummers.length === 1 ? 'nummer' : 'nummers'}`,
+        `volume ${volume}%`,
+        geluid?.shuffle ? 'shuffle' : null,
+      ].filter(Boolean).join(' · ')
+    : 'Geen audio in deze playlist'
+  return [
+    <Stack key="muziek-label" space={2}>
+      <Text size={1} weight="semibold" textOverflow="ellipsis">
+        ♪ Achtergrondmuziek
+      </Text>
+      <Text size={0} muted textOverflow="ellipsis" title={heeft ? nummers.join(', ') : undefined}>
+        {details}
+      </Text>
+    </Stack>,
+    <TijdBalk
+      key="muziek-bar"
+      item={geluid || {}}
+      actief={heeft && volume > 0}
+      leegTekst={heeft ? 'volume op 0% — stil' : 'geen muziek'}
+      nowMin={nowMin}
+      kleur="#1f9d6b"
+      label={heeft ? nummers.join(', ') : null}
+    />,
+    <div key="muziek-scheiding" style={{gridColumn: '1 / -1', height: 1, background: 'var(--card-border-color)', margin: '2px 0'}} />,
+  ]
+}
+
 function Planning({playlists}) {
   const [playlistId, setPlaylistId] = useState(playlists[0]?._id || '')
   const [dag, setDag] = useState(() => currentDag(new Date()) || 'dag1')
@@ -381,6 +448,8 @@ function Planning({playlists}) {
             ))}
           </div>
 
+          <MuziekRij geluid={playlist.geluid} nowMin={nowMin} />
+
           {items.length === 0 && (
             <Box style={{gridColumn: '1 / -1'}} paddingY={3}>
               <Text muted>Deze playlist heeft nog geen slides.</Text>
@@ -389,7 +458,6 @@ function Planning({playlists}) {
 
           {items.map(item => {
             const opDezeDag = !item.dagen?.length || item.dagen.includes(dag)
-            const {van, tot} = itemWindow(item)
             const duur = item.duur || item.slide.duur
             return [
               <Stack key={`${item._key}-label`} space={2}>
@@ -400,40 +468,20 @@ function Planning({playlists}) {
                   {[typeLabel(item.slide.type), item.slide.type === 'video' ? null : duur ? `${duur}s` : null].filter(Boolean).join(' · ')}
                 </Text>
               </Stack>,
-              <div
+              <TijdBalk
                 key={`${item._key}-bar`}
-                style={{position: 'relative', height: 30, borderRadius: 4, background: 'var(--card-border-color)', overflow: 'hidden'}}
-              >
-                {HOURS.map(h => (
-                  <i key={h} style={{position: 'absolute', left: pct(h), top: 0, bottom: 0, width: 1, background: 'var(--card-bg-color)', opacity: 0.6}} />
-                ))}
-                {opDezeDag ? (
-                  <div
-                    title={`${item.van || 'begin'} – ${item.tot || 'einde'}`}
-                    style={{
-                      position: 'absolute', top: 3, bottom: 3, left: pct(van), width: `calc(${pct(tot)} - ${pct(van)})`,
-                      borderRadius: 3, background: 'var(--card-focus-ring-color, #2276fc)',
-                      color: '#fff', fontSize: 11, lineHeight: '24px', padding: '0 8px', whiteSpace: 'nowrap', overflow: 'hidden',
-                    }}
-                  >
-                    {item.van || item.tot ? `${item.van || '…'} – ${item.tot || '…'}` : 'hele dag'}
-                  </div>
-                ) : (
-                  <span style={{position: 'absolute', left: 10, top: 0, lineHeight: '30px', fontSize: 11, color: 'var(--card-muted-fg-color)'}}>
-                    niet op deze dag
-                  </span>
-                )}
-                {nowMin != null && nowMin >= AXIS_START && nowMin <= AXIS_END && (
-                  <i style={{position: 'absolute', left: pct(nowMin), top: 0, bottom: 0, width: 2, background: '#e5484d'}} />
-                )}
-              </div>,
+                item={item}
+                actief={opDezeDag}
+                leegTekst="niet op deze dag"
+                nowMin={nowMin}
+              />,
             ]
           })}
         </div>
       </Card>
       <Text size={1} muted>
         Slides zonder tijdvenster draaien de hele dag mee. Dynamische slides (what's next, introductie spreker) verschijnen
-        binnen hun venster alleen als er iets te tonen is.
+        binnen hun venster alleen als er iets te tonen is. De achtergrondmuziek loopt door onder alle slides en geldt elke dag.
       </Text>
     </Stack>
   )
