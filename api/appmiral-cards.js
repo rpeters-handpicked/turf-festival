@@ -9,8 +9,6 @@ const TYPE_TAGS = {
   a60b70014ae7add081f030fb736e6413: { slug: 'guide',     name: { nl: 'Tips',     en: 'Guide'     }, color: '#f5a53b', text_color: '#0a0a0a' },
 }
 
-// TURF festival ends after dag3 (28 nov), show cards until end of day
-const FESTIVAL_END = '2026-11-29 00:00:00Z'
 
 function toAppmiral(isoStr) {
   if (!isoStr) return undefined
@@ -70,7 +68,6 @@ export default async function handler(req, res) {
           priority:       index + 1,
           description:    { nl: f['page-content'] || f.intro || '' },
           show_from_time: toAppmiral(f.datum || item.lastPublished),
-          show_until_time: FESTIVAL_END,
           published_time: toAppmiral(item.lastPublished),
           author:         'TURF',
           link:           { nl: `https://www.turf-event.nl/updates/${slug}` },
