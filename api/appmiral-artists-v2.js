@@ -96,11 +96,14 @@ export default async function handler(req, res) {
     const [eventData, sprekerData] = await Promise.all([eventRes.json(), sprekerRes.json()])
 
     // Normaliseer locale velden: plain string → { nl: string }, localeObject → strip _type
+    // Vult altijd 'en' in als fallback op 'nl' — Appmiral vereist Engels als standaardtaal
     const toLocale = v => {
       if (!v) return undefined
-      if (typeof v === 'string') return { nl: v }
+      if (typeof v === 'string') return { nl: v, en: v }
       const { _type, ...langs } = v
-      return Object.keys(langs).length ? langs : undefined
+      if (!Object.keys(langs).length) return undefined
+      if (langs.nl && !langs.en) langs.en = langs.nl
+      return langs
     }
 
     const events = eventData.result || []
@@ -165,7 +168,7 @@ export default async function handler(req, res) {
     const sprekerEntries = sprekers.map((spr, index) => {
       const entry = {
         id:              spr._id,
-        name:            { nl: spr.naam },
+        name:            { nl: spr.naam, en: spr.naam },
         priority:        events.length + index + 1,
         show_in_artists: true,
       }

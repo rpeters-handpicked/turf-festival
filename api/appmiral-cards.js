@@ -62,15 +62,19 @@ export default async function handler(req, res) {
         const f = item.fieldData
         const slug = f.slug || item.id
 
+        const title = f.titel || f.name
+        const body  = f['page-content'] || f.intro || ''
+        const url   = `https://www.turf-event.nl/updates/${slug}`
+
         const card = {
           id:             `card-${slug}`,
-          title:          { nl: f.titel || f.name },
+          title:          { nl: title, en: title },
           priority:       index + 1,
-          description:    { nl: f['page-content'] || f.intro || '' },
+          description:    { nl: body, en: body },
           show_from_time: toAppmiral(f.datum || item.lastPublished),
           published_time: toAppmiral(item.lastPublished),
           author:         'TURF',
-          link:           { nl: `https://www.turf-event.nl/updates/${slug}` },
+          link:           { nl: url, en: url },
         }
 
         if (f['cover-image']?.url) {
