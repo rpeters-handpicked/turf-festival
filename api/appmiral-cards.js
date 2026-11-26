@@ -10,6 +10,14 @@ const TYPE_TAGS = {
 }
 
 
+// Converteert afbeelding naar JPEG via images.weserv.nl
+// Webflow CDN ondersteunt geen format-conversie via URL-params
+function toJpeg(url) {
+  if (!url) return undefined
+  const stripped = url.replace(/^https?:\/\//, '')
+  return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&output=jpg&w=1500`
+}
+
 function toAppmiral(isoStr) {
   if (!isoStr) return undefined
   return new Date(isoStr).toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, 'Z')
@@ -78,7 +86,7 @@ export default async function handler(req, res) {
         }
 
         if (f['cover-image']?.url) {
-          card.image = `${f['cover-image'].url}?format=jpeg`
+          card.image = toJpeg(f['cover-image'].url)
         }
 
         const tag = TYPE_TAGS[f.type]
