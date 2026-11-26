@@ -148,7 +148,7 @@ export default async function handler(req, res) {
 
       const desc = toLocale(event.beschrijving)
       if (desc) artist.description = desc
-      if (event.afbeelding) artist.image = `${event.afbeelding}?w=1500&h=1500&fit=crop`
+      if (event.afbeelding) artist.image = `${event.afbeelding}?w=1500&h=1500&fit=crop&fm=jpg`
 
       // Tag 'event' als eerste, gevolgd door thema/track/type tags
       const tags = ['event']
@@ -175,7 +175,7 @@ export default async function handler(req, res) {
 
       const bio = toLocale(spr.bio)
       if (bio) entry.description = bio
-      if (spr.foto)      entry.image     = `${spr.foto}?w=1500&h=1500&fit=crop`
+      if (spr.foto)      entry.image     = `${spr.foto}?w=1500&h=1500&fit=crop&fm=jpg`
       if (spr.website)   entry.website   = spr.website
       if (spr.instagram) entry.instagram = `https://instagram.com/${spr.instagram.replace(/^@/, '')}`
 

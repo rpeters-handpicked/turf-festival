@@ -78,7 +78,7 @@ export default async function handler(req, res) {
         }
 
         if (f['cover-image']?.url) {
-          card.image = f['cover-image'].url
+          card.image = `${f['cover-image'].url}?format=jpeg`
         }
 
         const tag = TYPE_TAGS[f.type]
