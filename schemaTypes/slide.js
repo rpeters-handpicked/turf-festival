@@ -105,6 +105,16 @@ export default {
       hidden: isType(...DYNAMISCH),
     },
     {
+      name: 'locaties',
+      title: 'Locaties op de kaart',
+      type: 'array',
+      of: [{type: 'reference', to: [{type: 'locatie'}], options: {disableNew: true}}],
+      description:
+        'Kies welke TURF-locaties op deze walking map staan. Zalen op hetzelfde adres worden één punt. De locatie van het scherm zelf staat er altijd op ("U bent hier"). Leeg = de vier hoofdlocaties.',
+      hidden: isType('walkingMap'),
+      validation: Rule => [Rule.unique(), Rule.max(8).warning('Meer dan 8 locaties past niet leesbaar in de lijst naast de kaart.')],
+    },
+    {
       name: 'ontwerpLandscape',
       title: 'Ontwerp — liggend (1920×1080)',
       type: 'slideOntwerp',

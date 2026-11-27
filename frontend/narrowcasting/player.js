@@ -59,7 +59,7 @@ async function query(groq, vars = {}, {cdn = true} = {}) {
 
 const SCREEN_QUERY = `*[_type == "scherm" && slug.current == $id][0]{
   _id, naam, soort, orientatie, rotatie,
-  "locaties": locaties[]->{_id, naam},
+  "locaties": locaties[]->{_id, naam, geo},
   "playlist": playlist->{
     naam,
     "geluid": geluid{volume, shuffle, van, tot, "nummers": nummers[].asset->url},
@@ -70,6 +70,7 @@ const SCREEN_QUERY = `*[_type == "scherm" && slug.current == $id][0]{
         _id, naam, type, duur, achtergrond, titel, kicker, minutenVooraf,
         "event": event._ref, "events": events[]._ref,
         ontwerpLandscape, ontwerpPortrait,
+        "kaartLocaties": locaties[]->{_id, naam, adres, geo},
         "video": video.asset->url,
         "videoPortrait": videoPortrait.asset->url,
         "afbeelding": afbeelding.asset->url,
@@ -98,7 +99,7 @@ const MELDINGEN_QUERY = `*[_type == "melding" && actief == true] | order(_update
 // Sponsoren voor de sponsorslide; geüpload logo gaat vóór de link uit Webflow.
 const SPONSORS_QUERY = `*[_type == "sponsor" && actief != false && defined(coalesce(logo.asset, logoUrl))]
   | order(prio asc, naam asc){naam, prio, "logo": coalesce(logo.asset->url, logoUrl)}`
-const LOCATIES_QUERY = `*[_type == "locatie"]{_id, naam}`
+const LOCATIES_QUERY = `*[_type == "locatie"]{_id, naam, geo}`
 
 const text = v => (typeof v === 'string' ? v.trim() : '')
 
