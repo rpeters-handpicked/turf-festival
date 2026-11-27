@@ -8,7 +8,8 @@
  *   frontend/narrowcasting/assets/walking-map.svg   gestileerde stratenkaart (coördinaten in meters)
  *   frontend/narrowcasting/walking-map-data.js      venues, looproutes en kaartmaten voor de player
  *
- * Alleen opnieuw draaien als de venues of het kaartgebied veranderen.
+ * Opnieuw draaien als er locaties in Sanity bijkomen of verhuizen: dan krijgen die ook
+ * echte looproutes (anders toont de speler een geschatte looptijd met een stippellijn).
  * Kaartdata © OpenStreetMap-bijdragers (ODbL).
  */
 import {writeFileSync} from 'node:fs'
@@ -27,12 +28,30 @@ const VENUES = [
   {key: 'rooipannen', naam: 'De Rooi Pannen', adres: 'Fellenoordstraat 93', label: 'rechts', lat: 51.5850321, lon: 4.7732614,
     locaties: ['loc-17', '847a003f-5293-4d61-b69a-2a1c34e7a05d']},
 ]
-// Kaartgebied: ruim om de venues heen, zodat er ook in staand formaat context is.
-const RADIUS = 1100 // meter
+// Kaartgebied rond het midden van de venues; groot genoeg voor alle TURF-locaties
+// (Pier15, Phoenix en het Koepeldistrict liggen aan de rand).
+const RADIUS = 1800 // meter
 
 const UA = 'turf-narrowcasting-map-build/1.0'
 const OUT_SVG = 'frontend/narrowcasting/assets/walking-map.svg'
 const OUT_JS = 'frontend/narrowcasting/walking-map-data.js'
+
+// ── Locaties uit Sanity ──────────────────────────────────────────────────────
+// Elke unieke coördinaat wordt een bestemming; meerdere zalen op één adres delen die.
+const coordKey = (lat, lng) => `${lat.toFixed(5)},${lng.toFixed(5)}`
+async function sanityLocaties() {
+  const q = encodeURIComponent('*[_type == "locatie" && !(_id in path("drafts.**")) && defined(geo)]{_id, naam, geo}')
+  const res = await fetch(`https://x545nfex.apicdn.sanity.io/v2024-01-01/data/query/production?query=${q}`)
+  if (!res.ok) throw new Error(`Sanity ${res.status}`)
+  return (await res.json()).result
+}
+const LOCATIES = await sanityLocaties()
+// Venues krijgen de coördinaat van hun Sanity-locatie, zodat routes en markeringen precies aansluiten.
+for (const v of VENUES) {
+  const loc = LOCATIES.find(l => v.locaties.includes(l._id))
+  if (loc) Object.assign(v, {lat: loc.geo.lat, lon: loc.geo.lng})
+}
+const BESTEMMINGEN = [...new Map(LOCATIES.map(l => [coordKey(l.geo.lat, l.geo.lng), {lat: l.geo.lat, lon: l.geo.lng}])).entries()]
 
 // ── Projectie: lokale meters rond het midden (x naar oost, y naar zuid) ───────
 const lat0 = VENUES.reduce((s, v) => s + v.lat, 0) / VENUES.length
@@ -67,6 +86,21 @@ out geom;`
   return (await res.json()).elements
 }
 
+// Ramer-Douglas-Peucker: minder punten in de route, zelfde vorm (tolerantie in meters).
+function simplify(pts, tol) {
+  if (pts.length < 3) return pts
+  const [a, b] = [pts[0], pts.at(-1)]
+  const [dx, dy] = [b[0] - a[0], b[1] - a[1]]
+  const len = Math.hypot(dx, dy) || 1
+  let [max, idx] = [0, 0]
+  for (let i = 1; i < pts.length - 1; i++) {
+    const d = Math.abs(dy * pts[i][0] - dx * pts[i][1] + b[0] * a[1] - b[1] * a[0]) / len
+    if (d > max) [max, idx] = [d, i]
+  }
+  if (max <= tol) return [a, b]
+  return [...simplify(pts.slice(0, idx + 1), tol).slice(0, -1), ...simplify(pts.slice(idx), tol)]
+}
+
 async function route(a, b) {
   const url = `https://routing.openstreetmap.de/routed-foot/route/v1/foot/${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson`
   const res = await fetch(url, {headers: {'User-Agent': UA}})
@@ -76,7 +110,7 @@ async function route(a, b) {
     meters: Math.round(r.distance),
     // Wandeltempo van ~4,8 km/u, afgerond naar boven; minimaal 1 minuut.
     minuten: Math.max(1, Math.ceil(r.distance / 80)),
-    d: 'M' + r.geometry.coordinates.map(([lon, lat]) => project(lat, lon).map(r1).join(',')).join('L'),
+    d: 'M' + simplify(r.geometry.coordinates.map(([lon, lat]) => project(lat, lon)), 1.5).map(p => p.map(Math.round).join(',')).join('L'),
   }
 }
 
@@ -139,17 +173,27 @@ const svg = buildSvg(elements)
 writeFileSync(OUT_SVG, svg)
 console.log(`${OUT_SVG}: ${elements.length} OSM-objecten, ${(svg.length / 1024).toFixed(0)} kB`)
 
+// Routes van elke schermlocatie (venue) naar elke bestemming. Sleutel: `venue>lat,lng`.
 const routes = {}
 for (const a of VENUES) {
-  for (const b of VENUES) {
-    if (a === b) continue
-    routes[`${a.key}>${b.key}`] = await route(a, b)
+  for (const [key, b] of BESTEMMINGEN) {
+    if (key === coordKey(a.lat, a.lon)) continue
+    for (let poging = 1; ; poging++) {
+      try {
+        routes[`${a.key}>${key}`] = await route(a, b)
+        break
+      } catch (err) {
+        if (poging >= 3) throw err
+        await new Promise(r => setTimeout(r, 2000 * poging))
+      }
+    }
     await new Promise(r => setTimeout(r, 400)) // de publieke routeserver niet overbelasten
   }
 }
 
 const data = {
   radius: RADIUS,
+  midden: [lat0, lon0],
   venues: VENUES.map(v => ({...v, xy: project(v.lat, v.lon).map(r1)})),
   routes,
 }
@@ -160,5 +204,4 @@ writeFileSync(
 export const WALKING_MAP = ${JSON.stringify(data, null, 2)}
 `,
 )
-console.log(`${OUT_JS}: ${VENUES.length} venues, ${Object.keys(routes).length} routes`)
-for (const [k, r] of Object.entries(routes)) console.log(`  ${k}: ${r.meters} m, ${r.minuten} min`)
+console.log(`${OUT_JS}: ${VENUES.length} venues, ${BESTEMMINGEN.length} bestemmingen, ${Object.keys(routes).length} routes`)

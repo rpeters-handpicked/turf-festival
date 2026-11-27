@@ -490,18 +490,97 @@ const MAP_COLORS = ['#f0641e', '#f2b63f', '#d94080', '#c8f04a']
 // Afmeting van het kaartpaneel in px (zie .wm-map in player.css).
 const MAP_PANEL = {landscape: [960, 804], portrait: [888, 860]}
 
+const wmKey = (lat, lng) => `${lat.toFixed(5)},${lng.toFixed(5)}`
+
+/** Projectie naar de meters van de kaart (zelfde als scripts/build-walking-map.mjs). */
+function wmXY(lat, lon) {
+  const [lat0, lon0] = WALKING_MAP.midden || [lat, lon]
+  return [(lon - lon0) * 111320 * Math.cos((lat0 * Math.PI) / 180), -(lat - lat0) * 110540]
+}
+
+/** Gemeenschappelijk begin van de namen: "De Avenue Main Stage" + "De Avenue Up Stage" → "De Avenue". */
+function wmNaam(namen) {
+  if (namen.length === 1) return namen[0]
+  const woorden = namen.map(n => n.split(/\s+/))
+  const prefix = []
+  for (let i = 0; woorden.every(w => w[i] && w[i] === woorden[0][i]); i++) prefix.push(woorden[0][i])
+  const naam = prefix.join(' ').replace(/[\s\-–(]+$/, '')
+  return naam || namen[0]
+}
+
+/** De punten op de kaart: gekozen locaties (zalen op één adres samengevoegd), of de vaste venues. */
+function wmPlekken(slide, ctx) {
+  const M = WALKING_MAP
+  const venueVan = ids => M.venues.find(v => v.locaties.some(id => ids.includes(id)))
+  const fromVenue = v => ({key: wmKey(v.lat, v.lon), naam: v.naam, adres: v.adres, lat: v.lat, lon: v.lon, label: v.label, venue: v})
+
+  const gekozen = (slide.kaartLocaties || []).filter(l => l?.geo?.lat != null)
+  let plekken
+  if (!gekozen.length) {
+    plekken = M.venues.map(fromVenue)
+  } else {
+    const groepen = new Map()
+    for (const l of gekozen) {
+      const key = wmKey(l.geo.lat, l.geo.lng)
+      if (!groepen.has(key)) groepen.set(key, [])
+      groepen.get(key).push(l)
+    }
+    plekken = [...groepen].map(([key, locs]) => {
+      const venue = venueVan(locs.map(l => l._id))
+      if (venue) return {...fromVenue(venue), key}
+      return {
+        key,
+        naam: wmNaam(locs.map(l => l.naam.trim())),
+        adres: (locs[0].adres || '').trim().replace(/,?\s*\d{4}\s?[A-Z]{2}/, '').replace(/,?\s*Breda$/i, ''),
+        lat: locs[0].geo.lat,
+        lon: locs[0].geo.lng,
+      }
+    })
+  }
+
+  // Waar staat dit scherm? Die plek staat er altijd op.
+  const ids = ctx.locaties.map(l => l._id)
+  const hereVenue = venueVan(ids)
+  const hereLoc = ctx.locaties.find(l => l.geo?.lat != null)
+  const hereKey = hereVenue ? wmKey(hereVenue.lat, hereVenue.lon) : hereLoc ? wmKey(hereLoc.geo.lat, hereLoc.geo.lng) : null
+  let here = hereKey ? plekken.find(p => p.key === hereKey) : null
+  if (hereKey && !here) {
+    here = hereVenue
+      ? fromVenue(hereVenue)
+      : {key: hereKey, naam: wmNaam(ctx.locaties.map(l => l.naam)), adres: '', lat: hereLoc.geo.lat, lon: hereLoc.geo.lng}
+    plekken.unshift(here)
+  }
+  for (const p of plekken) p.xy = wmXY(p.lat, p.lon)
+  return {plekken, here, hereVenue}
+}
+
 function walkingMap(slide, ctx) {
   const M = WALKING_MAP
   const [pw, ph] = MAP_PANEL[ctx.orient]
-  const venues = M.venues.map((v, i) => ({...v, nr: i + 1, kleur: MAP_COLORS[i % MAP_COLORS.length]}))
-  const here = venues.find(v => v.locaties.some(id => ctx.locaties.some(l => l._id === id)))
-  const minutes = v => (here && v !== here ? M.routes[`${here.key}>${v.key}`]?.minuten : null)
+  const {plekken, here, hereVenue} = wmPlekken(slide, ctx)
+  if (!plekken.length) return null
 
-  // Uitsnede: alle venues met marge, passend gemaakt op de verhouding van het paneel.
-  const xs = venues.map(v => v.xy[0])
-  const ys = venues.map(v => v.xy[1])
+  // Looproute vanaf "hier": berekend (OpenStreetMap) of, voor nieuwe locaties, een schatting in rechte lijn.
+  const route = p => {
+    if (!here || p === here) return null
+    const echt = hereVenue && M.routes[`${hereVenue.key}>${p.key}`]
+    if (echt) return echt
+    const afstand = Math.hypot(p.xy[0] - here.xy[0], p.xy[1] - here.xy[1])
+    return {schatting: true, minuten: Math.max(1, Math.ceil((afstand * 1.3) / 80)), d: `M${here.xy.join(',')}L${p.xy.join(',')}`}
+  }
+  const minutes = p => route(p)?.minuten ?? null
+
+  // Volgorde en nummering: eerst waar je bent, dan op looptijd.
+  plekken.sort((a, b) => (a === here ? -1 : b === here ? 1 : (minutes(a) ?? 99) - (minutes(b) ?? 99)))
+  plekken.forEach((p, i) => Object.assign(p, {nr: i + 1, kleur: MAP_COLORS[i % MAP_COLORS.length]}))
+
+  // Uitsnede: alle punten met marge (minimaal ~600 m breed), passend op de verhouding van het paneel.
+  const xs = plekken.map(p => p.xy[0])
+  const ys = plekken.map(p => p.xy[1])
   const marge = 190
   let [x0, x1, y0, y1] = [Math.min(...xs) - marge, Math.max(...xs) + marge, Math.min(...ys) - marge, Math.max(...ys) + marge]
+  const minW = 600
+  if (x1 - x0 < minW) [x0, x1] = [(x0 + x1) / 2 - minW / 2, (x0 + x1) / 2 + minW / 2]
   const aspect = pw / ph
   if ((x1 - x0) / (y1 - y0) < aspect) {
     const extra = (y1 - y0) * aspect - (x1 - x0)
@@ -512,37 +591,87 @@ function walkingMap(slide, ctx) {
     y0 -= extra / 2
     y1 += extra / 2
   }
-  const u = px => +(px / (pw / (x1 - x0))).toFixed(2) // px op het scherm → meters in de kaart
+  const k = pw / (x1 - x0) // px per meter
+  const u = px => +(px / k).toFixed(2) // px op het scherm → meters in de kaart
   const R = M.radius
 
-  const routes = here
-    ? venues
-        .filter(v => v !== here)
-        .map((v, i) => `<path class="wm-route" style="--i:${i}" d="${M.routes[`${here.key}>${v.key}`].d}"
-            stroke-width="${u(7)}" stroke-dasharray="0 ${u(15)}"/>`)
-        .join('')
-    : ''
+  // Markeringen die (bijna) op elkaar liggen iets uit elkaar duwen, zodat elk nummer leesbaar blijft.
+  for (const p of plekken) p.pos = [...p.xy]
+  const minAfstand = u(50)
+  for (let ronde = 0; ronde < 30; ronde++) {
+    let bewogen = false
+    for (let i = 0; i < plekken.length; i++) {
+      for (let j = i + 1; j < plekken.length; j++) {
+        const [a, b] = [plekken[i].pos, plekken[j].pos]
+        let [dx, dy] = [b[0] - a[0], b[1] - a[1]]
+        let d = Math.hypot(dx, dy)
+        if (d >= minAfstand) continue
+        if (d < 0.01) [dx, dy, d] = [1, 0, 1]
+        const duw = (minAfstand - d) / 2
+        a[0] -= (dx / d) * duw
+        a[1] -= (dy / d) * duw
+        b[0] += (dx / d) * duw
+        b[1] += (dy / d) * duw
+        bewogen = true
+      }
+    }
+    if (!bewogen) break
+  }
 
-  const marker = (v, i) => {
-    const [x, y] = v.xy
-    const isHere = v === here
+  // Labels links of rechts van de markering, zodat ze elkaar en de kaartrand zo min mogelijk raken.
+  const box = (p, right) => {
+    const [cx, cy] = [(p.pos[0] - x0) * k, (p.pos[1] - y0) * k]
+    const w = p.naam.length * 19 + 20
+    const h = p === here ? 80 : 44
+    const x = right ? cx + 28 : cx - 28 - w
+    return {x, y: cy - 26, w, h}
+  }
+  const overlap = (a, b) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y))
+  const blokken = plekken.map(p => {
+    const [cx, cy] = [(p.pos[0] - x0) * k, (p.pos[1] - y0) * k]
+    return {x: cx - 26, y: cy - 26, w: 52, h: 52}
+  })
+  const geplaatst = []
+  for (const p of plekken) {
+    const score = right => {
+      const b = box(p, right)
+      const buiten = Math.max(0, -b.x) + Math.max(0, b.x + b.w - pw)
+      return [...blokken, ...geplaatst].reduce((s, o) => s + overlap(b, o), 0) + buiten * 200
+    }
+    const voorkeur = p.label ? p.label !== 'links' : true
+    const [sa, sb] = [score(voorkeur), score(!voorkeur)]
+    p.right = sb < sa ? !voorkeur : voorkeur
+    geplaatst.push(box(p, p.right))
+  }
+
+  const routes = plekken
+    .map(route)
+    .filter(Boolean)
+    .map(
+      (r, i) => `<path class="wm-route ${r.schatting ? 'is-schatting' : ''}" style="--i:${i}" d="${r.d}"
+          stroke-width="${u(7)}" stroke-dasharray="0 ${u(r.schatting ? 22 : 15)}"/>`,
+    )
+    .join('')
+
+  const marker = (p, i) => {
+    const [x, y] = p.pos
+    const isHere = p === here
     const size = u(isHere ? 50 : 40)
-    const right = v.label !== 'links'
+    const right = p.right
     const tx = x + (right ? 1 : -1) * (size / 2 + u(14))
     return `
-      <g class="wm-marker ${isHere ? 'is-here' : ''}" style="--i:${i};--c:${v.kleur}">
+      <g class="wm-marker ${isHere ? 'is-here' : ''}" style="--i:${i};--c:${p.kleur}">
         ${isHere ? `<circle class="wm-pulse" cx="${x}" cy="${y}" r="${u(36)}" stroke-width="${u(3)}"/>` : ''}
         <rect x="${x - size / 2}" y="${y - size / 2}" width="${size}" height="${size}" rx="${u(10)}"/>
-        <text class="wm-nr" x="${x}" y="${y + u(10)}" font-size="${u(isHere ? 34 : 28)}">${v.nr}</text>
+        <text class="wm-nr" x="${x}" y="${y + u(10)}" font-size="${u(isHere ? 34 : 28)}">${p.nr}</text>
         <text class="wm-label" x="${tx}" y="${y + u(12)}" font-size="${u(36)}" text-anchor="${right ? 'start' : 'end'}"
-          stroke-width="${u(8)}">${esc(v.naam)}</text>
+          stroke-width="${u(8)}">${esc(p.naam)}</text>
         ${isHere ? `<text class="wm-here" x="${tx}" y="${y + u(42)}" font-size="${u(21)}" text-anchor="${right ? 'start' : 'end'}" stroke-width="${u(6)}">U bent hier</text>` : ''}
       </g>`
   }
 
-  // Lijst: eerst waar je bent, dan op looptijd.
-  const lijst = [...venues].sort((a, b) => (a === here ? -1 : b === here ? 1 : (minutes(a) ?? a.nr) - (minutes(b) ?? b.nr)))
-  const maxMin = Math.max(...Object.values(M.routes).map(r => r.minuten))
+  const tijden = plekken.map(minutes).filter(m => m != null)
+  const maxMin = tijden.length ? Math.max(...tijden) : null
 
   const el = html(`
     <section class="tpl walkmap" style="--bg:${BG([1, 2, 3].includes(slide.achtergrond) ? slide.achtergrond : 3, ctx.orient)}">
@@ -550,33 +679,33 @@ function walkingMap(slide, ctx) {
         <div class="tpl-logo" data-turf-logo data-align="left"></div>
         <div class="tpl-clock">${hhmm(ctx.now)}</div>
       </header>
-      <div class="wm-grid">
+      <div class="wm-grid ${plekken.length > 6 ? 'is-vol is-heel-vol' : plekken.length > 4 ? 'is-vol' : ''}">
         <div class="wm-side">
           <div class="tpl-title">
             <div class="kicker">${esc(here ? `Vanaf ${here.naam}` : 'TURF-locaties')}</div>
             <h1>${esc(slide.titel || 'Walking map')}</h1>
           </div>
           <ol class="wm-list">
-            ${lijst
+            ${plekken
               .map(
-                (v, i) => `
-              <li class="${v === here ? 'is-here' : ''}" style="--c:${v.kleur};--i:${i}">
-                <span class="wm-num">${v.nr}</span>
-                <div class="wm-text"><strong>${esc(v.naam)}</strong><span>${esc(v.adres)}</span></div>
-                <em>${v === here ? 'U bent hier' : minutes(v) ? `${minutes(v)} min` : ''}</em>
+                (p, i) => `
+              <li class="${p === here ? 'is-here' : ''}" style="--c:${p.kleur};--i:${i}">
+                <span class="wm-num">${p.nr}</span>
+                <div class="wm-text"><strong>${esc(p.naam)}</strong>${p.adres ? `<span>${esc(p.adres)}</span>` : ''}</div>
+                <em>${p === here ? 'U bent hier' : minutes(p) ? `${route(p).schatting ? '±' : ''}${minutes(p)} min` : ''}</em>
               </li>`,
               )
               .join('')}
           </ol>
           <div class="wm-foot"><span class="pill">${
-            here ? `Looptijden vanaf ${esc(here.naam)}` : `Max. ${maxMin} min lopen`
+            here ? `Looptijden vanaf ${esc(here.naam)}` : maxMin ? `Max. ${maxMin} min lopen` : 'TURF-locaties'
           }</span></div>
         </div>
         <div class="wm-map">
           <svg viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" preserveAspectRatio="xMidYMid slice">
             <image href="${ASSETS}/walking-map.svg" x="${-R}" y="${-R}" width="${2 * R}" height="${2 * R}"/>
             ${routes}
-            ${venues.map(marker).join('')}
+            ${plekken.map(marker).join('')}
           </svg>
           <small class="wm-credit">Kaart © OpenStreetMap</small>
         </div>
